@@ -26,7 +26,8 @@ NOT_APPLICABLE = {
 }
 # 설계서 목록 항목(rowset)의 칸 중 설계서 전체에서 한 번 이상 쓰여야 하는 것 (date_compare는 날짜 열을 안 써서 제외)
 ROWSET_FIELDS = {"name", "description", "source", "column", "filter", "scope", "time_column", "window", "agg",
-                 "made_by", "derive", "assessment", "as_of"}
+                 "made_by", "derive", "assessment", "as_of",
+                 "episode", "history_key", "version_order", "age_reference"}   # 2b 예비 검수로 보탠 칸
 
 
 def _object_paths(schema: dict, prefix: str = "") -> list[str]:

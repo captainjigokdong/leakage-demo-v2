@@ -10,7 +10,7 @@ SCHEMA = ROOT / "designs" / "schema.json"
 DOC = ROOT / "docs" / "design_format_v2.md"
 
 TAG = re.compile(r"^(K L[123](\.[1-4])?|P [1-4]\.[1-9]|P\+AI (참여자·데이터 출처|예측변수|결과|분석)"
-                 r"|Albu|Kaufman|Suissa|관리)$")
+                 r"|Albu|Kaufman|Suissa|관리|예비 검수)$")   # 예비 검수: 2b에서 보탠 칸
 ROW = re.compile(r"^\| `([^`]+)` \| (.+?) \| (.+?) \|$")
 
 

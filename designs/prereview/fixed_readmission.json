@@ -84,6 +84,16 @@
       "end_of_data": "exclude_incomplete",
       "death": "composite_outcome",
       "lost_to_followup": "count_as_negative"
+    },
+    "pending_at_tp": "ignore",
+    "match_key": "person_id",
+    "planned_by": {
+      "source": "admission_info",
+      "filter": {
+        "admission_type": [
+          "elective"
+        ]
+      }
     }
   },
   "cohort": {
@@ -145,7 +155,8 @@
       "column": "age",
       "scope": "patient",
       "agg": "value",
-      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수."
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수.",
+      "age_reference": "index_admission"
     },
     {
       "name": "sex",
@@ -177,7 +188,8 @@
         "start": "admit",
         "end": "tp"
       },
-      "agg": "any"
+      "agg": "any",
+      "episode": "index_episode"
     },
     {
       "name": "los_h",
@@ -218,7 +230,9 @@
         "end": "tp"
       },
       "agg": "count",
-      "description": "같은 등록 번호의 이전 입원 수 (인덱스 입원과 같은 에피소드의 앞 입원은 빼고, 지난 365일 안에 퇴원한 것)"
+      "description": "같은 등록 번호의 이전 입원 수 (인덱스 입원과 같은 에피소드의 앞 입원은 빼고, 지난 365일 안에 퇴원한 것)",
+      "history_key": "patient_id",
+      "episode": "exclude_index_episode"
     },
     {
       "name": "prior_dx_ckd",
@@ -236,7 +250,8 @@
         "start": "-inf",
         "end": "tp"
       },
-      "agg": "any"
+      "agg": "any",
+      "history_key": "patient_id"
     },
     {
       "name": "prior_dx_chf",
@@ -254,7 +269,8 @@
         "start": "-inf",
         "end": "tp"
       },
-      "agg": "any"
+      "agg": "any",
+      "history_key": "patient_id"
     },
     {
       "name": "problem_ckd_active",
@@ -275,7 +291,9 @@
         "end": "tp"
       },
       "as_of": "tp",
-      "agg": "any"
+      "agg": "any",
+      "history_key": "patient_id",
+      "version_order": "version_then_filter"
     },
     {
       "name": "cr_last",
@@ -348,7 +366,8 @@
         "start": "admit",
         "end": "tp"
       },
-      "agg": "count"
+      "agg": "count",
+      "episode": "index_episode"
     },
     {
       "name": "dialysis_ordered",
@@ -364,7 +383,8 @@
         "start": "admit",
         "end": "tp"
       },
-      "agg": "any"
+      "agg": "any",
+      "episode": "index_episode"
     },
     {
       "name": "cr_last_over_hgb",

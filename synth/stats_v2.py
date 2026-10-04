@@ -169,7 +169,7 @@ def format_report(s: dict, checks: list[Check]) -> str:
              f"크레아티닌/일: 입원 병동 기준 ICU {s['cr_per_day_icu']:.2f}, 병동 {s['cr_per_day_ward']:.2f}; "
              f"머문 병동 기준 ICU {s['cr_per_day_location']['ICU']:.2f}, 병동 {s['cr_per_day_location']['ward']:.2f}",
              f"B 병원 입원 {s['site_b_admission_frac']:.1%}, 예약 입원 {s['elective_frac']:.1%}, "
-             f"이어진 입원 {s['split_episode_frac']:.1%}, family_id 결측 {s['family_id_missing']:.1%}, "
+             f"이어진 입원 에피소드에 속한 입원 기록 {s['split_episode_frac']:.1%}, family_id 결측 {s['family_id_missing']:.1%}, "
              f"등록 번호 둘 {s['id_switch_persons']}명", ""]
     for c in checks:
         lines.append(f"[{'✔' if c.passed else '✘'}] {c.name}: {c.value}  (기준 {c.criterion})")

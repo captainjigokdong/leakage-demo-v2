@@ -18,7 +18,8 @@ ROW = re.compile(r"^\| `([a-z_]+\.[a-z_]+)` \|(.*)\|$")
 
 def dictionary_rows() -> dict[str, list[str]]:
     rows: dict[str, list[str]] = {}
-    for line in DOC.read_text(encoding="utf-8").splitlines():
+    text = DOC.read_text(encoding="utf-8").split("### 보조 데이터 실측값")[0]   # 보조 데이터 실측표(2b)는 열 설명이 아니다
+    for line in text.splitlines():
         m = ROW.match(line)
         if m:
             assert m.group(1) not in rows, f"설명서에 같은 열이 두 번: {m.group(1)}"
@@ -68,3 +69,16 @@ def test_time_column_lists_refer_to_real_columns():
         for c, ref in m.items():
             assert f"{t}.{c}" in cols, f"{t}.{c}"
             assert (ref if "." in ref else f"{t}.{ref}") in cols, ref
+
+
+def test_measured_values_match_committed_data():
+    """2b: 결측·값의 범위 칸의 실측 부분이 저장된 데이터(본·보조)에서 다시 계산한 값과 같다."""
+    from synth import profile_v2
+    from synth.generate_v2 import PROFILES, load
+
+    main, aux = profile_v2.measured_from_doc(DOC.read_text(encoding="utf-8"))
+    want_main = profile_v2.profile(load(ROOT / PROFILES["main"].out))
+    want_aux = profile_v2.profile(load(ROOT / PROFILES["aux"].out))
+    assert {k: v for k, v in main.items() if k not in DERIVED_V2} == want_main
+    assert all(main[k] == (None, None) for k in DERIVED_V2)   # 파생 열은 데이터 파일에 없어 실측값이 없다
+    assert aux == want_aux

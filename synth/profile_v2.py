@@ -67,7 +67,7 @@ def _merge(cell: str, measured: str) -> str:
 
 def apply(text: str, main: dict, aux: dict) -> str:
     out = []
-    for line in text.splitlines():
+    for line in text.split(AUX_START)[0].rstrip().splitlines():   # 보조 실측표는 아래에서 새로 쓴다
         m = ROW.match(line)
         key = f"{m.group(1)}.{m.group(2)}" if m else None
         if key in main:
@@ -76,8 +76,7 @@ def apply(text: str, main: dict, aux: dict) -> str:
             cells[5] = _merge(cells[5], main[key][1])     # 값의 범위
             line = f"| `{key}` | " + " | ".join(cells) + " |"
         out.append(line)
-    text = "\n".join(out) + "\n"
-    head = text.split(AUX_START)[0].rstrip() + "\n"
+    head = "\n".join(out) + "\n"
     rows = ["", AUX_START, "", "`data/synth_aux/`에서 계산. 열마다 결측과 값의 범위.", "",
             "| 열 | 결측 | 값의 범위 |", "|---|---|---|"]
     rows += [f"| `{k}` | {v[0]} | {v[1]} |" for k, v in aux.items()]

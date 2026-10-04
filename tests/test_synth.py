@@ -1,15 +1,11 @@
-import gzip
-import hashlib
-import json
 from math import comb
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from synth.generate import DEFAULT_OUT, TABLES, generate, load, save, to_csv_bytes
-from synth.stats import check_criteria, kdigo_first, kdigo_table, readmission_table, summarize
+from synth.generate import TABLES, generate, load, save, to_csv_bytes
+from synth.stats import kdigo_first, kdigo_table, readmission_table, summarize
 
 SMALL = 300
 SEED = 7
@@ -201,13 +197,6 @@ def test_aki_admissions_get_renal_proxies(ehr):
     assert has[kd.to_numpy()].mean() > 3 * has[~kd.to_numpy()].mean()
 
 
-# --- 저장된 기본 데이터 (5,000명) ---
-
-@pytest.mark.skipif(not (DEFAULT_OUT / "MANIFEST.json").exists(), reason="기본 데이터가 아직 생성되지 않음")
-def test_committed_data_matches_manifest_and_criteria():
-    manifest = json.loads((DEFAULT_OUT / "MANIFEST.json").read_text())
-    for name, info in manifest["tables"].items():
-        raw = gzip.decompress((DEFAULT_OUT / info["file"]).read_bytes())
-        assert hashlib.sha256(raw).hexdigest() == info["sha256_csv"], name
-    checks = check_criteria(summarize(load(DEFAULT_OUT)))
-    assert all(c.passed for c in checks), [c for c in checks if not c.passed]
+# --- 저장된 데이터 ---
+# v1 데이터(7개 테이블)의 잠금 시험은 2단계 2b에서 v2 데이터 시험(tests/test_data_v2.py)으로 바꿨다
+# (사용자 승인 2026-10-04). 이 파일은 v1 생성기(synth/generate.py)만 시험한다. 3단계 전까지 점검기 시험이 v1 생성기를 쓴다.

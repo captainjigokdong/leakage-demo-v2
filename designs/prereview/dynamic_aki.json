@@ -75,7 +75,8 @@
           "description": "결과 창의 각 값보다 먼저 채취한 값만 쓴다"
         }
       ],
-      "agg": "결과 창의 각 값마다, 그 값보다 먼저 채취한 값 중 최솟값 (48시간·7일 두 기준). 나중 값은 기준값이 되지 않는다"
+      "agg": "결과 창의 각 값마다, 그 값보다 먼저 채취한 값 중 최솟값 (48시간·7일 두 기준). 나중 값은 기준값이 되지 않는다",
+      "compare_to": "prior_values_each"
     },
     "planned": "include",
     "proxies": [
@@ -161,6 +162,16 @@
       "end_of_data": "not_applicable",
       "death": "composite_outcome",
       "lost_to_followup": "count_as_negative"
+    },
+    "pending_at_tp": "exclude_row",
+    "match_key": "patient_id",
+    "planned_by": {
+      "source": "admission_info",
+      "filter": {
+        "admission_type": [
+          "elective"
+        ]
+      }
     }
   },
   "cohort": {
@@ -203,7 +214,8 @@
         },
         "agg": "kdigo_aki",
         "op": "==",
-        "value": true
+        "value": true,
+        "episode": "index_episode"
       },
       {
         "name": "dialysis_by_tp",
@@ -222,7 +234,8 @@
         },
         "agg": "any",
         "op": "==",
-        "value": true
+        "value": true,
+        "episode": "index_episode"
       }
     ],
     "subgroups": [
@@ -251,7 +264,8 @@
       "column": "age",
       "scope": "patient",
       "agg": "value",
-      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수."
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수.",
+      "age_reference": "index_admission"
     },
     {
       "name": "sex",
@@ -308,7 +322,8 @@
           "method"
         ],
         "method": "2155-01-01 전은 jaffe(약 0.10 mg/dL 높음), 뒤는 enzymatic. 측정법을 함께 넣는다"
-      }
+      },
+      "episode": "index_episode"
     },
     {
       "name": "cr_min_adm",
@@ -325,7 +340,8 @@
         "start": "admit",
         "end": "tp"
       },
-      "agg": "min"
+      "agg": "min",
+      "episode": "index_episode"
     },
     {
       "name": "cr_max_48h",
@@ -364,7 +380,8 @@
           "unit_at_tp"
         ],
         "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"
-      }
+      },
+      "episode": "index_episode"
     },
     {
       "name": "cr_rise",
@@ -516,7 +533,8 @@
         "start": "-inf",
         "end": "tp"
       },
-      "agg": "any"
+      "agg": "any",
+      "history_key": "patient_id"
     },
     {
       "name": "problem_ckd_active",
@@ -537,7 +555,9 @@
         "end": "tp"
       },
       "as_of": "tp",
-      "agg": "any"
+      "agg": "any",
+      "history_key": "patient_id",
+      "version_order": "version_then_filter"
     }
   ],
   "split_unit": "family",
