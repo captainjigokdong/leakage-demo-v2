@@ -1,0 +1,10 @@
+# 평문 봉인 파일은 절대 커밋하지 않는다
+sealed/*
+!sealed/*.enc
+!sealed/README.md
+*.plain
+*.plain.*
+__pycache__/
+.pytest_cache/
+# experiment/runs/, experiment/pilot/은 6단계부터 커밋한다. 에이전트 작업 폴더는 보관하되 커밋하지 않는다
+.venv/
