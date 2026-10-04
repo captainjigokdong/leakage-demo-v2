@@ -239,6 +239,8 @@
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
 - [ ] (2b에서 넘김) 사전 점검에 넣는다: heredoc(`<<`), `find -exec` 같은 명령이 권한 규칙에 막히면 에이전트가 데이터를 열지 않고 끝낼 수 있다 (2b 예비 검수 4회 중 2회). 에이전트가 데이터를 읽으려면 시스템 python(`/usr/local/bin/python3`)에 numpy·pandas와 그 의존 패키지가 **에이전트의 HOME과 무관한 위치**에 있어야 한다. 2b 세션 컨테이너에는 numpy·pandas가 없어서 `requirements-lock.txt`로 설치했는데, python-dateutil은 `/root/.local`에만 있어 HOME을 따로 정한 에이전트에서는 `import pandas`가 실패했다 (예비 검수 에이전트는 csv 모듈로 우회해 데이터를 읽었다). 사전 점검 5번(패키지 import)을 에이전트와 같은 환경 변수로 확인한다
 - [ ] (3단계에서 확인한 원인) 세션 컨테이너 이미지의 `/root/.local/lib/python3.11/site-packages`에 python-dateutil이 처음부터 들어 있다 (다른 도구가 설치해 둔 것). 그래서 사용자 폴더를 무시하지 않고 `pip install`하면 pip가 "이미 있음"으로 보고 시스템 위치에 설치하지 않는다. `PYTHONNOUSERSITE=1 python3 -m pip install -r requirements-lock.txt`로 설치하면 시스템 위치(`/usr/local/lib/python3.11/dist-packages`)에 설치되고, `PYTHONNOUSERSITE=1`에서도 `import pandas`가 된다 (3단계 세션에서 확인). 사전 점검에 이 설치 방법과 확인을 넣는다
+- [ ] (3단계 3b 스킬 검수에서 넘김) 권한 규칙이 셸 `for` 반복문이 든 명령(`ls data && for f in data/*; do …; done | cut …`)을 거부했다 (동적 1회차, 점검기 실행 뒤 데이터를 훑어보는 명령). 에이전트는 Python 스크립트 파일로 다시 확인했고 점검기 호출 거부는 0이었다. 환경(권한 규칙) 문제라 스킬은 고치지 않았다. 사전 점검 6번에 반복문 형태를 넣을지 6단계 계획에서 정한다 (`docs/skill_review_v2.md`)
+- [ ] (3단계 3b 스킬 검수에서 넘김) 실행 시간·토큰 참고값: (가) 1회 약 100초, 출력 토큰 약 7,600, 캐시 읽기 20만~32만 토큰 (`docs/skill_review_v2.md`). 6단계 실행 계획(시간 초과·Pro 한도)에 쓴다
 - [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
 - [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)

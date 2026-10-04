@@ -42,7 +42,7 @@ PROMPT = """이 작업 폴더에 예측 모델 설계서 `design.json`과 합성
 형식은 [{"target": 설계서의 항목, "kind": "문제" 또는 "가정" 또는 "점검 불가", "problem": 설명}] 이다."""
 KINDS = {"문제", "가정", "점검 불가"}
 KIND_OF = {"차단": "문제", "경고": "문제", "점검 불가": "점검 불가", "가정": "가정"}
-TARGET_RE = re.compile(r"^(design_type|tp|intended_use|data_source|outcome|cohort|features|split_unit|split|preprocessing|"
+TARGET_RE = re.compile(r"^(design_id|question|notes|design_type|tp|intended_use|data_source|outcome|cohort|features|split_unit|split|preprocessing|"
                        r"model|analysis|evaluation|attempts|data)(\.[^\s]+)?$")
 
 
@@ -76,7 +76,12 @@ def findings_checks(ws: Path, cj: dict | None) -> dict:
         out["kind_mismatch"] = sorted({w for w in want if w not in got and w[0] in targets})
         flagged = {f["target"] for f in cj["findings"] + cj.get("assumptions", []) if f["verdict"] in KIND_OF}
         quiet = {f["target"] for f in cj["findings"] if f["verdict"] in ("통과", "기록")} - flagged
-        out["pass_or_record_included"] = sorted(targets & (quiet | {"설계 전체", "attempts"}))
+        # 통과·기록 항목 자체를 옮긴 것: "설계 전체"·Q6 대상, 또는 점검기 통과를 옮겼다고 적은 것
+        out["pass_or_record_included"] = sorted(
+            str(x.get("target")) for x in data if isinstance(x, dict)
+            and (x.get("target") in ("설계 전체", "attempts") or re.search(r"점검기\s*(통과|기록)|\bQ6\b", str(x.get("problem")))))
+        # 점검기가 통과시킨 대상에 에이전트가 따로 단 의심(②). 혼입이 아니며 원문으로 확인한다
+        out["agent_items_on_checker_passed_targets"] = sorted(targets & quiet)
     return out
 
 

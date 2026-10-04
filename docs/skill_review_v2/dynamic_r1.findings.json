@@ -1,0 +1,47 @@
+[
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "문제",
+    "problem": "[점검기 차단 · Q5 선택 시점 · 규칙 C.pending] pending_at_tp=exclude_row는 tp 전에 채취했지만 tp 뒤에 보고된 크레아티닌(labs.collect_time ≤ tp < report_time, 지연 최대 6h)이 있는 행을 뺀다. tp 뒤 정보로 표본을 고르는 것이다. 수정안: count_as_outcome(권장: 결과 창이 collect_time 기준이라 ignore로 두면 tp 직전 채취분에서 생긴 AKI가 음성으로 남음) 또는 ignore."
+  },
+  {
+    "target": "split.method",
+    "kind": "문제",
+    "problem": "[점검기 경고 · Q1 가용 시점 · 규칙 S.temporal_deploy] intended_use.purpose=prospective_deployment인데 split.method=group_holdout(무작위)라 평가 기간보다 뒤의 진료 관행이 학습에 들어간다. 데이터 기간 안에 크레아티닌 측정법 전환(2155-01-01 jaffe→enzymatic)도 있다. 수정안: split.method=temporal로 바꾸고 family_id/person_id 묶음을 유지하며 time_column·cutoff·gap을 정한다."
+  },
+  {
+    "target": "data_source.death_source",
+    "kind": "문제",
+    "problem": "[점검기 경고 · Q7 결과 확인 균질성 · 규칙 O.death_source] 사망을 결과에 넣는데(censoring.death=composite_outcome) 원내 사망만 쓴다(in_hospital_only). 결과 창 안에 퇴원한 행은 원외 사망을 놓쳐 음성(count_as_negative)으로 들어간다. 수정안: death_source=linked_registry. 단, extract_info.death_linkage_through=2159-07-01로 자료 추출 종료(2160-01-01)보다 이르므로 그 뒤의 tp는 연계 사망 확인이 불완전하다. 이 기간을 빼거나 따로 다뤄야 한다."
+  },
+  {
+    "target": "question",
+    "kind": "문제",
+    "problem": "[추가 의심 · 설계 서술과 칸의 불일치] question은 '48시간 안 AKI 발생'을 예측한다고 하지만 outcome.name=aki_or_death_48h이고 censoring.death=composite_outcome이라 실제 결과는 AKI 또는 원내 사망 복합이다. 수정안: question을 복합 결과로 고치거나, 사망을 결과에서 빼고 경쟁 사건으로 다룬다."
+  },
+  {
+    "target": "features.cr_last",
+    "kind": "문제",
+    "problem": "[추가 의심 · Q7 · 서술과 칸의 불일치] features.cr_last.assessment.method에 '2155-01-01 전은 jaffe(약 0.10 mg/dL 높음)… 측정법을 함께 넣는다'고 적었지만 features에 측정법 특징이 없다. 데이터 labs에는 method 열(jaffe/enzymatic)이 있다. cr_last·cr_min_adm·cr_max_48h·cr_rise는 측정법이 섞인 값으로 계산될 수 있다(cr_rise는 전환 전후 값 차이가 들어갈 수 있음). 수정안: labs.method를 특징으로 추가하고(window admit~tp, report_time 기준, agg last), 크레아티닌 특징은 결과 정의처럼 같은 측정법 값끼리만 집계한다."
+  },
+  {
+    "target": "features.prior_dx_ckd",
+    "kind": "문제",
+    "problem": "[추가 의심 · 개체 단위 불일치] history_key=patient_id(등록 번호)지만 데이터에서 등록 번호 5,111개가 사람(person_links.person_id) 5,000명에 대응한다. 등록 번호가 여러 개인 사람은 다른 번호로 기록된 이전 CKD 진단을 놓친다. 분할은 person_id를 대체 키로 쓰면서 이력은 patient_id로 묶어 단위가 맞지 않는다. 수정안: history_key=person_id(person_links로 연결). features.problem_ckd_active도 같다."
+  },
+  {
+    "target": "features.problem_ckd_active",
+    "kind": "문제",
+    "problem": "[추가 의심 · 개체 단위 불일치] history_key=patient_id. features.prior_dx_ckd와 같은 이유로 다른 등록 번호의 문제 목록 이력을 놓친다(등록 번호 5,111개 / 사람 5,000명). 수정안: history_key=person_id."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.family_missing · Q2] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키 person_id로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.family_missing · Q2] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키 person_id로 묶는다. 기록되지 않은 가족은 교차검증 폴드에 나뉠 수 있다."
+  }
+]
