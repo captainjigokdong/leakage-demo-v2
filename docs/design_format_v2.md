@@ -1,11 +1,11 @@
 # 설계서 형식 설명 (v2)
 
 `designs/schema.json`의 모든 칸을 설명하고, 칸마다 근거가 된 분류 항목을 적는다.
-v2 2단계에서 형식을 확정했다. 이후 단계에서 칸을 더하지 않는다.
+v2 2단계에서 형식을 확정했다 (2a 151칸, 2b 예비 검수로 10칸을 보탬). 이후 단계에서 칸을 더하지 않는다.
 
 ## 근거 표기
 
-모든 칸의 "근거"는 아래 꼬리표를 `;`로 이어 쓴다 (순서: K → P → P+AI → 기타 문헌). 시험(`tests/test_design_format_doc.py`)이 꼬리표 형식을 확인한다.
+모든 칸의 "근거"는 아래 꼬리표를 `;`로 이어 쓴다 (순서: K → P → P+AI → 기타 문헌 → 예비 검수). 시험(`tests/test_design_format_doc.py`)이 꼬리표 형식을 확인한다.
 
 | 꼬리표 | 뜻 |
 |---|---|
@@ -13,6 +13,7 @@ v2 2단계에서 형식을 확정했다. 이후 단계에서 칸을 더하지 �
 | `P 1.1`~`P 4.9` | PROBAST 2019 신호 질문 번호 (9절 3) |
 | `P+AI 참여자·데이터 출처` / `예측변수` / `결과` / `분석` | PROBAST+AI 2025의 영역 (9절 2). 항목 번호는 쓰지 않는다 |
 | `Albu`, `Kaufman`, `Suissa` | 9절 4, 5, 6의 문헌 |
+| `예비 검수` | 2단계 2b 예비 검수에서 형식에 표현할 칸이 없다고 드러나 보탠 칸 (`docs/prereview_v2.md`의 지적 번호를 설명에 적음) |
 | `관리` | 분류 항목과 무관한 식별·설명용 칸 |
 
 경로 표기: `a.b`는 객체 안의 칸, `a[]`는 목록의 각 항목이다. 여러 곳에서 같이 쓰는 정의(행 명세 `rowset`, 전처리 단계 `step` 등)는 마지막 절에 한 번만 적는다.
@@ -64,7 +65,13 @@ v2 2단계에서 형식을 확정했다. 이후 단계에서 칸을 더하지 �
 | `outcome.reference` | 결과 판정 기준값의 출처 (reference_window보다 자세히) | P 3.1; P 3.4; P+AI 결과; Albu |
 | `outcome.reference.sources` | 기준값 출처의 우선순위 목록 (앞 출처에 값이 없으면 다음) | P 3.1; P 3.4; P+AI 결과; Albu |
 | `outcome.reference.agg` | 기준값 계산 | P 3.1; P+AI 결과 |
+| `outcome.reference.compare_to` | 결과 창의 각 값을 무엇과 비교하나: 각 값보다 먼저 잰 값 / 정해진 기준값 하나 (예비 검수 B14) | P 3.1; P 3.3; P+AI 결과; 예비 검수 |
 | `outcome.planned` | 예정(계획) 입원을 결과에 넣는가 | K L2; P 3.1; P+AI 결과 |
+| `outcome.planned_by` | 예정(계획) 입원을 판정하는 테이블과 조건. planned와 함께 쓴다 (예비 검수 B5) | K L2; P 3.1; P+AI 결과; 예비 검수 |
+| `outcome.planned_by.source` | 판정에 쓰는 테이블 | P 3.1; P+AI 결과; 예비 검수 |
+| `outcome.planned_by.filter` | 예정 입원으로 보는 행 조건 (`filter`) | P 3.1; P+AI 결과; 예비 검수 |
+| `outcome.match_key` | 결과 사건을 어디까지 찾나: 같은 등록 번호 / 같은 사람(person_links로 묶은 모든 등록 번호) (예비 검수 B3) | K L3.2; P 3.1; P+AI 결과; 예비 검수 |
+| `outcome.pending_at_tp` | tp 전에 생겼지만 tp에는 아직 알려지지 않은 결과 사건(예: tp 전 채취, tp 뒤 보고)의 처리: 행 제외 / 결과로 셈 / 무시 (예비 검수 B27) | K L3.1; P 3.6; P+AI 결과; Albu; 예비 검수 |
 | `outcome.proxies` | 결과를 정하는 과정에서 생기는 기록 | K L2; P 3.3; P 3.5; P+AI 결과; Kaufman |
 | `outcome.ascertainment` | 결과 확인 방식 | K L3.3; P 3.4; P+AI 결과 |
 | `outcome.ascertainment.method` | 확인 방식 설명 | K L3.3; P 3.4; P+AI 결과 |
@@ -183,6 +190,10 @@ v2 2단계에서 형식을 확정했다. 이후 단계에서 칸을 더하지 �
 | `rowset.window` | 시간 창 | K L3.1; P 2.3; P+AI 예측변수 |
 | `rowset.date_compare` | 날짜만 있는 시각을 tp와 비교하는 규칙 (그날 끝 / 그날 시작 / 날짜끼리) | K L3.1; P 2.3; P+AI 예측변수; Albu |
 | `rowset.as_of` | 수정 이력이 있는 기록을 어느 시점 내용으로 읽나 (tp 시점 / 최종본) | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `rowset.version_order` | as_of로 버전을 고르는 것과 filter를 거는 것의 순서 (예비 검수 B26) | K L3.1; P 2.3; P+AI 예측변수; Albu; 예비 검수 |
+| `rowset.episode` | 이어진 입원(같은 episode_id) 처리: 이번 입원 기록만 / 같은 에피소드의 tp까지 모든 입원 기록 / 같은 에피소드의 입원을 뺌 (이전 입원 집계용) (예비 검수 B8, B24) | K L3.2; P 2.3; P+AI 예측변수; Albu; 예비 검수 |
+| `rowset.history_key` | 환자 단위 범위(patient, prior_admissions, patient_history)의 행을 무엇으로 묶나: 같은 등록 번호 / 같은 사람 (예비 검수 B23) | K L1.4; K L3.2; P 2.3; P+AI 예측변수; 예비 검수 |
+| `rowset.age_reference` | patients.age를 어느 시점 나이로 쓰나: 그 등록 번호의 첫 입원 때 값 / 인덱스 입원 때 나이(age + 첫 입원부터 경과 연수) (예비 검수 B21) | P 2.3; P+AI 예측변수; 예비 검수 |
 | `rowset.agg` | 집계 (value, last, first, max, min, mean, count, any, kdigo_aki, delta, range, slope) | P 2.1; P 4.2; P+AI 예측변수 |
 | `rowset.derive` | 다른 특징·값으로 만든 파생 특징 | K L2; P 2.1; P 3.3; P+AI 예측변수; Kaufman |
 | `rowset.derive.op` | 비율 / 차이 / 합 / 곱 | K L2; P 2.1; P+AI 예측변수 |

@@ -187,6 +187,13 @@
             "agg": {
               "type": "string",
               "description": "기준값 계산 (min, first 등)"
+            },
+            "compare_to": {
+              "enum": [
+                "prior_values_each",
+                "fixed_baseline"
+              ],
+              "description": "결과 창의 각 값을 무엇과 비교하나: prior_values_each 각 값보다 먼저 잰 값 / fixed_baseline 정해진 기준값 하나"
             }
           }
         },
@@ -246,6 +253,35 @@
               "description": "추적 소실"
             }
           }
+        },
+        "match_key": {
+          "enum": [
+            "patient_id",
+            "person_id"
+          ],
+          "description": "결과 사건을 어디까지 찾나: patient_id 같은 등록 번호 / person_id 같은 사람(person_links로 묶은 모든 등록 번호)"
+        },
+        "planned_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "예정(계획) 입원을 판정하는 테이블과 조건 (planned와 함께 쓴다)",
+          "properties": {
+            "source": {
+              "type": "string",
+              "description": "판정에 쓰는 테이블"
+            },
+            "filter": {
+              "$ref": "#/$defs/filter"
+            }
+          }
+        },
+        "pending_at_tp": {
+          "enum": [
+            "exclude_row",
+            "count_as_outcome",
+            "ignore"
+          ],
+          "description": "tp 전에 생겼지만 tp에는 아직 알려지지 않은 결과 사건(예: tp 전 채취, tp 뒤 보고)의 처리: 행 제외 / 결과로 셈 / 무시"
         }
       }
     },
@@ -786,6 +822,35 @@
               "type": "string"
             }
           }
+        },
+        "episode": {
+          "enum": [
+            "index_admission",
+            "index_episode",
+            "exclude_index_episode"
+          ],
+          "description": "이어진 입원(같은 episode_id) 처리: index_admission 이번 입원 기록만 / index_episode 같은 에피소드의 tp까지 모든 입원 기록 / exclude_index_episode 같은 에피소드의 입원을 뺌 (이전 입원 집계용)"
+        },
+        "history_key": {
+          "enum": [
+            "patient_id",
+            "person_id"
+          ],
+          "description": "환자 단위 범위(patient, prior_admissions, patient_history)의 행을 무엇으로 묶나: 같은 등록 번호 / 같은 사람"
+        },
+        "version_order": {
+          "enum": [
+            "version_then_filter",
+            "filter_then_version"
+          ],
+          "description": "as_of로 버전을 고르는 것과 filter를 거는 것의 순서: 버전을 먼저 고른 뒤 거름 / 거른 뒤 버전을 고름"
+        },
+        "age_reference": {
+          "enum": [
+            "first_admission_of_id",
+            "index_admission"
+          ],
+          "description": "patients.age를 어느 시점 나이로 쓰나: 그 등록 번호의 첫 입원 때 값 그대로 / 인덱스 입원 때 나이 (age + 첫 입원부터 경과 연수)"
         }
       }
     },

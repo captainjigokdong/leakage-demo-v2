@@ -1,0 +1,98 @@
+{
+  "generator": "synth.generate_v2",
+  "generator_version": "v2.2",
+  "profile": "aux",
+  "seed": 20261041,
+  "n_persons": 200,
+  "packages": {
+    "numpy": "2.4.6",
+    "pandas": "3.0.6"
+  },
+  "tables": {
+    "extract_info": {
+      "file": "extract_info.csv.gz",
+      "rows": 1,
+      "sha256_csv": "64515ddb768fbc90ae068ba11bc9ad49cf36c713f33038c0b38739e3d8da64c7"
+    },
+    "patients": {
+      "file": "patients.csv.gz",
+      "rows": 200,
+      "sha256_csv": "ad88a2d827382948d1d41611c1ca892761ddd9a6dddad5edd14d5d252fc37d35"
+    },
+    "person_links": {
+      "file": "person_links.csv.gz",
+      "rows": 200,
+      "sha256_csv": "05ed04d109239d1911f061817ebeb46b03d4d6d713234f98aeacfef9e76918a2"
+    },
+    "admissions": {
+      "file": "admissions.csv.gz",
+      "rows": 200,
+      "sha256_csv": "511f62038af46793b8f9e704f0b9dc1d5a594827ba85cafbda47f267e0a34726"
+    },
+    "admission_info": {
+      "file": "admission_info.csv.gz",
+      "rows": 200,
+      "sha256_csv": "14cbff7fff3d7b3d477961c49fe925a7cc3ee958e67cfd32ae8dac99506ffe72"
+    },
+    "transfers": {
+      "file": "transfers.csv.gz",
+      "rows": 238,
+      "sha256_csv": "1476dede295f82f23afd92de6411b70547aaaa7907b99d8f2046230b0f22661d"
+    },
+    "labs": {
+      "file": "labs.csv.gz",
+      "rows": 200557,
+      "sha256_csv": "50dcd62481e42decac2aab644d1a86ba8a2928779249dff6d553c5ee812a66e5"
+    },
+    "vitals": {
+      "file": "vitals.csv.gz",
+      "rows": 21345,
+      "sha256_csv": "10b2fb5b54b28a93815be0071ad98f31adce15dcb9139c7da243c4e30d8a09c8"
+    },
+    "medications": {
+      "file": "medications.csv.gz",
+      "rows": 898,
+      "sha256_csv": "9df095274dbcd2d8278025db8ca0805f2df4376b31f5bee89e3cf3e52736ed5f"
+    },
+    "orders": {
+      "file": "orders.csv.gz",
+      "rows": 351,
+      "sha256_csv": "c1d559434f6b5ea7655a32cf4d567d9c5555b0adc3afbbc352388fe71ecb3904"
+    },
+    "diagnoses": {
+      "file": "diagnoses.csv.gz",
+      "rows": 379,
+      "sha256_csv": "0d0a42971b00c8721ee652f3242a0cd249961949d6b77206f1b8915f6dbbe72f"
+    },
+    "procedures": {
+      "file": "procedures.csv.gz",
+      "rows": 73,
+      "sha256_csv": "2ebd8002d2e9846284637e20c8a3e271c3e26cf1b2db84a204436ec2682e3e31"
+    },
+    "problem_list": {
+      "file": "problem_list.csv.gz",
+      "rows": 362,
+      "sha256_csv": "f7af5280efc6a6e184a25fdcf4a09362a265e496345d3d4df649f41f2df960f7"
+    },
+    "outpatient_visits": {
+      "file": "outpatient_visits.csv.gz",
+      "rows": 334,
+      "sha256_csv": "712f48c1493d90c20df7337b9e2d79380171f5157c8b6b3ca73b2618e22d4e68"
+    },
+    "outpatient_labs": {
+      "file": "outpatient_labs.csv.gz",
+      "rows": 425,
+      "sha256_csv": "1c618d3e40f739415beec2928962cdf87cad986942af5ff5f62be47459fecec7"
+    },
+    "admission_bookings": {
+      "file": "admission_bookings.csv.gz",
+      "rows": 0,
+      "sha256_csv": "ac7a925b8d03355c053f28a48fdd31473170cbd78030fad858d86446d318b053"
+    },
+    "deaths": {
+      "file": "deaths.csv.gz",
+      "rows": 26,
+      "sha256_csv": "e37cd3a892c6d9540e3e2590e92e76e3a779fc3466ebb6333f1bd46fefbe0fa7"
+    }
+  }
+}

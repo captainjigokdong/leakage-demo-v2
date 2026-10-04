@@ -60,12 +60,12 @@
 
 | 시험 | 잠그는 파일 → 대조 기준 | 다시 잠글 단계 |
 |---|---|---|
-| `test_synth.py::test_committed_data_matches_manifest_and_criteria` | `data/synth/` 7개 테이블 → `MANIFEST.json` | 2단계 |
+| `test_data_v2.py::test_table_hash_matches_manifest` (테이블마다 하나, 34개) + `test_folder_files_equal_manifest` | `data/synth/`, `data/synth_aux/`의 v2 17개 테이블씩 → 각 `MANIFEST.json` | **2단계 2b에서 다시 잠금 완료** (v1 시험 `test_synth.py::test_committed_data_matches_manifest_and_criteria`를 대체, 사용자 승인 2026-10-04) |
 | `test_grader.py::test_verify_variants` | `designs/variants/` 20개 → `docs/injection_log.md` | 4단계 |
 | `test_grader.py::test_locked_files_match_success_criteria` | `experiment/agent_prompt.md`, `grader.py`, `scoring_rules.md` → `docs/success_criteria.md` | 5단계 |
 | `test_grader.py::test_prompt_fixed_and_neutral` | `experiment/agent_prompt.md` → `experiment/prompt.py`의 해시와 `docs/success_criteria.md` | 5단계 |
 
-잠금이 없는 것 (0단계에서 발견): `data/synth/outpatient_visits.csv.gz`(`OUTPATIENT_MANIFEST.json`에 해시는 있으나 대조 시험 없음), `leakcheck/`·`skill_src/`(태그와 규칙으로만 동결). 각각 2단계, 3단계에서 시험을 추가한다.
+잠금이 없는 것 (0단계에서 발견): `data/synth/outpatient_visits.csv.gz`(`OUTPATIENT_MANIFEST.json`에 해시는 있으나 대조 시험 없음), `leakcheck/`·`skill_src/`(태그와 규칙으로만 동결). 각각 2단계, 3단계에서 시험을 추가한다. → 외래 방문은 2b에서 해결 (`OUTPATIENT_MANIFEST.json`을 없애고 `MANIFEST.json` 하나로 합쳐 테이블마다 해시 시험).
 
 - `designs/variants/`의 20개와 `docs/` 안의 v1 기록 문서는 v1 것이다. 4단계에서 v2 것으로 바꾼다.
 - `tpot`(누수 효과 시연용)은 시험에 필요 없어 이 세션에 설치하지 않았다. 8단계에서 설치한다.
@@ -113,15 +113,17 @@
 **2a 결과 (2026-10-04)**: 설계서 형식(`designs/schema.json`, 설명 `docs/design_format_v2.md` 151칸), 테이블·열 목록(`synth/tables_v2.py` 17개 테이블 + 파생 열 2개), 데이터 설명서(`docs/data_dictionary_v2.md` 92열)를 확정했다. v1 보류 6개 원문은 `designs/error_catalog_v1_holdout.csv` (출처·v1 조정 기록은 `docs/injection_log_v2.md`). 2a 작업 기록은 `sealed/stage2a_record.enc`에 봉인.
 
 2b (할 일: 안 B 전체 재생성, 보조 데이터, 일관성 시험, 예비 검수, v1 비교 수치 보고, 잠금 기준 교체 — 교체 전 사용자 승인)
-- [ ] 합성 데이터 **전체 재생성** (안 B, 2026-10-04 사용자 결정): 기존 7개 테이블을 포함해 모든 테이블을 한 번에 다시 만든다. 사망, 자료 추출 종료 시각, 코딩 완료 시각, 결과 확인 강도 차이도 생성기 안에서 함께 만든다. 평문에 적는 재생성 이유는 "v2에서 데이터 구조를 확정하며 전체 재생성". 2단계 뒤에는 데이터를 다시 만들지 않는다.
-- [ ] 데이터를 다시 만들 때는 `requirements-lock.txt`의 버전을 쓴다
-- [ ] 보조 데이터("환자 적고 변수 많은", 200명·검사 500종)를 같은 구조로 생성 (Q3 전처리 누수 시연용)
-- [ ] 일관성 시험: 사건 시각 열은 사망 뒤 0건, 모든 시각 열은 자료 추출 종료 뒤 0건, 기록 시각 열은 자기 사건 시각 뒤 (`synth/tables_v2.py`의 열 구분)
-- [ ] 데이터 파일의 열이 `synth/tables_v2.py`와 같은지, 설명서의 설계값을 실측값으로 바꿨는지 확인
-- [ ] 외래 방문(`outpatient_visits`)을 포함해 **모든 데이터 테이블**에 해시 대조 시험이 있는지 확인 (테이블마다 시험 하나)
-- [ ] 예비 검수: 스킬 없는 새 에이전트에게 시험용 기본 설계서(유형별 1개)와 재생성한 데이터를 주고 검토시킨다. 지적을 "데이터를 바꿔야 풀리는 것 / 설계서로 풀리는 것 / 고칠 수 없는 것"으로 나눠 보고. 4단계 정식 검수를 대신하지 않는다. 방법은 2b 시작 때 계획으로 먼저 보인다.
-- [ ] 잠금 기준을 바꾸기 전에 보고: v1과 비교한 주요 수치(환자 수, 입원 수, AKI 비율, 30일 재입원 비율, 입원 2회 이상 비율, ICU·병동 검사 빈도), v1 데이터 숫자에 묶인 시험 목록(고치기 전 승인), 일관성 시험 결과
-- [ ] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_synth.py`)
+- [x] 합성 데이터 **전체 재생성** (안 B, 2026-10-04 사용자 결정): 기존 7개 테이블을 포함해 모든 테이블을 한 번에 다시 만든다. 사망, 자료 추출 종료 시각, 코딩 완료 시각, 결과 확인 강도 차이도 생성기 안에서 함께 만든다. 평문에 적는 재생성 이유는 "v2에서 데이터 구조를 확정하며 전체 재생성". 2단계 뒤에는 데이터를 다시 만들지 않는다.
+- [x] 데이터를 다시 만들 때는 `requirements-lock.txt`의 버전을 쓴다
+- [x] 보조 데이터("환자 적고 변수 많은", 200명·검사 500종)를 같은 구조로 생성 (Q3 전처리 누수 시연용)
+- [x] 일관성 시험: 사건 시각 열은 사망 뒤 0건, 모든 시각 열은 자료 추출 종료 뒤 0건, 기록 시각 열은 자기 사건 시각 뒤 (`synth/tables_v2.py`의 열 구분)
+- [x] 데이터 파일의 열이 `synth/tables_v2.py`와 같은지, 설명서의 설계값을 실측값으로 바꿨는지 확인
+- [x] 외래 방문(`outpatient_visits`)을 포함해 **모든 데이터 테이블**에 해시 대조 시험이 있는지 확인 (테이블마다 시험 하나)
+- [x] 예비 검수: 스킬 없는 새 에이전트에게 시험용 기본 설계서(유형별 1개)와 재생성한 데이터를 주고 검토시킨다. 지적을 "데이터를 바꿔야 풀리는 것 / 설계서로 풀리는 것 / 고칠 수 없는 것"으로 나눠 보고. 4단계 정식 검수를 대신하지 않는다. 방법은 2b 시작 때 계획으로 먼저 보인다.
+- [x] 잠금 기준을 바꾸기 전에 보고: v1과 비교한 주요 수치(환자 수, 입원 수, AKI 비율, 30일 재입원 비율, 입원 2회 이상 비율, ICU·병동 검사 빈도), v1 데이터 숫자에 묶인 시험 목록(고치기 전 승인), 일관성 시험 결과
+- [x] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_synth.py`)
+
+**2b 결과 (2026-10-04)**: 생성기 `synth/generate_v2.py`(v2.2), 본 데이터 `data/synth/`(시드 20261040, 사람 5,000명·등록 번호 5,111개·입원 7,724건)와 보조 데이터 `data/synth_aux/`(시드 20261041, 200명·검사 500종) 각 17개 테이블. 설명서만으로 정할 수 없던 값은 D1~D23으로 정해 설명서에 적고(승인 ①), 결측·값의 범위는 실측값으로 바꿨다. 완료 기준 11개 통과, 일관성 위반 0건. 예비 검수 6회(`docs/prereview_v2.md`): 데이터를 바꿔야 풀리는 지적 1개(A1, 첫 입원이 연구 시작 3,250일 안에서만 생김)를 반영해 같은 시드로 다시 생성했고(승인 ②), 형식에 표현할 칸이 없던 지적 9개를 위해 `designs/schema.json`에 10칸을 보탰다(151 → 161, 승인 ③). 잠금 시험은 `test_data_v2.py`로 교체(승인 ③). `leakcheck/`·`skill_src/`는 바꾸지 않았다. 3·4·5·6·8단계로 넘기는 항목은 각 단계 체크리스트에 "(2b에서 넘김)"으로 적었다.
 
 2c
 - [ ] 후보 30개 + v1 18개, 모두 48개의 주입 코드 작성. 새 후보 30개분 주입 코드는 봉인
@@ -132,6 +134,7 @@
   - 시험을 지우거나 검사를 느슨하게 만들지 않는다.
 - [ ] 2a 커밋의 핵심어 대조 일치 목록(일치 핵심어와 후보 번호)을 2c에서 만드는 봉인 파일 안에 기록한다. `tools/keyword_check.py 6411af8..f7e349c --hits-json <저장소 밖>`으로 다시 계산한다 (2a 보고: 핵심어 380개 중 커밋 내용 42개 158회, 커밋 설명 0개). **평문에는 적지 않는다.** 2b·2c 커밋도 같은 도구로 대조하고, 일치 목록은 봉인 파일에만 둔다.
 - [ ] 암호가 있어야 도는 시험은 이름과 "몇 단계에서 반드시 통과"를 0단계의 건너뜀 표에 추가한다
+- [ ] 2c에서 데이터가 사례를 담지 못하는 경우, 다시 생성하지 말고 멈춰서 번호와 문제의 종류만 보고한다. (2b 사용자 지시, 2026-10-04)
 
 **완료 기준**: 48개 모두 **조정 없이** 주입 가능함을 시험으로 확인. 표현이 안 되는 사례가 나오면 사례를 고치지 않고 형식을 고친다.
 
@@ -143,6 +146,7 @@
 
 **할 일** (`v2_plan.md` 3.1, 시행착오 2, 9, 10)
 - [ ] `docs/data_dictionary_v2.md`만 보고 `leakcheck/rules.py`에 모든 테이블의 규칙을 쓴다 (2단계는 `rules.py`를 고치지 않았다)
+- [ ] (2b에서 넘김) 2b에서 형식에 보탠 10칸(`outcome.match_key`, `outcome.planned_by`, `outcome.pending_at_tp`, `outcome.reference.compare_to`, `rowset.episode`, `rowset.history_key`, `rowset.version_order`, `rowset.age_reference`)을 점검기가 해석하는지 확인한다
 - [ ] 모든 테이블에 규칙표 규칙이 있는지 확인하는 시험 추가 (`synth/tables_v2.py`의 테이블 목록 기준)
 - [ ] 2단계 건너뜀 표에서 "3단계 완료 시 반드시 통과"인 시험(점검기가 넓어진 형식·새 공개 사례를 아직 판정하지 못해 실패하던 것)이 통과
 - [ ] 규칙표를 스킬 폴더 안에 읽을 수 있는 형태로 넣고, SKILL.md 첫머리에 위치를 적는다
@@ -152,6 +156,9 @@
 - [ ] Q5: 포함·제외 기준마다 "언제 알 수 있는 정보인가" 꼬리표 판정. Q7: "결과 확인 범위" 칸 점검 규칙
 - [ ] 지침서에 "점검기 실행이 필수 첫 단계"를 명시
 - [ ] `leakcheck/`와 `skill_src/`의 해시 잠금 시험 추가. 해시를 커밋한 **뒤에** 사용자가 태그를 만든다
+- [ ] (2b에서 넘김) 시험용 작은 데이터 `tests/conftest.py`의 `small_tables`를 v1 생성기(`synth.generate`)에서 v2 생성기(`synth.generate_v2`)로 바꾼다. 2b는 `rules.py`에 v2 테이블 규칙이 없어 v1 생성기를 그대로 두었다. 이를 쓰는 시험(`test_checks`, `test_tagging`, `test_features`, `test_lock`, `test_inject` 일부)이 v2 데이터로 통과해야 한다
+- [ ] (2b에서 넘김) `skill_src/leakage-check/scripts/run_check.py`의 `--data` 읽기를 `synth.generate.load`(v1 6개 테이블)에서 `synth.generate_v2.load`(17개 테이블)로 바꾼다
+- [ ] (2b에서 넘김) `tests/test_inject.py::test_load_reads_only_six_tables`는 v1 로더의 6개 테이블을 확인하는 v1 시험이다. v2 로더 기준(17개)으로 바꾼다 (고치기 전 사용자 승인)
 
 **완료 기준**: 시험 통과 → 사용자가 GitHub Releases에서 `skill-frozen-v2` 태그 생성. 이후 `leakcheck/`, `skill_src/` 수정 금지.
 
@@ -163,6 +170,7 @@
 - [ ] `skill-frozen-v2` 태그가 있는지 확인한 뒤 보류 추첨: 새 후보 30개에서 질문별 2개씩, 12개를 스크립트로 무작위 추첨. 시드·날짜 기록. 뽑히지 않은 18개는 열지 않는다.
 - [ ] 깨끗한 설계서 8개 새로 작성 (설계 유형별 4개)
 - [ ] 깨끗한 설계서 검수: v1 약점 제거 → 스킬 없는 에이전트로 한 번 검토(검수용) → 지적마다 실제 약점이면 고치고, 못 고치는 것만 "정당한 지적" 목록에. 넣는 기준은 "설계서·데이터에서 사실로 확인되는가"
+- [ ] (2b에서 넘김) 깨끗한 설계서 8개를 만들 때 `docs/prereview_v2.md`의 "설계서로 풀림" 지적을 모두 반영한다. "고칠 수 없음" 지적은 "정당한 지적" 목록의 후보로 검토한다. 형식에 표현할 칸이 없던 지적(B3, B5, B8, B14, B21, B23, B24, B26, B27)은 **4단계로 넘기지 않고 2b에서 형식에 칸을 보탰다** (`docs/prereview_v2.md` "형식에 보탠 칸"). 4단계는 그 칸을 채우기만 한다
 - [ ] "정당한 지적" 목록을 해시로 잠금
 - [ ] 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인
 - [ ] `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
@@ -176,6 +184,7 @@
 
 **할 일** (`v2_plan.md` 3.4, 3.5, 시행착오 3~6)
 - [ ] 에이전트 지시문 확정
+- [ ] (2b에서 넘김) 대조 조건 (나)에도 계정의 기본 제공 스킬 목록이 보인다 (2b 예비 검수에서 34개, `docs/prereview_v2/*.meta.json`의 `init.skills`). 누수 점검 스킬은 없었고 호출도 없었다. 두 조건에 어떻게 다룰지 정한다
 - [ ] `findings.json` 형식: `[{"target": 항목, "kind": "문제"|"가정"|"점검 불가", "problem": 설명}]`. 형식 검사 실패 시 "파일 형식만 고쳐 다시 제출" 1회 (두 조건 같게, 횟수 기록)
 - [ ] 채점기: "점검 불가"는 문장이 아니라 `kind` 칸으로 판정. 주 분석 항목 일치, 보조 분석 항목 + 종류. "가정"은 채점하지 않음
 - [ ] 채점기 검증 세트: v1 보고서 119개의 지적 문장에서 뽑아 만들고, 그 세트로 채점기를 검증
@@ -194,7 +203,9 @@
 - [ ] 허용 도구 6개(Read, Glob, Grep, Skill, Write, Bash). 자동 권한 검사가 막은 동작은 우회하지 않음
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
+- [ ] (2b에서 넘김) 사전 점검에 넣는다: heredoc(`<<`), `find -exec` 같은 명령이 권한 규칙에 막히면 에이전트가 데이터를 열지 않고 끝낼 수 있다 (2b 예비 검수 4회 중 2회). 에이전트가 데이터를 읽으려면 시스템 python(`/usr/local/bin/python3`)에 numpy·pandas와 그 의존 패키지가 **에이전트의 HOME과 무관한 위치**에 있어야 한다. 2b 세션 컨테이너에는 numpy·pandas가 없어서 `requirements-lock.txt`로 설치했는데, python-dateutil은 `/root/.local`에만 있어 HOME을 따로 정한 에이전트에서는 `import pandas`가 실패했다 (예비 검수 에이전트는 csv 모듈로 우회해 데이터를 읽었다). 사전 점검 5번(패키지 import)을 에이전트와 같은 환경 변수로 확인한다
 - [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
+- [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 - [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
@@ -220,5 +231,6 @@
 **할 일**
 - [ ] 누수 효과 시연: v1 설계 + 2단계 보조 데이터(환자 적고 변수 많은)
 - [ ] `tpot` 설치와 버전 기록 (`requirements-lock.txt`)
+- [ ] (2b에서 넘김) `experiment/leakage_effect.py`의 `load()`는 v1 로더다. 시연에 쓸 데이터(본 데이터 또는 `data/synth_aux/`)를 v2 로더로 읽도록 바꾼다
 
 **완료 기준**: 그림과 표
