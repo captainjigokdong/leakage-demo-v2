@@ -134,6 +134,32 @@ def fixed_outcome(rows: pd.DataFrame, sites: tuple[str, ...] = ("A", "B")) -> pd
     return rows["landmark_row_id"].isin(readmit | died).astype(int)
 
 
+@lru_cache(maxsize=1)
+def kdigo_flags() -> pd.DataFrame:
+    """크레아티닌마다 같은 입원의 앞선 값과 비교한 KDIGO 충족 여부 (48시간 +0.3 또는 7일 최솟값의 1.5배, 근사)."""
+    cr = creatinine().sort_values(["admission_id", "collect_time"])
+    out = []
+    for _, g in cr.groupby("admission_id", sort=False):
+        t, v = g["collect_time"].values, g["value"].values
+        flag = np.zeros(len(v), dtype=bool)
+        for i in range(1, len(v)):
+            p48 = v[:i][t[:i] >= t[i] - np.timedelta64(48, "h")]
+            p7 = v[:i][t[:i] >= t[i] - np.timedelta64(168, "h")]
+            flag[i] = (len(p48) > 0 and v[i] - p48.min() >= 0.3) or (len(p7) > 0 and v[i] >= 1.5 * p7.min())
+        out.append(g.assign(kdigo=flag))
+    return pd.concat(out)
+
+
+def dynamic_outcome(rows: pd.DataFrame) -> pd.Series:
+    """동적 설계 결과 근사: (tp, tp+48h]에 채취된 크레아티닌이 KDIGO 충족, 또는 그 창 안 원내 사망."""
+    k = kdigo_flags()
+    k = k[k["kdigo"]][["admission_id", "collect_time"]]
+    m = rows[["landmark_row_id", "admission_id", "tp"]].merge(k, on="admission_id")
+    hit = set(m[(m["collect_time"] > m["tp"]) & (m["collect_time"] <= m["tp"] + pd.Timedelta(hours=48))]["landmark_row_id"])
+    died = (rows["discharge_status"] == "died") & (rows["discharge_time"] <= rows["tp"] + pd.Timedelta(hours=48))
+    return (rows["landmark_row_id"].isin(hit) | died).astype(int)
+
+
 def result(premise: float, premise_detail: str, diff: float, diff_detail: str) -> dict:
     return {"premise": float(premise), "premise_ok": bool(premise > 0), "premise_detail": premise_detail,
             "difference": float(diff), "difference_detail": diff_detail}
@@ -306,7 +332,7 @@ def e09(kind):
 def e10(kind):
     from sklearn.feature_selection import f_classif
     rows = rows_of(kind)
-    y = (fixed_outcome(rows) if kind == "fixed" else in_window(rows, creatinine(), "collect_time", 48) > 0).astype(int)
+    y = (fixed_outcome(rows) if kind == "fixed" else dynamic_outcome(rows)).astype(int)
     X = pd.DataFrame({k: v for k, v in imputed_columns(kind).items()}).assign(age=rows["age"].values)
     X = X.fillna(X.median())
     test = split_frame(rows, "family_id").astype(bool).values
