@@ -132,6 +132,7 @@
   - 시험을 지우거나 검사를 느슨하게 만들지 않는다.
 - [ ] 2a 커밋의 핵심어 대조 일치 목록(일치 핵심어와 후보 번호)을 2c에서 만드는 봉인 파일 안에 기록한다. `tools/keyword_check.py 6411af8..f7e349c --hits-json <저장소 밖>`으로 다시 계산한다 (2a 보고: 핵심어 380개 중 커밋 내용 42개 158회, 커밋 설명 0개). **평문에는 적지 않는다.** 2b·2c 커밋도 같은 도구로 대조하고, 일치 목록은 봉인 파일에만 둔다.
 - [ ] 암호가 있어야 도는 시험은 이름과 "몇 단계에서 반드시 통과"를 0단계의 건너뜀 표에 추가한다
+- [ ] 2c에서 데이터가 사례를 담지 못하는 경우, 다시 생성하지 말고 멈춰서 번호와 문제의 종류만 보고한다. (2b 사용자 지시, 2026-10-04)
 
 **완료 기준**: 48개 모두 **조정 없이** 주입 가능함을 시험으로 확인. 표현이 안 되는 사례가 나오면 사례를 고치지 않고 형식을 고친다.
 
@@ -152,6 +153,9 @@
 - [ ] Q5: 포함·제외 기준마다 "언제 알 수 있는 정보인가" 꼬리표 판정. Q7: "결과 확인 범위" 칸 점검 규칙
 - [ ] 지침서에 "점검기 실행이 필수 첫 단계"를 명시
 - [ ] `leakcheck/`와 `skill_src/`의 해시 잠금 시험 추가. 해시를 커밋한 **뒤에** 사용자가 태그를 만든다
+- [ ] (2b에서 넘김) 시험용 작은 데이터 `tests/conftest.py`의 `small_tables`를 v1 생성기(`synth.generate`)에서 v2 생성기(`synth.generate_v2`)로 바꾼다. 2b는 `rules.py`에 v2 테이블 규칙이 없어 v1 생성기를 그대로 두었다. 이를 쓰는 시험(`test_checks`, `test_tagging`, `test_features`, `test_lock`, `test_inject` 일부)이 v2 데이터로 통과해야 한다
+- [ ] (2b에서 넘김) `skill_src/leakage-check/scripts/run_check.py`의 `--data` 읽기를 `synth.generate.load`(v1 6개 테이블)에서 `synth.generate_v2.load`(17개 테이블)로 바꾼다
+- [ ] (2b에서 넘김) `tests/test_inject.py::test_load_reads_only_six_tables`는 v1 로더의 6개 테이블을 확인하는 v1 시험이다. v2 로더 기준(17개)으로 바꾼다 (고치기 전 사용자 승인)
 
 **완료 기준**: 시험 통과 → 사용자가 GitHub Releases에서 `skill-frozen-v2` 태그 생성. 이후 `leakcheck/`, `skill_src/` 수정 금지.
 
@@ -195,6 +199,7 @@
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
 - [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
+- [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 - [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
@@ -220,5 +225,6 @@
 **할 일**
 - [ ] 누수 효과 시연: v1 설계 + 2단계 보조 데이터(환자 적고 변수 많은)
 - [ ] `tpot` 설치와 버전 기록 (`requirements-lock.txt`)
+- [ ] (2b에서 넘김) `experiment/leakage_effect.py`의 `load()`는 v1 로더다. 시연에 쓸 데이터(본 데이터 또는 `data/synth_aux/`)를 v2 로더로 읽도록 바꾼다
 
 **완료 기준**: 그림과 표

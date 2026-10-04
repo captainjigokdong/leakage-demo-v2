@@ -4,7 +4,8 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 모든 환자·수치는 가상 값이다. 날짜는 실제 날짜와 섞이지 않게 2150년대로 옮겨 두었다.
 
 - 테이블·열 목록의 기준은 `synth/tables_v2.py`이다. 시험(`tests/test_data_dictionary.py`)이 목록의 모든 열과 파생 열이 이 문서에 있고, 칸이 모두 채워졌는지 확인한다.
-- v2에서 데이터 구조를 확정하며 전체 재생성한다 (2단계 2b). 이 문서의 결측 비율·값의 범위는 **설계값**이다. 2b에서 생성한 뒤 실측값으로 바꾸고, 바꾼 사실을 기록한다.
+- v2에서 데이터 구조를 확정하며 전체 재생성한다 (2단계 2b). 생성기는 `synth/generate_v2.py`. 설명서만으로 정할 수 없던 값은 2b에서 D1~D23으로 정했고(2026-10-04 사용자 승인), 아래 "생성 규칙" 절과 각 열의 칸에 적었다.
+- 이 문서의 결측 비율·값의 범위는 **설계값**이다. 2b에서 생성한 뒤 실측값으로 바꾸고, 바꾼 사실을 기록한다.
 - 3단계는 이 문서만 보고 `leakcheck/rules.py`의 테이블 규칙을 쓴다.
 - 근거 꼬리표는 `docs/design_format_v2.md`와 같은 형식이다.
 - 시각은 분 단위 (`YYYY-MM-DD HH:MM:SS`), 날짜는 일 단위 (`YYYY-MM-DD`).
@@ -24,9 +25,10 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 
 ## 데이터 전체의 성질 (생성기에 넣는 일반적 특성)
 
-- 연구 기간: 2150-01-01 ~ 자료 추출 종료 시각(2160-01-01 00:00). 모든 사건 시각과 기록 시각은 자료 추출 종료 시각 이전이다.
+- 연구 기간: 2150-01-01 ~ 자료 추출 종료 시각(2160-01-01 00:00). 모든 사건 시각과 기록 시각은 자료 추출 종료 시각 이전이다. 예외: 입원 예약의 예정일(`admission_bookings.planned_date`)은 일어난 사건이 아니라 앞으로의 예정이므로 종료 뒤일 수 있다.
+- 종료 시각까지 보고·입력·코딩되지 않은 기록(검사 보고, 활력 입력, 진단·시술 코딩, 문제 목록 수정, 원외 사망 연계)은 행이 없다. 퇴원이 종료 뒤로 넘어가는 입원은 데이터에 없고, 그 사람의 기록은 그 입원 전에서 끝난다.
 - 병원 두 곳(A, B)의 기록이 모두 들어 있다. 대부분 A에서 입원한다.
-- 사망 뒤에는 새 사건(입원, 검사 채취, 처방, 오더, 외래 등)이 없다. 사망 전에 생긴 사건의 기록(검사 보고, 코딩)은 사망 뒤에 있을 수 있다.
+- 사망 뒤에는 새 사건(입원, 검사 채취, 처방, 오더, 외래 등)이 없다. 사망 전에 생긴 사건의 기록(검사 보고, 코딩, 문제 목록 수정)은 사망 뒤에 있을 수 있다. 사망 연계가 아직 반영되지 않은 원외 사망은 `deaths`에 없지만, 그 사람의 사건도 사망 뒤에는 없다.
 - 시간이 흐르며 진료 관행(검사 빈도, ICU 입실 비율)이 서서히 바뀐다.
 - 주말·야간에는 병동 검사·관찰 빈도가 낮다.
 - 연구 기간 중 크레아티닌 측정법이 한 번 바뀌고, 진단 코드 체계가 ICD-9에서 ICD-10으로 한 번 바뀐다.
@@ -44,7 +46,7 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `extract_info.extraction_end_time` | 시각 | 자료 추출 시 | 자료 추출 시 | 없음 | 0% | 2160-01-01 00:00:00 | 고정값 | P 1.1; P 4.6; P+AI 참여자·데이터 출처; Albu |
 | `extract_info.sites_covered` | 문자 | 자료 추출 시 | 자료 추출 시 | 없음 | 0% | "A;B" | 고정값 | K L3.3; P 1.1; P+AI 참여자·데이터 출처 |
-| `extract_info.death_linkage_through` | 날짜 | 자료 추출 시 | 자료 추출 시 | 이 날짜 이후의 원외 사망은 아직 연계되지 않았다 | 0% | 자료 추출 종료 약 6개월 전 | 고정값 | P 3.6; P 4.6; P+AI 결과; Albu |
+| `extract_info.death_linkage_through` | 날짜 | 자료 추출 시 | 자료 추출 시 | 이 날짜 이후의 원외 사망은 아직 연계되지 않았다 | 0% | 2159-07-01 (자료 추출 종료 6개월 전) | 고정값 | P 3.6; P 4.6; P+AI 결과; Albu |
 
 ## patients
 
@@ -52,9 +54,9 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 
 | 열 | 자료형 | 값이 생기는 때 | 값이 알려지는 때 | 지연·불확실성 | 결측 | 값의 범위 | 생성 방식 | 근거 |
 |---|---|---|---|---|---|---|---|---|
-| `patients.patient_id` | 문자 | 등록 시 | 첫 입원 시 | 없음 | 0% | P00001 형식 | 일련번호 | K L3.2; P+AI 분석 |
-| `patients.family_id` | 문자 | 정적 | 첫 입원 시 | 가족 연결은 일부만 기록된다 | 약 80% (가족 연결 미기록) | F0001 형식 | 가족 묶음을 만든 뒤 일부에만 기록. 가족은 잠재 위험을 공유 | K L3.2; P 4.6; P+AI 분석 |
-| `patients.age` | 정수 | 정적 (첫 입원 시 나이) | 첫 입원 시 | 없음 | 0% | 18~95 | 연령 분포에서 추출 | P 2.3; P+AI 예측변수 |
+| `patients.patient_id` | 문자 | 등록 시 | 첫 입원 시 | 없음 | 0% | P00001 형식. 사람 5,000명의 번호(P00001~P05000) + 새 등록 번호(P05001부터, 약 2%) | 일련번호. 새 등록 번호는 person_links 참고 | K L3.2; P+AI 분석 |
+| `patients.family_id` | 문자 | 정적 | 첫 입원 시 | 가족 연결은 일부만 기록된다 | 약 80% (가족 연결 미기록) | F0001 형식 | 사람의 40%가 가족(2~3명)에 속함. 가족 단위로 50%만 기록(기록된 가족만 번호를 받음). 기록되지 않은 가족도 잠재 위험을 공유. 새 등록 번호도 같은 값 | K L3.2; P 4.6; P+AI 분석 |
+| `patients.age` | 정수 | 정적 (그 등록 번호의 첫 입원 시 나이) | 첫 입원 시 | 없음 | 0% | 18~95 | 연령 분포에서 추출. 새 등록 번호는 그 번호로 처음 입원할 때의 나이(95 상한) | P 2.3; P+AI 예측변수 |
 | `patients.sex` | 문자 | 정적 | 첫 입원 시 | 없음 | 0% | M, F | 반반 | P 2.3; P+AI 예측변수 |
 
 ## person_links
@@ -64,7 +66,7 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | 열 | 자료형 | 값이 생기는 때 | 값이 알려지는 때 | 지연·불확실성 | 결측 | 값의 범위 | 생성 방식 | 근거 |
 |---|---|---|---|---|---|---|---|---|
 | `person_links.patient_id` | 문자 | 등록 시 | 첫 입원 시 | 없음 | 0% | patients와 같음 | 모든 등록 번호에 한 행 | K L1.4; K L3.2; P+AI 분석 |
-| `person_links.person_id` | 문자 | 정적 | 자료 추출 시 (등록 번호 연결 작업) | 연결은 추출 때 한 번에 한다 | 0% | H00001 형식 | 사람마다 하나. 일부(설계 약 2%) 사람은 나중 입원이 새 등록 번호로 기록됨 | K L1.4; K L3.2; P+AI 분석; Albu |
+| `person_links.person_id` | 문자 | 정적 | 자료 추출 시 (등록 번호 연결 작업) | 연결은 추출 때 한 번에 한다 | 0% | H00001 형식 | 사람마다 하나. 입원 2회 이상인 사람의 7%(사람 전체의 약 2%)는 두 번째 이후의 어느 입원(이어진 입원 제외)부터 새 등록 번호로 기록됨. 그 시각 뒤의 외래·예약·문제 목록도 새 번호. 사망은 마지막 번호로. 성별·family_id는 같음 | K L1.4; K L3.2; P+AI 분석; Albu |
 
 ## admissions
 
@@ -74,10 +76,10 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `admissions.admission_id` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | A000001 형식 | 일련번호 | K L3.2; P+AI 분석 |
 | `admissions.patient_id` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | patients와 같음 | 입원한 등록 번호 | K L3.2; P+AI 분석 |
-| `admissions.admit_time` | 시각 | 입원 시 | 입원 시 | 없음 | 0% | 연구 기간 안 | 첫 입원은 기간 안 무작위, 재입원은 퇴원 뒤 간격 | K L3.1; P 2.3; P 3.6; P+AI 예측변수; Albu |
-| `admissions.discharge_time` | 시각 | 퇴원(또는 원내 사망) 시 | 퇴원 시 | 없음 | 0% | admit_time 이후 | 재원 기간 분포. 원내 사망이면 사망 시각 | K L3.1; P 2.3; P 3.6; P+AI 예측변수; Albu |
-| `admissions.discharge_status` | 문자 | 퇴원 시 | 퇴원 시 | 없음 | 0% | home, transfer, died | 위험도에 따른 퇴원처 | P 3.4; P 4.6; P+AI 결과; Albu |
-| `admissions.unit` | 문자 | 입원 시 (처음 배정된 병동) | 입원 시 | 이후 이동은 transfers에 | 0% | ICU, ward | 위험도에 따라 배정 | P 2.1; P 3.4; P+AI 결과 |
+| `admissions.admit_time` | 시각 | 입원 시 | 입원 시 | 없음 | 0% | 연구 기간 안 | 첫 입원은 2150-01-01부터 3,250일 안 무작위. 다음 입원은 응급 재입원(30일 안: 위험 z·AKI·나이·ICU에 따른 확률, 그 밖 18%는 31~720일 뒤; 응급 입원은 1인 4회까지)·예약 입원·이어진 입원 중 먼저 오는 것. 원외 사망이 먼저면 다음 입원 없음. 1인 8회까지 | K L3.1; P 2.3; P 3.6; P+AI 예측변수; Albu |
+| `admissions.discharge_time` | 시각 | 퇴원(또는 원내 사망) 시 | 퇴원 시 | 없음 | 0% | admit_time 이후 | 재원 기간 로그정규 분포(중앙값 ICU 110시간, 병동 80시간, 24시간~30일). AKI 입원은 회복까지 길어짐. 원내 사망이면 사망 시각. 퇴원이 자료 추출 종료 뒤인 입원은 만들지 않음 | K L3.1; P 2.3; P 3.6; P+AI 예측변수; Albu |
+| `admissions.discharge_status` | 문자 | 퇴원 시 | 퇴원 시 | 없음 | 0% | home, transfer, died | 원내 사망 1% + ICU 3% + 중증 AKI 6%, 전원 12%, 나머지 자택. 이어진 입원의 앞 입원은 transfer | P 3.4; P 4.6; P+AI 결과; Albu |
+| `admissions.unit` | 문자 | 입원 시 (처음 배정된 병동) | 입원 시 | 이후 이동은 transfers에 | 0% | ICU, ward | 위험도에 따라 배정. ICU 입실 logit이 연구 기간 10년 동안 0.3 증가. 예약 입원은 낮음 | P 2.1; P 3.4; P+AI 결과 |
 
 ## admission_info
 
@@ -86,10 +88,10 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | 열 | 자료형 | 값이 생기는 때 | 값이 알려지는 때 | 지연·불확실성 | 결측 | 값의 범위 | 생성 방식 | 근거 |
 |---|---|---|---|---|---|---|---|---|
 | `admission_info.admission_id` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | admissions와 같음 | 모든 입원에 한 행 | 관리 |
-| `admission_info.site` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | A, B | 대부분 A. 퇴원 뒤 재입원이 B로 갈 확률은 직전 퇴원처에 따라 다름 (전원 > 자택) | K L3.3; P 1.1; P 3.4; P+AI 참여자·데이터 출처 |
-| `admission_info.admission_type` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | emergency, elective | 예약된 입원(admission_bookings)이면 elective | P 1.2; P 2.3; P+AI 참여자·데이터 출처 |
-| `admission_info.service` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | medicine, surgery | 입원 사유에 따라 배정 | P 2.1; P 3.4; P+AI 결과 |
-| `admission_info.episode_id` | 문자 | 입원 시 | 입원 시 (이어지는 입원이면 이전 입원과 같은 값) | 없음 | 0% | E000001 형식 | 대부분 입원마다 새 값. 병원·진료과 이동으로 바로 이어진 입원은 같은 값 | K L3.2; P 4.6; P+AI 분석; Albu |
+| `admission_info.site` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | A, B | 첫 입원과 예약 입원은 A. 응급 재입원이 B로 갈 확률은 직전 퇴원처가 자택이면 5%, 전원이면 40%. 이어진 입원은 절반이 병원을 바꿈. B 입원도 모든 테이블에 같은 구조로 기록 | K L3.3; P 1.1; P 3.4; P+AI 참여자·데이터 출처 |
+| `admission_info.admission_type` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | emergency, elective | 예약(admission_bookings)대로 이루어진 입원이면 elective, 그 밖 emergency. 이어진 입원은 앞 입원과 같음 | P 1.2; P 2.3; P+AI 참여자·데이터 출처 |
+| `admission_info.service` | 문자 | 입원 시 | 입원 시 | 없음 | 0% | medicine, surgery | 내과 70% / 외과 30%. 이어진 입원은 절반이 진료과를 바꿈 | P 2.1; P 3.4; P+AI 결과 |
+| `admission_info.episode_id` | 문자 | 입원 시 | 입원 시 (이어지는 입원이면 이전 입원과 같은 값) | 없음 | 0% | E000001 형식 | 입원마다 새 값. 입원의 3%는 병원·진료과 이동으로 바로 이어진 입원(앞 입원 퇴원 0~60분 뒤, 같은 등록 번호)과 같은 값 (한 에피소드 최대 두 입원) | K L3.2; P 4.6; P+AI 분석; Albu |
 
 ## transfers
 
@@ -99,7 +101,7 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `transfers.transfer_id` | 문자 | 병동 입실 시 | 병동 입실 시 | 없음 | 0% | T000001 형식 | 일련번호 | 관리 |
 | `transfers.admission_id` | 문자 | 병동 입실 시 | 병동 입실 시 | 없음 | 0% | admissions와 같음 | 입원마다 1개 이상 | 관리 |
-| `transfers.unit` | 문자 | 병동 입실 시 | 병동 입실 시 | 없음 | 0% | ICU, ward | 첫 구간은 admissions.unit. 일부는 입원 중 병동↔ICU 이동 | K L3.3; P 1.2; P 2.1; P+AI 참여자·데이터 출처; Suissa |
+| `transfers.unit` | 문자 | 병동 입실 시 | 병동 입실 시 | 없음 | 0% | ICU, ward | 첫 구간은 admissions.unit. ICU 입원의 60%는 1~4일 뒤 병동으로 이동(남은 기간이 12시간 넘을 때). 병동 입원의 5%는 입원 기간의 20~70% 시점에 ICU로 이동. 한 입원 최대 두 구간 | K L3.3; P 1.2; P 2.1; P+AI 참여자·데이터 출처; Suissa |
 | `transfers.in_time` | 시각 | 병동 입실 시 | 병동 입실 시 | 없음 | 0% | 입원 기간 안 | 첫 구간은 admit_time | K L3.1; P 2.3; P+AI 예측변수; Albu |
 | `transfers.out_time` | 시각 | 병동 퇴실 시 | 병동 퇴실 시 | 없음 | 0% | 입원 기간 안 | 마지막 구간은 discharge_time | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
@@ -112,11 +114,11 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | `labs.lab_id` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | L0000001 형식 | 일련번호 | 관리 |
 | `labs.admission_id` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | admissions와 같음 | 입원 중 채취 | 관리 |
 | `labs.test` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | creatinine, bun, potassium, hemoglobin | 검사 묶음 | P 2.1; P+AI 예측변수 |
-| `labs.value` | 실수 | 채취 시 (환자 상태) | report_time | 채취 뒤 30분~6시간 | 0% | 검사별 생리적 범위 | 잠재 상태 + 측정 오차. 크레아티닌은 측정법에 따라 계통 차이 | P 2.1; P 3.1; P+AI 예측변수 |
+| `labs.value` | 실수 | 채취 시 (환자 상태) | report_time | 채취 뒤 30분~6시간 | 0% | 검사별 생리적 범위 | 잠재 상태 + 측정 오차. 크레아티닌은 jaffe 측정이면 0.10 mg/dL 높음 | P 2.1; P 3.1; P+AI 예측변수 |
 | `labs.unit` | 문자 | 정적 | 보고 시 | 없음 | 0% | mg/dL, mmol/L, g/dL | 검사별 고정 | 관리 |
-| `labs.method` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | 크레아티닌: jaffe, enzymatic / 그 밖: standard | 크레아티닌 측정법이 연구 기간 중 한 번 바뀜 | P 2.1; P 3.4; P+AI 결과; Albu |
-| `labs.collect_time` | 시각 | 채취 시 | 보고 시 (report_time) | 없음 | 0% | 입원 기간 안 | ICU는 하루 1~2회, 병동은 2~3일에 1회. 주말·야간 병동은 더 드묾. 시기에 따라 빈도 변화 | K L3.1; P 2.3; P+AI 예측변수; Albu |
-| `labs.report_time` | 시각 | 보고 시 | 보고 시 | collect_time 뒤 30분~6시간. 퇴원·사망 뒤 보고 있음 | 0% | 자료 추출 종료 이전 | 채취 시각 + 지연 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `labs.method` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | 크레아티닌: jaffe, enzymatic / 그 밖: standard | 채취가 2155-01-01 전이면 jaffe, 그 뒤 enzymatic | P 2.1; P 3.4; P+AI 결과; Albu |
+| `labs.collect_time` | 시각 | 채취 시 | 보고 시 (report_time) | 없음 | 0% | 입원 기간 안 | 그 시각에 머문 병동(transfers) 기준. 입원 직후 1회. ICU는 하루 1~2회(6시·18시 무렵). 병동은 간격 40~72시간(연구 초)에서 30~60시간(연구 끝)으로 서서히 줄어듦. 야간(22~06시) 병동 채혈은 06~08시로 미룸, 주말 병동 채혈 30%는 건너뜀. 35%는 퇴원 직전 1회 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `labs.report_time` | 시각 | 보고 시 | 보고 시 | collect_time 뒤 30분~6시간. 퇴원·사망 뒤 보고 있음 | 0% (종료까지 보고되지 않은 검사는 행이 없음) | 자료 추출 종료 이전 | 채취 시각 + 지연 (로그정규, 혈색소가 더 빠름) | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## vitals
 
@@ -127,9 +129,9 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | `vitals.vital_id` | 문자 | 관찰 시 | 입력 시 | 없음 | 0% | V0000001 형식 | 일련번호 | 관리 |
 | `vitals.admission_id` | 문자 | 관찰 시 | 입력 시 | 없음 | 0% | admissions와 같음 | 입원 중 관찰 | 관리 |
 | `vitals.item` | 문자 | 관찰 시 | 입력 시 | 없음 | 0% | heart_rate, sbp, temperature | 관찰 묶음 | P 2.1; P+AI 예측변수 |
-| `vitals.value` | 실수 | 관찰 시 | entered_time | 관찰 뒤 입력까지 지연 | 0% | 항목별 생리적 범위 | 잠재 상태 + 측정 오차 | P 2.1; P+AI 예측변수 |
-| `vitals.charted_time` | 시각 | 관찰 시 (기록상 관찰 시각) | entered_time | 없음 | 0% | 입원 기간 안 | ICU 1~2시간, 병동 4~8시간 간격. 야간 병동은 더 드묾 | K L3.1; P 2.3; P+AI 예측변수; Albu |
-| `vitals.entered_time` | 시각 | 전산 입력 시 | 전산 입력 시 | charted_time 뒤 0~6시간 (병동이 더 김) | 0% | 자료 추출 종료 이전 | 관찰 시각 + 지연 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `vitals.value` | 실수 | 관찰 시 | entered_time | 관찰 뒤 입력까지 지연 | 0% | 항목별 생리적 범위 | 잠재 상태 + 측정 오차. 심박수 80 (+8 ICU, +15 패혈증, +8 AKI 무렵), 수축기 혈압 125 (−12 ICU, −15 패혈증, −10 AKI 무렵), 체온 36.8 (+1.0 패혈증 첫 72시간). AKI 무렵 = 발생부터 상승 끝 24시간 뒤까지 | P 2.1; P+AI 예측변수 |
+| `vitals.charted_time` | 시각 | 관찰 시 (기록상 관찰 시각) | entered_time | 없음 | 0% | 입원 기간 안 | 그 시각에 머문 병동 기준. ICU 1~2시간, 병동 4~8시간 간격. 야간(22~06시) 병동은 간격 ×1.5. 한 번에 세 항목 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `vitals.entered_time` | 시각 | 전산 입력 시 | 전산 입력 시 | charted_time 뒤 0~6시간 (병동이 더 김) | 0% (종료 뒤 입력은 행이 없음) | 자료 추출 종료 이전 | 관찰 시각 + 지연. ICU 0~60분 균등, 병동 지수분포(평균 90분, 최대 6시간) | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## medications
 
@@ -139,9 +141,9 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `medications.med_id` | 문자 | 처방 시 | 처방 시 | 없음 | 0% | M0000001 형식 | 일련번호 | 관리 |
 | `medications.admission_id` | 문자 | 처방 시 | 처방 시 | 없음 | 0% | admissions와 같음 | 입원 중 처방 | 관리 |
-| `medications.drug` | 문자 | 처방 시 | 처방 시 | 없음 | 0% | 약물 계열 이름 (예: loop_diuretic, ace_inhibitor, nsaid, vancomycin 등) | 환자 상태에 따라 처방 | K L2; P 2.3; P+AI 예측변수; Kaufman |
-| `medications.med_type` | 문자 | 처방 시 | 처방 시 | 없음 | 0% | inpatient, discharge | 입원 중 처방 / 퇴원약 | K L3.1; P 2.3; P+AI 예측변수; Kaufman |
-| `medications.order_time` | 시각 | 처방 시 | 처방 시 | 없음 | 0% | 입원 기간 안 | 입원 중 처방은 입원 기간 안, 퇴원약은 퇴원 몇 시간 전 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `medications.drug` | 문자 | 처방 시 | 처방 시 | 없음 | 0% | loop_diuretic, ace_inhibitor, nsaid, vancomycin, piperacillin_tazobactam, proton_pump_inhibitor, insulin, heparin, statin, acetaminophen (10종) | 병동·ICU별 기본 확률. 패혈증이면 항생제, 당뇨면 인슐린, 고혈압 코드면 ACE 억제제, 60세 이상이면 statin이 늘어남. 처방은 AKI 발생에 영향을 주지 않음. AKI 입원의 40%는 발생 6~48시간 뒤 이뇨제 처방이 더 있음 | K L2; P 2.3; P+AI 예측변수; Kaufman |
+| `medications.med_type` | 문자 | 처방 시 | 처방 시 | 없음 | 0% | inpatient, discharge | 입원 중 처방 / 퇴원약. 생존 퇴원의 60%가 퇴원약 1~4종(ace_inhibitor, statin, proton_pump_inhibitor, loop_diuretic, insulin, acetaminophen 중) | K L3.1; P 2.3; P+AI 예측변수; Kaufman |
+| `medications.order_time` | 시각 | 처방 시 | 처방 시 | 없음 | 0% | 입원 기간 안 | 입원 중 처방은 입원 기간 안, 퇴원약은 퇴원 1~6시간 전 | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## orders
 
@@ -162,10 +164,10 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `diagnoses.admission_id` | 문자 | 코딩 시 | coded_time | 없음 | 0% | admissions와 같음 | 퇴원한 입원마다 | 관리 |
 | `diagnoses.seq` | 정수 | 코딩 시 | coded_time | 없음 | 0% | 1부터 | 입원 안 순서 | 관리 |
-| `diagnoses.icd_code` | 문자 | 코딩 시 (입원 중 상태를 퇴원 뒤 요약) | coded_time | 퇴원 뒤 코딩 | 0% | ICD-9 또는 ICD-10 코드 | 입원 중 상태에서. AKI 코드의 누락 정도는 병동·진료과에 따라 다름 | K L2; P 2.3; P 3.1; P+AI 예측변수; Albu |
-| `diagnoses.code_system` | 문자 | 코딩 시 | coded_time | 없음 | 0% | ICD9, ICD10 | 코딩 시점에 따라 한 번 전환 | P 3.4; P+AI 결과; Albu |
-| `diagnoses.present_on_admission` | 문자 | 코딩 시 | coded_time | 없음 | 0% | Y, N | 입원 전부터 있던 상태면 Y | K L3.1; P 2.3; P+AI 예측변수; Albu; Kaufman |
-| `diagnoses.coded_time` | 시각 | 코딩 완료 시 | 코딩 완료 시 | 퇴원 뒤 1~14일 (일부 더 늦음) | 0% (추출 종료까지 코딩이 끝나지 않은 입원은 행이 없음) | 퇴원 뒤, 자료 추출 종료 이전 | 퇴원 시각 + 지연 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `diagnoses.icd_code` | 문자 | 코딩 시 (입원 중 상태를 퇴원 뒤 요약) | coded_time | 퇴원 뒤 코딩 | 0% | ICD-9 또는 ICD-10 코드 | 입원 중 상태에서. 코드 14종(N17.9, N18.3, A41.9, I50.9, E87.5, I10, E11.9, D64.9, J18.9, N39.0, E87.1, K21.9, F32.9, R53.83; 아무것도 없으면 R53.83). E11.9는 당뇨인 사람(22%)의 90%, A41.9는 입원 중 패혈증의 90%. AKI(N17.9) 코드: 크레아티닌으로 KDIGO 기준을 만족한 입원은 입원 때 병동이 ICU면 0.9, 병동이면 0.75, 외과면 여기에 ×0.8. 만족하지 않은 잠재 AKI는 그 값의 약 절반, 그 밖 0.01 | K L2; P 2.3; P 3.1; P+AI 예측변수; Albu |
+| `diagnoses.code_system` | 문자 | 코딩 시 | coded_time | 없음 | 0% | ICD9, ICD10 | coded_time이 2155-10-01 전이면 ICD9 (코드마다 ICD-9로 대응, 예 N17.9 → 584.9), 그 뒤 ICD10 | P 3.4; P+AI 결과; Albu |
+| `diagnoses.present_on_admission` | 문자 | 코딩 시 | coded_time | 없음 | 0% | Y, N | 만성 질환(N18.3, I10, E11.9, F32.9, K21.9, D64.9, R53.83)은 Y, N17.9는 N, 패혈증·폐렴·심부전·요로감염은 70%가 Y, 전해질 이상(E87.5, E87.1)은 40%가 Y | K L3.1; P 2.3; P+AI 예측변수; Albu; Kaufman |
+| `diagnoses.coded_time` | 시각 | 코딩 완료 시 | 코딩 완료 시 | 퇴원 뒤 1~14일 (일부 더 늦음) | 0% (추출 종료까지 코딩이 끝나지 않은 입원은 행이 없음) | 퇴원 뒤, 자료 추출 종료 이전 | 퇴원 시각 + 지연. 90%는 1~14일, 10%는 15~90일 (입원 하나의 진단은 모두 같은 시각) | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## procedures
 
@@ -176,7 +178,7 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | `procedures.admission_id` | 문자 | 시술 시 | coded_time | 없음 | 0% | admissions와 같음 | 입원 중 시술 | 관리 |
 | `procedures.code` | 문자 | 시술 시 | coded_time | 없음 | 0% | ICD-10-PCS 형식 코드 | 상태에 따라 (투석 처치는 AKI 무렵) | P 2.3; P+AI 예측변수 |
 | `procedures.chart_date` | 날짜 | 시술한 날 | coded_time | 날짜만 있어 그날 중 언제인지 모름 | 0% | 입원 기간 안 | 시술 시각의 날짜 | K L3.1; P 2.3; P+AI 예측변수; Albu |
-| `procedures.coded_time` | 시각 | 코드 입력 시 | 코드 입력 시 | 시술 뒤. 대부분 퇴원 뒤 행정 코딩 단계에서 입력 | 0% (추출 종료까지 입력되지 않은 시술은 행이 없음) | 자료 추출 종료 이전 | 시술일 또는 퇴원 시각 + 지연 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `procedures.coded_time` | 시각 | 코드 입력 시 | 코드 입력 시 | 시술 뒤. 대부분 퇴원 뒤 행정 코딩 단계에서 입력 | 0% (추출 종료까지 입력되지 않은 시술은 행이 없음) | 자료 추출 종료 이전 | 20%는 시술 시각 + 0~12시간, 80%는 그 입원의 진단 coded_time과 같음 | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## problem_list
 
@@ -187,10 +189,10 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | `problem_list.entry_id` | 문자 | 항목 처음 기록 시 | 처음 기록 시 | 없음 | 0% | PL000001 형식 | 일련번호 | 관리 |
 | `problem_list.patient_id` | 문자 | 처음 기록 시 | 처음 기록 시 | 없음 | 0% | patients와 같음 | 기록한 등록 번호 | 관리 |
 | `problem_list.admission_id` | 문자 | 이 버전 기록 시 | recorded_time | 없음 | 0% | admissions와 같음 | 이 버전을 기록한 입원 | 관리 |
-| `problem_list.version` | 정수 | 이 버전 기록 시 | recorded_time | 없음 | 0% | 1부터 | 수정할 때마다 1 증가 | K L3.1; P 2.3; P+AI 예측변수; Albu |
-| `problem_list.icd_code` | 문자 | 이 버전 기록 시 | recorded_time | 버전마다 다를 수 있음 | 0% | ICD-10 코드 | 입원 중 상태. 일부 항목은 입원 뒤에 코드가 바뀜 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `problem_list.version` | 정수 | 이 버전 기록 시 | recorded_time | 없음 | 0% | 1부터 | 수정할 때마다 1 증가. 오류 표시 3%, 코드 변경 5%, resolved 15% | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `problem_list.icd_code` | 문자 | 이 버전 기록 시 | recorded_time | 버전마다 다를 수 있음 | 0% | ICD-10 코드 | 입원 중 상태. 만성 문제(N18.3, I10, E11.9, F32.9, K21.9)는 등록 번호마다 처음 나타난 입원에 한 번 기록하고, 뒤 입원의 10%에서 그 입원 id로 코드가 바뀐 새 버전. 급성 문제(A41.9, J18.9, I50.9)는 입원마다 입원 0~48시간에, N17.9는 크레아티닌 KDIGO 기준을 만족한 검사의 보고 0~24시간 뒤에 기록 (퇴원 전인 것만). 코드 변경 예: N17.9 → N17.0 | K L3.1; P 2.3; P+AI 예측변수; Albu |
 | `problem_list.status` | 문자 | 이 버전 기록 시 | recorded_time | 없음 | 0% | active, resolved, entered_in_error | 수정 버전에서 바뀜 | K L3.1; P 2.3; P+AI 예측변수; Albu |
-| `problem_list.recorded_time` | 시각 | 이 버전 기록 시 | 이 버전 기록 시 | 첫 버전은 입원 중, 수정 버전은 입원 중 또는 퇴원 뒤 | 0% | 자료 추출 종료 이전 | 첫 기록 + 수정 간격 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `problem_list.recorded_time` | 시각 | 이 버전 기록 시 | 이 버전 기록 시 | 첫 버전은 입원 중, 수정 버전은 입원 중 또는 퇴원 뒤 | 0% (종료 뒤 수정은 행이 없음) | 자료 추출 종료 이전 | 첫 기록 + 수정 간격 (코드 변경 1시간~30일, 오류 표시 1~72시간, resolved는 퇴원 30일 뒤까지). 퇴원 뒤 수정도 admission_id는 그 항목을 기록한 입원 | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## outpatient_visits
 
@@ -200,8 +202,8 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `outpatient_visits.visit_id` | 문자 | 방문 시 | 방문 시 | 없음 | 0% | OV000001 형식 | 일련번호 | 관리 |
 | `outpatient_visits.patient_id` | 문자 | 방문 시 | 방문 시 | 없음 | 0% | patients와 같음 | 방문한 등록 번호 | 관리 |
-| `outpatient_visits.visit_time` | 시각 | 방문 시 | 방문 시 | 없음 | 0% | 사망·자료 추출 종료 이전 | 생존 퇴원 뒤 추적 외래 (자택 퇴원이 더 잦음, 그 전에 재입원하면 열리지 않음) + 정기 외래 | K L3.3; P 1.2; P 3.6; P+AI 참여자·데이터 출처; Suissa |
-| `outpatient_visits.site` | 문자 | 방문 시 | 방문 시 | 없음 | 0% | A, B | 대부분 A | K L3.3; P 3.1; P 3.4; P+AI 결과; Albu |
+| `outpatient_visits.visit_time` | 시각 | 방문 시 | 방문 시 | 없음 | 0% | 사망·자료 추출 종료 이전 | 추적 외래: 생존 퇴원 뒤 5~28일, 자택 퇴원 70%, 전원 퇴원 35% (그 전에 재입원·사망하면 열리지 않음). 정기 외래: 첫 입원 뒤부터 다음 입원·사망·종료 전까지 1년 평균 0.25회. 첫 입원 전 외래는 없음 | K L3.3; P 1.2; P 3.6; P+AI 참여자·데이터 출처; Suissa |
+| `outpatient_visits.site` | 문자 | 방문 시 | 방문 시 | 없음 | 0% | A, B | 외래 방문의 10%가 B (정기·추적 모두) | K L3.3; P 3.1; P 3.4; P+AI 결과; Albu |
 | `outpatient_visits.visit_type` | 문자 | 방문 시 | 방문 시 | 없음 | 0% | follow_up, routine | 퇴원 뒤 추적 / 정기 | P 3.4; P+AI 결과; Albu |
 
 ## outpatient_labs
@@ -212,13 +214,13 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `outpatient_labs.lab_id` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | OL000001 형식 | 일련번호 | 관리 |
 | `outpatient_labs.patient_id` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | patients와 같음 | 외래 방문한 등록 번호 | 관리 |
-| `outpatient_labs.visit_id` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | outpatient_visits와 같음 | 일부 외래 방문에서 채취 | 관리 |
-| `outpatient_labs.test` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | creatinine, potassium, hemoglobin | 외래 검사 묶음 | P 2.1; P+AI 예측변수 |
-| `outpatient_labs.value` | 실수 | 채취 시 | report_time | 채취 뒤 수 시간~1일 | 0% | 검사별 생리적 범위 | 평소 상태 + 측정 오차 | P 2.1; P 3.1; P+AI 결과 |
+| `outpatient_labs.visit_id` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | outpatient_visits와 같음 | 외래 방문의 50%에서 채취 | 관리 |
+| `outpatient_labs.test` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | creatinine, potassium, hemoglobin | 채취한 방문에서 크레아티닌 100%, 칼륨 80%, 혈색소 60% | P 2.1; P+AI 예측변수 |
+| `outpatient_labs.value` | 실수 | 채취 시 | report_time | 채취 뒤 수 시간~1일 | 0% | 검사별 생리적 범위 | 평소 상태 + 측정 오차 (크레아티닌은 기저치, jaffe면 +0.10 mg/dL) | P 2.1; P 3.1; P+AI 결과 |
 | `outpatient_labs.unit` | 문자 | 정적 | 보고 시 | 없음 | 0% | mg/dL, mmol/L, g/dL | 검사별 고정 | 관리 |
 | `outpatient_labs.method` | 문자 | 채취 시 | 보고 시 | 없음 | 0% | labs.method와 같음 | 입원 검사와 같은 시기에 같은 전환 | P 2.1; P 3.4; P+AI 결과; Albu |
 | `outpatient_labs.collect_time` | 시각 | 채취 시 | 보고 시 | 없음 | 0% | 방문 시각 | 방문 시각 | K L3.1; P 2.3; P+AI 예측변수; Albu |
-| `outpatient_labs.report_time` | 시각 | 보고 시 | 보고 시 | collect_time 뒤 수 시간~1일 | 0% | 자료 추출 종료 이전 | 채취 시각 + 지연 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `outpatient_labs.report_time` | 시각 | 보고 시 | 보고 시 | collect_time 뒤 수 시간~1일 | 0% (종료까지 보고되지 않은 검사는 행이 없음) | 자료 추출 종료 이전 | 채취 시각 + 2~24시간 | K L3.1; P 2.3; P+AI 예측변수; Albu |
 
 ## admission_bookings
 
@@ -228,10 +230,10 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 |---|---|---|---|---|---|---|---|---|
 | `admission_bookings.booking_id` | 문자 | 예약 시 | 예약 시 | 없음 | 0% | B000001 형식 | 일련번호 | 관리 |
 | `admission_bookings.patient_id` | 문자 | 예약 시 | 예약 시 | 없음 | 0% | patients와 같음 | 예약한 등록 번호 | 관리 |
-| `admission_bookings.source_admission_id` | 문자 | 예약 시 | 예약 시 | 없음 | 일부 (외래에서 예약) | admissions와 같음 | 입원 중 예약이면 그 입원 | K L2; P 3.3; P+AI 결과 |
-| `admission_bookings.booked_time` | 시각 | 예약 시 | 예약 시 | 없음 | 0% | 사망·자료 추출 종료 이전 | 입원 중 또는 외래 | K L3.1; P 2.3; P+AI 예측변수 |
-| `admission_bookings.planned_date` | 날짜 | 예약 시 | 예약 시 | 날짜만 | 0% | booked_time 뒤 | 예약 간격 | K L2; P 3.1; P+AI 결과 |
-| `admission_bookings.admission_id` | 문자 | 예약 입원 시 | 예약 입원 시 | 없음 | 일부 (예약했지만 입원하지 않음, 또는 아직 입원 전) | admissions와 같음 | 예약대로 입원하면 그 입원 (elective) | K L2; P 3.1; P+AI 결과 |
+| `admission_bookings.source_admission_id` | 문자 | 예약 시 | 예약 시 | 없음 | 일부 (외래에서 예약) | admissions와 같음 | 입원 중 예약이면 그 입원. 생존 퇴원의 8%가 퇴원 1~24시간 전에 예약, 외래 방문의 3%가 방문 시각에 예약 | K L2; P 3.3; P+AI 결과 |
+| `admission_bookings.booked_time` | 시각 | 예약 시 | 예약 시 | 없음 | 0% | 사망·자료 추출 종료 이전 | 입원 중(퇴원 1~24시간 전) 또는 외래 방문 시각 | K L3.1; P 2.3; P+AI 예측변수 |
+| `admission_bookings.planned_date` | 날짜 | 예약 시 | 예약 시 | 날짜만. 앞으로의 예정이라 자료 추출 종료 뒤일 수 있음 | 0% | booked_time 뒤 (자료 추출 종료 뒤 가능) | 예약 시각 + 7~60일. 예정일 08~12시에 입원 | K L2; P 3.1; P+AI 결과 |
+| `admission_bookings.admission_id` | 문자 | 예약 입원 시 | 예약 입원 시 | 없음 | 일부 (예약했지만 입원하지 않음, 또는 아직 입원 전) | admissions와 같음 | 예약의 85%가 예정일에 입원 (elective). 그 전에 다른 입원·사망이 오거나 입원이 종료 뒤면 비어 있음 | K L2; P 3.1; P+AI 결과 |
 
 ## deaths
 
@@ -240,9 +242,9 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 | 열 | 자료형 | 값이 생기는 때 | 값이 알려지는 때 | 지연·불확실성 | 결측 | 값의 범위 | 생성 방식 | 근거 |
 |---|---|---|---|---|---|---|---|---|
 | `deaths.patient_id` | 문자 | 사망 시 | death_recorded_time | 없음 | 0% | patients와 같음 | 사망한 사람의 등록 번호 | 관리 |
-| `deaths.death_time` | 시각 | 사망 시 | death_recorded_time | 원외 사망은 기록이 늦음 | 0% | 자료 추출 종료 이전 | 원내 사망: discharge_time과 같음. 원외 사망: 마지막 퇴원 뒤 위험도에 따라 | P 3.6; P 4.6; P+AI 분석; Suissa |
+| `deaths.death_time` | 시각 | 사망 시 | death_recorded_time | 원외 사망은 기록이 늦음 | 0% | 자료 추출 종료 이전 | 원내 사망: discharge_time과 같음. 원외 사망: 생존 퇴원마다 1년 안 사망 확률(위험 z·나이·AKI·ICU에 따라, 평균 약 5~8%), 시점은 퇴원 1~365일 뒤 균등 | P 3.6; P 4.6; P+AI 분석; Suissa |
 | `deaths.place` | 문자 | 사망 시 | death_recorded_time | 없음 | 0% | in_hospital, out_of_hospital | 원내 / 원외 | P 3.4; P 4.6; P+AI 결과; Albu |
-| `deaths.death_recorded_time` | 시각 | 사망 기록 시 | 사망 기록 시 | 원내: 사망 즉시. 원외: 사망 연계로 수 주~수 개월 뒤 | 0% | death_linkage_through 이전 (원외) | 사망 시각 + 지연 | K L3.1; P 2.3; P+AI 예측변수; Albu |
+| `deaths.death_recorded_time` | 시각 | 사망 기록 시 | 사망 기록 시 | 원내: 사망 즉시 (사망 시각과 같음). 원외: 사망 연계로 수 주~수 개월 뒤 | 0% | death_linkage_through 이전 (원외) | 원내: 사망 시각. 원외: 사망 시각 + 14~180일. 기록 날짜가 death_linkage_through 뒤인 원외 사망은 행이 없음 | K L3.1; P 2.3; P+AI 예측변수; Albu |
 | `deaths.source` | 문자 | 사망 기록 시 | 사망 기록 시 | 없음 | 0% | hospital_record, registry_link | 원내 / 사망 연계 | P 3.1; P 3.4; P+AI 결과; Albu |
 
 ## 파생 열
@@ -258,7 +260,9 @@ v2 합성 데이터의 **모든 테이블의 모든 열**에 대해, 값이 언�
 
 본 데이터와 **같은 테이블·같은 열**을 쓰고, 열마다 위 설명이 그대로 적용된다. 다른 점만 적는다.
 
-- 규모: 환자 200명, 1인당 입원 1회.
-- `labs.test`: 검사 500종 (`t001`~`t500`) + creatinine. 대부분 결과와 무관한 잡음이고 10종만 약한 신호. 항목마다 tₚ 이전 측정 1~3회.
-- 결과(크레아티닌 KDIGO AKI) 유병률 약 30% (설계값).
+- 규모: 환자 200명, 1인당 입원 1회. 그래서 재입원·이어진 입원·새 등록 번호·입원 예약이 없다 (`admission_bookings`는 열만 있고 행이 없다).
+- tₚ = 입원 24시간.
+- `labs.test`: 검사 500종 (`t001`~`t500`) + creatinine (bun, potassium, hemoglobin은 없다). 대부분 결과와 무관한 잡음이고 10종만 약한 신호 (잠재 AKI 입원에서 0.3 SD 이동). 항목마다 tₚ 이전(입원 24시간 안) 측정 1~3회. 값은 항목마다 평균·척도가 다른 연속값.
+- `labs.unit`: t001~t500은 `AU`(임의 단위), creatinine은 mg/dL. `labs.method`: t001~t500은 standard.
+- 크레아티닌은 본 데이터와 같은 일정으로 입원 내내 측정한다. 결과(크레아티닌 KDIGO AKI) 유병률 약 30% (설계값).
 - 다른 테이블은 본 데이터와 같은 규칙으로 만들되 규모에 맞게 줄인다.
