@@ -74,13 +74,14 @@ def test_rowset_fields_used_somewhere(kind):
 
 @pytest.mark.parametrize("kind", sorted(DESIGNS))
 def test_known_weaknesses_handled(kind):
-    """2b 사용자 조건: 진단 코드는 코딩 완료 시각, 추적 부족 제외, 사망 처리 명시, 가족·없으면 환자로 분할."""
+    """2b 사용자 조건: 진단 코드는 코딩 완료 시각, 추적 부족 제외, 사망 처리 명시, 가족·없으면 사람(person_id)으로 분할 (승인 ② 뒤 환자 → 사람)."""
     d = json.loads(DESIGNS[kind].read_text(encoding="utf-8"))
     for f in d["features"]:
         if f.get("source") == "diagnoses":
             assert f["time_column"] == "coded_time" and f["window"]["end"] == "tp", f["name"]
     assert d["outcome"]["censoring"]["death"] not in (None, "not_applicable")
-    assert (d["split"]["key"], d["split"]["fallback_key"], d["split_unit"]) == ("family_id", "patient_id", "family")
+    assert (d["split"]["key"], d["split"]["fallback_key"], d["split_unit"]) == ("family_id", "person_id", "family")
+    assert d["model"]["tuning"]["fallback_key"] == "person_id"
     if kind == "fixed":
         assert d["outcome"]["censoring"]["end_of_data"] == "exclude_incomplete"
         assert any(c["name"] == "followup_incomplete" for c in d["cohort"]["exclusion"])

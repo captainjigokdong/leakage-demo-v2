@@ -5,7 +5,15 @@
   "notes": "2단계 2b 예비 검수용 깨끗한 기본 설계서. 선택한 방법에 해당하지 않는 칸은 비워 두었다: cohort.sampling.by, cohort.sampling.fraction, cohort.sampling.ratio (전체 사용), split.n_folds, split.time_column, split.cutoff, split.gap (가족 단위 무작위 분할), features의 date_compare (날짜만 있는 열을 쓰지 않음).",
   "tp": {
     "anchor": "admit",
-    "offsets_h": [24, 48, 72, 96, 120, 144, 168]
+    "offsets_h": [
+      24,
+      48,
+      72,
+      96,
+      120,
+      144,
+      168
+    ]
   },
   "intended_use": {
     "purpose": "prospective_deployment",
@@ -14,50 +22,140 @@
   },
   "data_source": {
     "extraction_end": "2160-01-01 00:00:00",
-    "sites": ["A", "B"],
-    "study_period": {"start": "2150-01-01", "end": "2160-01-01"},
+    "sites": [
+      "A",
+      "B"
+    ],
+    "study_period": {
+      "start": "2150-01-01",
+      "end": "2160-01-01"
+    },
     "death_source": "in_hospital_only"
   },
   "outcome": {
-    "name": "aki_48h",
-    "description": "결과 창 안에 채취된 크레아티닌이 KDIGO 기준(48시간 안 +0.3 mg/dL 또는 7일 안 최솟값의 1.5배)을 만족. 측정법(method)이 다른 값끼리는 비교하지 않는다.",
+    "name": "aki_or_death_48h",
+    "description": "결과 창(tp, tp+48h]에 채취된 크레아티닌이 KDIGO 기준을 만족하거나 원내 사망. KDIGO: 결과 창의 각 값을 그보다 먼저 채취한 같은 입원의 값과만 비교한다 (48시간 안 최솟값보다 0.3 mg/dL 이상 높음, 또는 7일 안 최솟값의 1.5배 이상). 측정법(method)이 다른 값끼리는 비교하지 않는다. 결과 창에 크레아티닌 측정이 없거나 창 안에 퇴원하면 음성으로 보고, 병동은 채혈이 드물어 결과가 덜 잡힘을 한계로 보고한다.",
     "definition": "kdigo_creatinine",
     "prespecified": true,
     "definition_source": "KDIGO 2012 크레아티닌 기준 (소변량 기준은 쓰지 않음)",
     "source": "labs",
-    "filter": {"test": ["creatinine"]},
+    "filter": {
+      "test": [
+        "creatinine"
+      ]
+    },
     "scope": "index_admission",
     "time_column": "collect_time",
-    "window": {"start": "tp", "end": "tp+48h"},
-    "reference_window": {"start": "tp-168h", "end": "tp+48h"},
+    "window": {
+      "start": "tp",
+      "end": "tp+48h"
+    },
+    "reference_window": {
+      "start": "tp-168h",
+      "end": "tp+48h"
+    },
     "reference": {
       "sources": [
-        {"name": "inpatient_cr", "source": "labs", "column": "value", "filter": {"test": ["creatinine"]},
-         "scope": "index_admission", "time_column": "collect_time", "window": {"start": "tp-168h", "end": "tp+48h"},
-         "agg": "min"}
+        {
+          "name": "inpatient_cr",
+          "source": "labs",
+          "column": "value",
+          "filter": {
+            "test": [
+              "creatinine"
+            ]
+          },
+          "scope": "index_admission",
+          "time_column": "collect_time",
+          "window": {
+            "start": "tp-168h",
+            "end": "tp+48h"
+          },
+          "agg": "min",
+          "description": "결과 창의 각 값보다 먼저 채취한 값만 쓴다"
+        }
       ],
-      "agg": "min"
+      "agg": "결과 창의 각 값마다, 그 값보다 먼저 채취한 값 중 최솟값 (48시간·7일 두 기준). 나중 값은 기준값이 되지 않는다"
     },
     "planned": "include",
     "proxies": [
-      {"source": "orders", "filter": {"order_type": ["nephrology_consult", "dialysis_order", "renal_ultrasound"]},
-       "basis": "AKI를 의심하거나 확인한 뒤 내는 오더. 특징으로 쓰지 않는다"},
-      {"source": "procedures", "filter": {"code": ["5A1D70Z"]}, "basis": "투석 처치. 특징으로 쓰지 않는다"},
-      {"source": "medications", "filter": {"drug": ["loop_diuretic"]},
-       "basis": "AKI 뒤 처방이 늘어난다. 특징으로 쓰지 않는다"},
-      {"source": "diagnoses", "filter": {"icd_code": ["N17", "584"]}, "basis": "AKI 진단 코드"},
-      {"source": "problem_list", "filter": {"icd_code": ["N17"]}, "basis": "AKI를 확인한 뒤 기록하는 문제 목록"}
+      {
+        "source": "orders",
+        "filter": {
+          "order_type": [
+            "nephrology_consult",
+            "dialysis_order",
+            "renal_ultrasound"
+          ]
+        },
+        "basis": "AKI를 의심하거나 확인한 뒤 내는 오더. 특징으로 쓰지 않는다"
+      },
+      {
+        "source": "procedures",
+        "filter": {
+          "code": [
+            "5A1D70Z"
+          ]
+        },
+        "basis": "투석 처치. 특징으로 쓰지 않는다"
+      },
+      {
+        "source": "medications",
+        "filter": {
+          "drug": [
+            "loop_diuretic"
+          ]
+        },
+        "basis": "AKI 뒤 처방이 늘어난다. 특징으로 쓰지 않는다"
+      },
+      {
+        "source": "diagnoses",
+        "filter": {
+          "icd_code": [
+            "N17",
+            "584"
+          ]
+        },
+        "basis": "AKI 진단 코드"
+      },
+      {
+        "source": "problem_list",
+        "filter": {
+          "icd_code": [
+            "N17"
+          ]
+        },
+        "basis": "AKI를 확인한 뒤 기록하는 문제 목록"
+      }
     ],
     "ascertainment": {
       "method": "입원 중 채혈한 크레아티닌으로만 판정한다. 병동은 ICU보다 채혈이 드물어 결과가 덜 잡히므로 머문 병동별로 측정 빈도와 결과율을 따로 보고하고, 이를 한계로 적는다.",
-      "by_stratum": ["unit"],
-      "scope": {"sites": ["A", "B"], "settings": ["inpatient"], "sources": ["labs"]},
-      "min_followup": "tp+48h",
+      "by_stratum": [
+        "unit_at_tp"
+      ],
+      "scope": {
+        "sites": [
+          "A",
+          "B"
+        ],
+        "settings": [
+          "inpatient"
+        ],
+        "sources": [
+          "labs",
+          "admissions"
+        ]
+      },
+      "min_followup": "tp (창 안 퇴원·측정 없음은 음성, outcome.description 참고)",
       "blind_to_predictors": true
     },
     "history": [
-      {"from": "2150-01-01", "to": "2155-01-01", "change": "크레아티닌 측정법이 jaffe에서 enzymatic으로 바뀜 (2155-01-01)",
-       "handled": "KDIGO 판정은 같은 입원 안에서 측정법이 같은 값끼리만 비교한다. 측정법이 섞이는 랜드마크는 전환 뒤 값만으로 기준값을 다시 잡는다."}
+      {
+        "from": "2150-01-01",
+        "to": "2155-01-01",
+        "change": "크레아티닌 측정법이 jaffe에서 enzymatic으로 바뀜 (2155-01-01)",
+        "handled": "KDIGO 판정은 같은 입원 안에서 측정법이 같은 값끼리만 비교한다. 측정법이 섞이는 랜드마크는 전환 뒤 값만으로 기준값을 다시 잡는다."
+      }
     ],
     "censoring": {
       "end_of_data": "not_applicable",
@@ -68,119 +166,507 @@
   "cohort": {
     "index_time": "tp",
     "inclusion": [
-      {"name": "adult", "source": "patients", "column": "age", "agg": "value", "op": ">=", "value": 18}
+      {
+        "name": "adult",
+        "source": "patients",
+        "column": "age",
+        "agg": "value",
+        "op": ">=",
+        "value": 18
+      },
+      {
+        "name": "in_hospital_at_tp",
+        "description": "tp에 아직 입원 중 (퇴원 시각이 tp 뒤)",
+        "source": "admissions",
+        "column": "discharge_time",
+        "scope": "index_admission",
+        "agg": "value",
+        "op": ">",
+        "value": "tp"
+      }
     ],
     "exclusion": [
-      {"name": "aki_known_by_tp", "description": "tp까지 보고된 크레아티닌으로 이미 AKI", "source": "labs",
-       "filter": {"test": ["creatinine"]}, "scope": "index_admission", "time_column": "report_time",
-       "window": {"start": "admit", "end": "tp"}, "agg": "kdigo_aki", "op": "==", "value": true},
-      {"name": "dialysis_by_tp", "description": "tp까지 투석 오더", "source": "orders",
-       "filter": {"order_type": ["dialysis_order"]}, "scope": "index_admission", "time_column": "order_time",
-       "window": {"start": "admit", "end": "tp"}, "agg": "any", "op": "==", "value": true}
+      {
+        "name": "aki_known_by_tp",
+        "description": "tp까지 보고된 크레아티닌으로 이미 AKI",
+        "source": "labs",
+        "filter": {
+          "test": [
+            "creatinine"
+          ]
+        },
+        "scope": "index_admission",
+        "time_column": "report_time",
+        "window": {
+          "start": "admit",
+          "end": "tp"
+        },
+        "agg": "kdigo_aki",
+        "op": "==",
+        "value": true
+      },
+      {
+        "name": "dialysis_by_tp",
+        "description": "tp까지 투석 오더",
+        "source": "orders",
+        "filter": {
+          "order_type": [
+            "dialysis_order"
+          ]
+        },
+        "scope": "index_admission",
+        "time_column": "order_time",
+        "window": {
+          "start": "admit",
+          "end": "tp"
+        },
+        "agg": "any",
+        "op": "==",
+        "value": true
+      }
     ],
-    "subgroups": ["unit"],
-    "sampling": {"method": "all", "uses_outcome": false, "applies_to": "both"},
-    "rows_per_unit": {"unit": "admission", "choose": "all"},
-    "deduplication": {"key": ["admission_id"], "when": "before_split"}
+    "subgroups": [
+      "unit_at_tp"
+    ],
+    "sampling": {
+      "method": "all",
+      "uses_outcome": false,
+      "applies_to": "both"
+    },
+    "rows_per_unit": {
+      "unit": "admission",
+      "choose": "all"
+    },
+    "deduplication": {
+      "key": [
+        "landmark_row_id"
+      ],
+      "when": "before_split"
+    }
   },
   "features": [
-    {"name": "age", "source": "patients", "column": "age", "scope": "patient", "agg": "value"},
-    {"name": "sex", "source": "patients", "column": "sex", "scope": "patient", "agg": "value"},
-    {"name": "unit_at_tp", "description": "tp에 머문 병동", "source": "transfers", "column": "unit",
-     "scope": "index_admission", "time_column": "in_time", "window": {"start": "admit", "end": "tp"}, "agg": "last"},
-    {"name": "service", "source": "admission_info", "column": "service", "scope": "index_admission", "agg": "value"},
-    {"name": "admission_type", "source": "admission_info", "column": "admission_type", "scope": "index_admission",
-     "agg": "value"},
-    {"name": "cr_last", "source": "labs", "column": "value", "filter": {"test": ["creatinine"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "admit", "end": "tp"},
-     "agg": "last",
-     "assessment": {"by_stratum": ["method"], "method": "2155-01-01 전은 jaffe(약 0.10 mg/dL 높음), 뒤는 enzymatic. 측정법을 함께 넣는다"}},
-    {"name": "cr_min_adm", "source": "labs", "column": "value", "filter": {"test": ["creatinine"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "admit", "end": "tp"},
-     "agg": "min"},
-    {"name": "cr_max_48h", "source": "labs", "column": "value", "filter": {"test": ["creatinine"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "tp-48h", "end": "tp"},
-     "agg": "max"},
-    {"name": "cr_method", "source": "labs", "column": "method", "filter": {"test": ["creatinine"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "admit", "end": "tp"},
-     "agg": "last"},
-    {"name": "n_cr", "source": "labs", "filter": {"test": ["creatinine"]}, "scope": "index_admission",
-     "time_column": "report_time", "window": {"start": "admit", "end": "tp"}, "agg": "count",
-     "assessment": {"by_stratum": ["unit_at_tp"], "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"}},
-    {"name": "cr_rise", "derive": {"op": "difference", "of": ["cr_last", "cr_min_adm"]},
-     "made_by": "leakcheck.features"},
-    {"name": "bun_last", "source": "labs", "column": "value", "filter": {"test": ["bun"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "admit", "end": "tp"},
-     "agg": "last"},
-    {"name": "k_last", "source": "labs", "column": "value", "filter": {"test": ["potassium"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "admit", "end": "tp"},
-     "agg": "last"},
-    {"name": "hgb_min", "source": "labs", "column": "value", "filter": {"test": ["hemoglobin"]},
-     "scope": "index_admission", "time_column": "report_time", "window": {"start": "admit", "end": "tp"},
-     "agg": "min"},
-    {"name": "sbp_min_24h", "source": "vitals", "column": "value", "filter": {"item": ["sbp"]},
-     "scope": "index_admission", "time_column": "entered_time", "window": {"start": "tp-24h", "end": "tp"},
-     "agg": "min"},
-    {"name": "hr_max_24h", "source": "vitals", "column": "value", "filter": {"item": ["heart_rate"]},
-     "scope": "index_admission", "time_column": "entered_time", "window": {"start": "tp-24h", "end": "tp"},
-     "agg": "max"},
-    {"name": "temp_max_24h", "source": "vitals", "column": "value", "filter": {"item": ["temperature"]},
-     "scope": "index_admission", "time_column": "entered_time", "window": {"start": "tp-24h", "end": "tp"},
-     "agg": "max"},
-    {"name": "nephrotoxic_by_tp", "description": "tp까지 NSAID·vancomycin 처방",
-     "source": "medications", "filter": {"drug": ["nsaid", "vancomycin"]}, "scope": "index_admission",
-     "time_column": "order_time", "window": {"start": "admit", "end": "tp"}, "agg": "any"},
-    {"name": "prior_dx_ckd", "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (N18, 585)",
-     "source": "diagnoses", "filter": {"icd_code": ["N18", "585"]}, "scope": "prior_admissions",
-     "time_column": "coded_time", "window": {"start": "-inf", "end": "tp"}, "agg": "any"},
-    {"name": "problem_ckd_active", "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음",
-     "source": "problem_list", "filter": {"icd_code": ["N18"], "status": ["active"]}, "scope": "patient_history",
-     "time_column": "recorded_time", "window": {"start": "-inf", "end": "tp"}, "as_of": "tp", "agg": "any"},
-    {"name": "outpatient_cr_last", "description": "지난 1년 외래 크레아티닌 마지막 값",
-     "source": "outpatient_labs", "column": "value", "filter": {"test": ["creatinine"]}, "scope": "patient_history",
-     "time_column": "report_time", "window": {"start": "tp-365d", "end": "tp"}, "agg": "last"}
+    {
+      "name": "age",
+      "source": "patients",
+      "column": "age",
+      "scope": "patient",
+      "agg": "value",
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수."
+    },
+    {
+      "name": "sex",
+      "source": "patients",
+      "column": "sex",
+      "scope": "patient",
+      "agg": "value"
+    },
+    {
+      "name": "unit_at_tp",
+      "description": "tp에 머문 병동",
+      "source": "transfers",
+      "column": "unit",
+      "scope": "index_admission",
+      "time_column": "in_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "service",
+      "source": "admission_info",
+      "column": "service",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "admission_type",
+      "source": "admission_info",
+      "column": "admission_type",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "cr_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "assessment": {
+        "by_stratum": [
+          "method"
+        ],
+        "method": "2155-01-01 전은 jaffe(약 0.10 mg/dL 높음), 뒤는 enzymatic. 측정법을 함께 넣는다"
+      }
+    },
+    {
+      "name": "cr_min_adm",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min"
+    },
+    {
+      "name": "cr_max_48h",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "tp-48h",
+        "end": "tp"
+      },
+      "agg": "max"
+    },
+    {
+      "name": "n_cr",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "count",
+      "assessment": {
+        "by_stratum": [
+          "unit_at_tp"
+        ],
+        "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"
+      }
+    },
+    {
+      "name": "cr_rise",
+      "derive": {
+        "op": "difference",
+        "of": [
+          "cr_last",
+          "cr_min_adm"
+        ]
+      },
+      "made_by": "leakcheck.features"
+    },
+    {
+      "name": "bun_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "bun"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "k_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "potassium"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "hgb_min",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "hemoglobin"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min"
+    },
+    {
+      "name": "sbp_min_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "sbp"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "min"
+    },
+    {
+      "name": "hr_max_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "heart_rate"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "max"
+    },
+    {
+      "name": "temp_max_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "temperature"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "max"
+    },
+    {
+      "name": "nephrotoxic_by_tp",
+      "description": "tp까지 NSAID·vancomycin 처방",
+      "source": "medications",
+      "filter": {
+        "drug": [
+          "nsaid",
+          "vancomycin"
+        ],
+        "med_type": [
+          "inpatient"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "order_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "any"
+    },
+    {
+      "name": "prior_dx_ckd",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (N18, 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "source": "diagnoses",
+      "filter": {
+        "icd_code": [
+          "N18",
+          "585"
+        ]
+      },
+      "scope": "prior_admissions",
+      "time_column": "coded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "agg": "any"
+    },
+    {
+      "name": "problem_ckd_active",
+      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "source": "problem_list",
+      "filter": {
+        "icd_code": [
+          "N18"
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "scope": "patient_history",
+      "time_column": "recorded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "as_of": "tp",
+      "agg": "any"
+    }
   ],
   "split_unit": "family",
   "split": {
     "key": "family_id",
-    "fallback_key": "patient_id",
+    "fallback_key": "person_id",
     "method": "group_holdout",
     "test_fraction": 0.3,
     "seed": 20261040,
     "by_site": false
   },
   "preprocessing": [
-    {"name": "median_impute", "kind": "impute", "method": "median", "stateless": false, "fit_scope": "train",
-     "applies_to": "train+test", "before_split": false, "uses_outcome": false,
-     "columns": ["cr_last", "cr_min_adm", "cr_max_48h", "cr_rise", "bun_last", "k_last", "hgb_min", "sbp_min_24h",
-                 "hr_max_24h", "temp_max_24h", "outpatient_cr_last"]},
-    {"name": "one_hot", "kind": "encode", "method": "one_hot", "stateless": false, "fit_scope": "train",
-     "applies_to": "train+test", "before_split": false, "uses_outcome": false,
-     "columns": ["sex", "unit_at_tp", "service", "admission_type", "cr_method"]},
-    {"name": "standardize", "kind": "scale", "method": "z_score", "stateless": false, "fit_scope": "train",
-     "applies_to": "train+test", "before_split": false, "uses_outcome": false,
-     "columns": ["age", "cr_last", "cr_min_adm", "cr_max_48h", "n_cr", "cr_rise", "bun_last", "k_last", "hgb_min",
-                 "sbp_min_24h", "hr_max_24h", "temp_max_24h", "outpatient_cr_last"]}
+    {
+      "name": "median_impute",
+      "kind": "impute",
+      "method": "median",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "cr_last",
+        "cr_min_adm",
+        "cr_max_48h",
+        "cr_rise",
+        "bun_last",
+        "k_last",
+        "hgb_min",
+        "sbp_min_24h",
+        "hr_max_24h",
+        "temp_max_24h"
+      ],
+      "description": "조율 중에는 교차검증 학습 폴드마다 다시 맞추고, 최종 모형은 학습 부분 전체에 맞춘다"
+    },
+    {
+      "name": "one_hot",
+      "kind": "encode",
+      "method": "one_hot",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "sex",
+        "unit_at_tp",
+        "service",
+        "admission_type"
+      ],
+      "description": "조율 중에는 교차검증 학습 폴드마다 다시 맞추고, 최종 모형은 학습 부분 전체에 맞춘다"
+    },
+    {
+      "name": "standardize",
+      "kind": "scale",
+      "method": "z_score",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "age",
+        "cr_last",
+        "cr_min_adm",
+        "cr_max_48h",
+        "n_cr",
+        "cr_rise",
+        "bun_last",
+        "k_last",
+        "hgb_min",
+        "sbp_min_24h",
+        "hr_max_24h",
+        "temp_max_24h"
+      ],
+      "description": "조율 중에는 교차검증 학습 폴드마다 다시 맞추고, 최종 모형은 학습 부분 전체에 맞춘다"
+    }
   ],
   "model": {
     "family": "logistic_regression",
-    "tuning": {"method": "group_kfold", "cv_key": "family_id", "fit_scope": "train"},
-    "selection": {"method": "규제 강도 C 격자 탐색", "fit_scope": "train_fold", "metric": "AUROC"},
-    "early_stopping": {"method": "사용하지 않음 (로지스틱 회귀)"},
-    "threshold": {"method": "학습 부분 교차검증 예측에서 민감도 0.8이 되는 값", "fit_scope": "train_fold",
-                  "metric": "sensitivity"},
-    "calibration": {"method": "학습 부분 교차검증 예측으로 Platt 보정", "fit_scope": "train_fold",
-                    "metric": "calibration slope"}
+    "tuning": {
+      "method": "group_kfold (family_id, 없으면 person_id)",
+      "cv_key": "family_id",
+      "fit_scope": "train",
+      "fallback_key": "person_id"
+    },
+    "selection": {
+      "method": "규제 강도 C 격자 탐색",
+      "fit_scope": "train_fold",
+      "metric": "AUROC"
+    },
+    "early_stopping": {
+      "method": "사용하지 않음 (로지스틱 회귀)"
+    },
+    "threshold": {
+      "method": "학습 부분 교차검증 예측에서 민감도 0.8이 되는 값",
+      "fit_scope": "train_fold",
+      "metric": "sensitivity"
+    },
+    "calibration": {
+      "method": "학습 부분 교차검증 예측으로 Platt 보정",
+      "fit_scope": "train_fold",
+      "metric": "calibration slope"
+    }
   },
   "analysis": {
-    "missing_data": {"method": "impute", "drop_rows_when": "never", "outcome_missing": "not_applicable"}
+    "missing_data": {
+      "method": "impute",
+      "drop_rows_when": "never",
+      "outcome_missing": "not_applicable"
+    }
   },
   "evaluation": {
     "data": "test",
-    "metrics": ["AUROC", "AUPRC", "Brier", "calibration slope"],
+    "metrics": [
+      "AUROC",
+      "AUPRC",
+      "Brier",
+      "calibration slope"
+    ],
     "test_set_uses": 1,
-    "subgroups": ["unit_at_tp"],
+    "subgroups": [
+      "unit_at_tp"
+    ],
     "calibration_reported": true
   },
-  "attempts": {"n_designs_tried": 1, "n_models_tried": 1, "correction": "none"}
+  "attempts": {
+    "n_designs_tried": 1,
+    "n_models_tried": 1,
+    "correction": "none"
+  }
 }

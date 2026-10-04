@@ -33,7 +33,10 @@ DATA = ROOT / "data" / "synth"
 DICT = ROOT / "docs" / "data_dictionary_v2.md"
 OUT = ROOT / "docs" / "prereview_v2"
 BASE = Path("/srv/leakprereview")
-RUNS = {f"{kind}_{arm}": (kind, arm) for kind in ("fixed", "dynamic") for arm in ("nodict", "dict")}
+RUNS = {f"{kind}_{arm}": (kind, arm, False) for kind in ("fixed", "dynamic") for arm in ("nodict", "dict")}
+# 2회차 (승인 ② 뒤): A1 반영 데이터, 고친 설계서, 설명서 있음 + 스크립트 안내. 예비 검수는 실험이 아니라 데이터 약점을
+# 찾는 검수이므로 지시문에 안내를 넣는다 (사용자 결정 2026-10-04). v1 권한 규칙은 그대로
+RUNS |= {f"{kind}_dict_r2": (kind, "dict", True) for kind in ("fixed", "dynamic")}
 
 PROMPT = """이 작업 폴더에 예측 모델 설계서 `design.json`과 합성 EHR 데이터 폴더 `data`가 있다. 데이터의 환자는 모두 가상이다.{extra}
 
@@ -41,8 +44,9 @@ PROMPT = """이 작업 폴더에 예측 모델 설계서 `design.json`과 합성
 
 - 모델을 학습하거나 성능을 계산하지 않는다.
 - 설계서와 데이터 파일은 고치지 않는다.
-- 보고서는 한국어로 쓴다."""
+- 보고서는 한국어로 쓴다.{hint}"""
 DICT_LINE = "\n데이터 설명서는 `data_dictionary.md`이다."
+SCRIPT_HINT = "\n- 데이터 확인에는 Write로 스크립트 파일을 만든 뒤 python으로 실행하라."
 
 
 def dictionary_copy() -> str:
@@ -74,9 +78,9 @@ def prepare(name: str, kind: str, arm: str) -> R.RunDir:
     return rd
 
 
-def run_one(name: str, kind: str, arm: str, transcripts: Path, model: str = R.MODEL) -> dict:
+def run_one(name: str, kind: str, arm: str, hint: bool, transcripts: Path, model: str = R.MODEL) -> dict:
     rd = prepare(name, kind, arm)
-    text = PROMPT.format(extra=DICT_LINE if arm == "dict" else "")
+    text = PROMPT.format(extra=DICT_LINE if arm == "dict" else "", hint=SCRIPT_HINT if hint else "")
     users = R.default_users()
     users.create(name, rd)
     try:
@@ -92,7 +96,7 @@ def run_one(name: str, kind: str, arm: str, transcripts: Path, model: str = R.MO
     aud = R.audit(events, rd, "나")
     aud["violations"] += R.audit_scripts(rd, "나")
     meta = {"run": name, "design": DESIGNS[kind].name, "dictionary": arm == "dict", "prompt": text,
-            "exit_code": code, "seconds": round(secs, 1), "init": init,
+            "script_hint": hint, "exit_code": code, "seconds": round(secs, 1), "init": init,
             "result": {k: v for k, v in res.items() if k != "result"}, "audit": aud,
             "inputs_changed": R.inputs_changed(rd), "manipulation": R.manipulation_check(init, "나", model),
             "permission_denials": R.denials(res), "stderr_tail": err.decode("utf-8", "replace")[-1500:]}

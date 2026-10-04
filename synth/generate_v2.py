@@ -33,7 +33,7 @@ from synth.generate import OTHER_DX, OTHER_ORDERS, _cr_true, _logistic, _report_
 from synth.stats import kdigo_first
 from synth.tables_v2 import TABLES_V2
 
-GENERATOR_VERSION = "v2.1"
+GENERATOR_VERSION = "v2.2"
 
 EPOCH = pd.Timestamp("2150-01-01")
 H = 60
@@ -53,7 +53,10 @@ CR_METHOD_SWITCH = minute_of("2155-01-01")                  # D13 jaffe → enzy
 JAFFE_OFFSET = 0.10                                         # D13 mg/dL
 ICD10_SWITCH = minute_of("2155-10-01")                      # D14 (coded_time 기준)
 EPOCH_WEEKDAY = EPOCH.weekday()
-FIRST_ADMIT_SPAN_D = 3650 - 400                             # v1과 같음: 첫 입원은 이 범위 안 무작위
+# 첫 입원: 연구 기간 전체에서 무작위 (예비 검수 A1 반영, 2026-10-04). 재원 기간 상한이 30일이므로 마지막 30일을 빼면
+# 첫 입원의 퇴원은 항상 자료 추출 종료 전이다 (사람 5,000명이 모두 데이터에 있다). v1은 연구 시작 3,250일 안에서만 뽑았다
+MAX_LOS_D = 30
+FIRST_ADMIT_END = END - MAX_LOS_D * D
 
 # --- 사람 (D1, D4, D5) ---
 FAMILY_FRAC = 0.40          # 가족(2~3명)에 속한 사람
@@ -282,7 +285,7 @@ class _Gen:
         bookings: list[dict] = []
         death: tuple[int, str] | None = None
         n_unplanned = 0
-        pending = {"t": int(rng.integers(0, FIRST_ADMIT_SPAN_D * D)), "site": "A", "typ": "emergency",
+        pending = {"t": int(rng.integers(0, FIRST_ADMIT_END)), "site": "A", "typ": "emergency",
                    "booking": None, "cont": None}
         while pending is not None and len(adms) < (1 if prof.aux else MAX_ADMISSIONS):
             cont = pending["cont"]
@@ -455,7 +458,7 @@ class _Gen:
             site = spec["site"]
         icu = bool(rng.random() < _logistic(-1.3 + 0.5 * z + 0.01 * (age - 60) + ICU_TREND * f
                                             + ELECTIVE_RISK * elective))
-        los_h = float(np.clip(np.exp(rng.normal(np.log(110 if icu else 80), 0.5)), 24, 30 * 24))
+        los_h = float(np.clip(np.exp(rng.normal(np.log(110 if icu else 80), 0.5)), 24, MAX_LOS_D * 24))
         icpt = AUX_AKI_INTERCEPT if prof.aux else AKI_INTERCEPT
         aki = bool(rng.random() < _logistic(icpt + 0.7 * z + 0.9 * icu + 0.7 * ckd + 0.02 * (age - 60)
                                             + ELECTIVE_RISK * elective))
