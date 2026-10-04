@@ -317,6 +317,7 @@ def test_grade_checker_output():
     assert g2.n_unable == 1 and not any(x["primary"] for x in g2.defects)
 
 
+@pytest.mark.skip(reason="5단계 완료 시 반드시 통과 (v1 기본 설계서·v1 채점기 기준. v2 깨끗한 설계서·v2 채점기로 바꿈, 3단계 승인 ②)")
 def test_checker_on_clean_base_has_no_false_alarm():
     """동결된 점검기의 실제 출력(설계서 단계)을 깨끗한 기본 설계에 채점하면 오경보 0."""
     from leakcheck.checks import run_checks

@@ -16,20 +16,31 @@ def test_every_row_of_every_table_gets_four_tags(small_tables, tagged):
         assert len(df) == len(small_tables[name])
         for c in TAG_COLUMNS:
             assert c in df, (name, c)
-        assert df["_entity"].notna().all(), name
+        if name != "extract_info":   # 전역 1행 (자료 추출 정보)은 개체가 없다
+            assert df["_entity"].notna().all(), name
         assert df["_provenance"].str.startswith(f"{name}#").all(), name
-        if name != "patients":
-            assert df["_available_time"].notna().all(), name
+        assert df["_available_time"].notna().all(), name
 
 
 def test_rule_layers(tagged):
     labs = tagged["labs"]
     assert (labs["_available_time"] == labs["report_time"]).all()            # 1층: 보고 시각
     dx = tagged["diagnoses"]
-    assert (dx["_available_time"] == dx["_discharge_time"]).all()             # 2층: 퇴원 시각
+    assert (dx["_available_time"] == dx["coded_time"]).all()                  # 1층: 코딩 완료 시각 (v2 데이터의 사실)
+    assert (dx["coded_time"] > dx["_discharge_time"]).all()
     pr = tagged["procedures"]
+    assert (pr["_available_time"] == pr["coded_time"]).all()                  # 1층: 코드 입력 시각
+    pl = tagged["person_links"]
+    assert (available_series(pl, "person_links", "person_id") == tagged["extract_info"]["extraction_end_time"].iloc[0]).all()
+
+
+def test_date_only_values_use_day_end_by_default(tagged):
+    """3층: 날짜만 있는 값은 기본으로 그날 23:59로 본다 (가정, rules.DATE_ONLY_DEFAULT)."""
+    from leakcheck.features import date_times
+    pr = tagged["procedures"]
+    assert rules.DATE_ONLY_DEFAULT == "day_end"
     end = pd.to_datetime(pr["chart_date"]) + pd.Timedelta(hours=23, minutes=59)
-    assert (pr["_available_time"] == end).all()                                 # 3층: 그날 23:59
+    assert (date_times(pr, "chart_date", rules.DATE_ONLY_DEFAULT) == end).all()
 
 
 def test_column_level_rule_differs_from_row_rule(tagged):
@@ -43,9 +54,12 @@ def test_split_unit_follows_design(small_tables):
     fam = tag_tables(small_tables, "family")["patients"]
     has = fam["family_id"].notna()
     assert (fam.loc[has, "_split_unit"] == fam.loc[has, "family_id"]).all()
-    assert (fam.loc[~has, "_split_unit"] == fam.loc[~has, "patient_id"]).all()
+    person = fam["patient_id"].map(small_tables["person_links"].set_index("patient_id")["person_id"])
+    assert (fam.loc[~has, "_split_unit"] == person[~has]).all()      # 가족이 비면 사람으로 (D6)
     pat = tag_tables(small_tables, "patient")["labs"]
-    assert (pat["_split_unit"] == pat["_entity"]).all()
+    assert (pat["_split_unit"] == pat["_patient_id"]).all()
+    per = tag_tables(small_tables, "person")["labs"]
+    assert (per["_split_unit"] == per["_entity"]).all()            # 개체 = 사람 (D6)
 
 
 def _broken(small_tables, table, fn):
@@ -82,13 +96,15 @@ def test_unlinked_and_missing_rows_stop(small_tables):
 
 def test_table_without_rule_stops(small_tables):
     t = dict(small_tables)
-    t["vitals"] = pd.DataFrame({"admission_id": ["A000001"], "hr": [80]})
+    t["icu_notes"] = pd.DataFrame({"admission_id": ["A000001"], "note": ["x"]})
     with pytest.raises(TaggingError, match="규칙표에 이 테이블의 규칙이 없다"):
         tag_tables(t)
 
 
 def test_unknown_rule_lookup_raises():
     with pytest.raises(rules.RuleMissing):
-        rules.availability("vitals")
+        rules.availability("icu_notes")
+    with pytest.raises(rules.RuleMissing):
+        rules.availability("labs", "flag")
     with pytest.raises(rules.RuleMissing):
         rules.split_level("ward_id")

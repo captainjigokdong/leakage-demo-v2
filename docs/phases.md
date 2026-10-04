@@ -61,9 +61,17 @@
 
 | 시험 | 건너뛰는 이유 | 반드시 통과해야 하는 때 |
 |---|---|---|
-| `test_checks.py::test_public_case_gets_expected_verdict` [E04, E05, E09, E11, E16, E18] ×6 | (b) 점검기 미대응: 공개 목록이 18행이 되었으나 v1 보류였던 6개가 시험용 주입 함수(`tests/design_mutations.py`)에 없고, 점검기가 넓어진 형식을 아직 판정하지 못한다. 2c는 점검기·주입 함수를 고치지 않는다 | **3단계 완료 시** |
-| `test_checks.py::test_public_case_with_data` [같은 6개] ×6 | 같음 | **3단계 완료 시** |
+| `test_checks.py::test_public_case_gets_expected_verdict` [E04, E05, E09, E11, E16, E18] ×6 | (b) 점검기 미대응: 공개 목록이 18행이 되었으나 v1 보류였던 6개가 시험용 주입 함수(`tests/design_mutations.py`)에 없고, 점검기가 넓어진 형식을 아직 판정하지 못한다. 2c는 점검기·주입 함수를 고치지 않는다 | **3단계 완료 시** → **3단계 3a에서 통과** (공개 18개 모두 `designs/patches_v1_cases.py` + `designs/prereview/`로 주입, 승인 ②) |
+| `test_checks.py::test_public_case_with_data` [같은 6개] ×6 | 같음 | **3단계 완료 시** → **3단계 3a에서 통과** |
 | `test_injectability_v2.py::test_new_cases_complete_and_sentences_unchanged`, `::test_sealed_bases_valid_and_differ_only_in_case_state`, `::test_new_cases_inject_without_adjustment`, `::test_new_cases_premise_in_locked_data`, `::test_duplicates_and_draw_rules` ×5 | 암호 필요 (`sealed/stage2c_record.enc`, `sealed/candidates.enc`). 2c에서는 암호를 넣고 통과를 확인한 뒤 푸시한다 | **4단계 시작 시** (암호를 받을 때) |
+
+**3단계에서 더한 건너뜀 4개** (2026-10-04 사용자 승인 ②). 0단계 12개 + 2c의 암호 필요 5개와 합쳐 **21개**. 2c의 "3단계 완료 시" 12개는 3a에서 통과로 바뀌었다.
+
+| 시험 | 건너뛰는 이유 | 반드시 통과해야 하는 때 |
+|---|---|---|
+| `test_inject.py::test_base_passes_design_and_data` [dynamic, fixed] ×2 | (a) v1 기본 설계서(`designs/base/`)가 v2 규칙표·v2 데이터와 맞지 않음 (환자 단위 분할, 결과 이력 없음 등) | **4단계 완료 시** (v2 깨끗한 설계서 8개 기준으로 바꿈) |
+| `test_inject.py::test_clean_variants_pass_checker` | (a) v1 변형 20개 | **4단계 완료 시** (같음) |
+| `test_grader.py::test_checker_on_clean_base_has_no_false_alarm` | (a) v1 기본 설계서·v1 채점기 기준 | **5단계 완료 시** (v2 깨끗한 설계서·v2 채점기) |
 
 **파일 변경을 잠그는 시험 (해시 검사)** — 지금 잠금 기준은 모두 **v1 문서·v1 파일**이다. 해당 단계에서 v2 것으로 바꾼다 (바꾸기 전에 사용자 승인).
 
@@ -155,23 +163,23 @@
 
 **봉인 파일을 열지 않는다.** 보는 것은 넓어진 설계서 형식과 v1 공개 사례 18개뿐.
 
-- [ ] **3단계 세션은 2단계 커밋의 변경 기록(git log -p, git diff, git blame 등)을 보지 않는다. 현재 파일만 보고 작업한다.** (2c 사용자 지시)
+- [x] **3단계 세션은 2단계 커밋의 변경 기록(git log -p, git diff, git blame 등)을 보지 않는다. 현재 파일만 보고 작업한다.** (2c 사용자 지시)
 
 **할 일** (`v2_plan.md` 3.1, 시행착오 2, 9, 10)
-- [ ] `docs/data_dictionary_v2.md`만 보고 `leakcheck/rules.py`에 모든 테이블의 규칙을 쓴다 (2단계는 `rules.py`를 고치지 않았다)
-- [ ] (2b에서 넘김) 2b에서 형식에 보탠 10칸(`outcome.match_key`, `outcome.planned_by`, `outcome.pending_at_tp`, `outcome.reference.compare_to`, `rowset.episode`, `rowset.history_key`, `rowset.version_order`, `rowset.age_reference`)을 점검기가 해석하는지 확인한다
-- [ ] 모든 테이블에 규칙표 규칙이 있는지 확인하는 시험 추가 (`synth/tables_v2.py`의 테이블 목록 기준)
-- [ ] 2단계 건너뜀 표에서 "3단계 완료 시 반드시 통과"인 시험(점검기가 넓어진 형식·새 공개 사례를 아직 판정하지 못해 실패하던 것)이 통과
+- [x] `docs/data_dictionary_v2.md`만 보고 `leakcheck/rules.py`에 모든 테이블의 규칙을 쓴다 (2단계는 `rules.py`를 고치지 않았다)
+- [x] (2b에서 넘김) 2b에서 형식에 보탠 10칸(`outcome.match_key`, `outcome.planned_by`, `outcome.pending_at_tp`, `outcome.reference.compare_to`, `rowset.episode`, `rowset.history_key`, `rowset.version_order`, `rowset.age_reference`)을 점검기가 해석하는지 확인한다
+- [x] 모든 테이블에 규칙표 규칙이 있는지 확인하는 시험 추가 (`synth/tables_v2.py`의 테이블 목록 기준)
+- [x] 2단계 건너뜀 표에서 "3단계 완료 시 반드시 통과"인 시험(점검기가 넓어진 형식·새 공개 사례를 아직 판정하지 못해 실패하던 것)이 통과
 - [ ] 규칙표를 스킬 폴더 안에 읽을 수 있는 형태로 넣고, SKILL.md 첫머리에 위치를 적는다
-- [ ] 점검기 출력의 판정마다 "어느 규칙, 어느 값 때문에" 한 줄 표시
-- [ ] 3층 규칙(불확실, 보수적 기본값)을 적용한 곳은 "가정"으로 따로 출력. 코딩 지연 일수 등은 규칙표에서 조정 가능하게
+- [x] 점검기 출력의 판정마다 "어느 규칙, 어느 값 때문에" 한 줄 표시
+- [x] 3층 규칙(불확실, 보수적 기본값)을 적용한 곳은 "가정"으로 따로 출력. 코딩 지연 일수 등은 규칙표에서 조정 가능하게
 - [ ] 에이전트 보고를 ① 점검기가 차단·경고한 것 ② 추가로 의심하는 것 ③ 가정(참고)으로 나누도록 지침서 작성
-- [ ] Q5: 포함·제외 기준마다 "언제 알 수 있는 정보인가" 꼬리표 판정. Q7: "결과 확인 범위" 칸 점검 규칙
+- [x] Q5: 포함·제외 기준마다 "언제 알 수 있는 정보인가" 꼬리표 판정. Q7: "결과 확인 범위" 칸 점검 규칙
 - [ ] 지침서에 "점검기 실행이 필수 첫 단계"를 명시
 - [ ] `leakcheck/`와 `skill_src/`의 해시 잠금 시험 추가. 해시를 커밋한 **뒤에** 사용자가 태그를 만든다
-- [ ] (2b에서 넘김) 시험용 작은 데이터 `tests/conftest.py`의 `small_tables`를 v1 생성기(`synth.generate`)에서 v2 생성기(`synth.generate_v2`)로 바꾼다. 2b는 `rules.py`에 v2 테이블 규칙이 없어 v1 생성기를 그대로 두었다. 이를 쓰는 시험(`test_checks`, `test_tagging`, `test_features`, `test_lock`, `test_inject` 일부)이 v2 데이터로 통과해야 한다
-- [ ] (2b에서 넘김) `skill_src/leakage-check/scripts/run_check.py`의 `--data` 읽기를 `synth.generate.load`(v1 6개 테이블)에서 `synth.generate_v2.load`(17개 테이블)로 바꾼다
-- [ ] (2b에서 넘김) `tests/test_inject.py::test_load_reads_only_six_tables`는 v1 로더의 6개 테이블을 확인하는 v1 시험이다. v2 로더 기준(17개)으로 바꾼다 (고치기 전 사용자 승인)
+- [x] (2b에서 넘김) 시험용 작은 데이터 `tests/conftest.py`의 `small_tables`를 v1 생성기(`synth.generate`)에서 v2 생성기(`synth.generate_v2`)로 바꾼다. 2b는 `rules.py`에 v2 테이블 규칙이 없어 v1 생성기를 그대로 두었다. 이를 쓰는 시험(`test_checks`, `test_tagging`, `test_features`, `test_lock`, `test_inject` 일부)이 v2 데이터로 통과해야 한다
+- [x] (2b에서 넘김) `skill_src/leakage-check/scripts/run_check.py`의 `--data` 읽기를 `synth.generate.load`(v1 6개 테이블)에서 `synth.generate_v2.load`(17개 테이블)로 바꾼다 → 점검기 자체 로더 `leakcheck.data.load`로 바꿈 (D7, 값은 `generate_v2.load`와 같음을 시험으로 확인)
+- [x] (2b에서 넘김) `tests/test_inject.py::test_load_reads_only_six_tables`는 v1 로더의 6개 테이블을 확인하는 v1 시험이다. v2 로더 기준(17개)으로 바꾼다 (고치기 전 사용자 승인)
 
 **완료 기준**: 시험 통과 → 사용자가 GitHub Releases에서 `skill-frozen-v2` 태그 생성. 이후 `leakcheck/`, `skill_src/` 수정 금지.
 
@@ -179,12 +187,15 @@
 
 ## 4단계. 변형
 
+**4단계 시작 시 암호를 넣고 주입·실질 확인 시험 5개(`tests/test_injectability_v2.py`의 암호 필요 시험)가 3단계 점검 코드에서도 통과하는지 먼저 확인한다. 실패하면 멈추고 번호와 문제의 종류만 보고한다.** (3단계 사용자 지시, 2026-10-04)
+
 **할 일** (`v2_plan.md` 3.3, 4절, 시행착오 1)
 - [ ] `skill-frozen-v2` 태그가 있는지 확인한 뒤 보류 추첨: 새 후보 30개에서 질문별 2개씩, 12개를 스크립트로 무작위 추첨. 시드·날짜 기록. 뽑히지 않은 18개는 열지 않는다.
   - (2c에서 넘김) **추첨 전 규칙 R1~R3** (`docs/injection_log_v2.md` "추첨 전 규칙"): R1 전제가 없는 유형에는 배치하지 않고, 모든 유형에서 전제가 없으면 추첨에서 제외. R2 공개 사례와 패치가 같은 후보는 제외, 후보끼리 같으면 앞 번호만. R3 제외 뒤 질문마다 추첨 대상 2개 이상 (모자라면 멈추고 보고). 추첨 대상은 "30개에서 규칙으로 제외되지 않은 후보"다 (계획서의 "30개에서 추첨"과 다름, 이유는 같은 절). 추첨 스크립트는 `sealed/stage2c_record.enc`의 사례별 적용 결과를 읽어 제외 대상을 빼고, 배치는 사례마다 "배치 가능한 유형"에만 한다
 - [ ] 깨끗한 설계서 8개 새로 작성 (설계 유형별 4개)
 - [ ] 깨끗한 설계서 검수: v1 약점 제거 → 스킬 없는 에이전트로 한 번 검토(검수용) → 지적마다 실제 약점이면 고치고, 못 고치는 것만 "정당한 지적" 목록에. 넣는 기준은 "설계서·데이터에서 사실로 확인되는가"
 - [ ] (2b에서 넘김) 깨끗한 설계서 8개를 만들 때 `docs/prereview_v2.md`의 "설계서로 풀림" 지적을 모두 반영한다. "고칠 수 없음" 지적은 "정당한 지적" 목록의 후보로 검토한다. 형식에 표현할 칸이 없던 지적(B3, B5, B8, B14, B21, B23, B24, B26, B27)은 **4단계로 넘기지 않고 2b에서 형식에 칸을 보탰다** (`docs/prereview_v2.md` "형식에 보탠 칸"). 4단계는 그 칸을 채우기만 한다
+- [ ] (3단계에서 넘김) 깨끗한 설계서 8개를 점검기에 돌려 차단·경고·가정을 건별로 보고한다. 차단이나 경고가 나오면 설계서의 실제 약점인지 판단해, 맞으면 설계서를 고친다. 점검기는 동결됐으므로 고치지 않는다. 사실이 아닌 판정이 남으면 그대로 두고 `docs/known_issues_v2.md`에 기록한다.
 - [ ] "정당한 지적" 목록을 해시로 잠금
 - [ ] 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인
 - [ ] `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계 표)

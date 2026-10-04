@@ -15,8 +15,7 @@ import pytest
 from designs import inject as inj
 from leakcheck.checks import run_checks
 from leakcheck.design import normalize, validate
-from synth.generate import TABLES, load
-from synth.outpatient import FILE as OUTPATIENT_FILE, generate_visits
+from synth.outpatient import generate_visits
 from tests.design_mutations import clean, inject as old_inject
 from tools.seal import SealError, decrypt_bytes
 
@@ -61,6 +60,7 @@ def test_base_is_family_split(t):
     assert (b["split_unit"], b["split"]["key"], b["model"]["tuning"]["cv_key"]) == ("family", "family_id", "family_id")
 
 
+@pytest.mark.skip(reason="4단계 완료 시 반드시 통과 (v1 기본 설계서·v1 변형이 v2 규칙표·v2 데이터와 맞지 않음. v2 깨끗한 설계서 8개 기준으로 바꿈, 3단계 승인 ②)")
 @pytest.mark.parametrize("t", ["dynamic", "fixed"])
 def test_base_passes_design_and_data(t, small_tables):
     b = inj.load_bases()[t]
@@ -74,9 +74,17 @@ def test_fixed_base_records_ascertainment_by_discharge_status():
 
 # --- 외래 방문 테이블 (별도 파일) ---
 
-def test_load_reads_only_six_tables():
-    assert (ROOT / "data" / "synth" / OUTPATIENT_FILE).exists()
-    assert sorted(load()) == sorted(TABLES) and len(TABLES) == 6
+def test_load_reads_all_seventeen_tables():
+    """점검기 자체 로더(leakcheck.data, D7)가 v2 17개 테이블을 읽고, 값이 생성기 로더와 같다 (3단계 승인 ②)."""
+    import pandas.testing as pt
+    from leakcheck.data import load as checker_load
+    from synth.generate_v2 import load as v2_load
+    from synth.tables_v2 import TABLES_V2
+    got, want = checker_load(ROOT / "data" / "synth"), v2_load(ROOT / "data" / "synth")
+    assert sorted(got) == sorted(TABLES_V2) and len(TABLES_V2) == 17
+    for name in TABLES_V2:
+        assert list(got[name].columns) == TABLES_V2[name], name
+        pt.assert_frame_equal(got[name], want[name], check_dtype=False)
 
 
 def test_outpatient_is_deterministic_and_respects_readmission(small_tables):
@@ -200,6 +208,7 @@ def test_variants_are_blind_and_valid(built):
         assert validate(v) == []
 
 
+@pytest.mark.skip(reason="4단계 완료 시 반드시 통과 (v1 기본 설계서·v1 변형이 v2 규칙표·v2 데이터와 맞지 않음. v2 깨끗한 설계서 8개 기준으로 바꿈, 3단계 승인 ②)")
 def test_clean_variants_pass_checker(built, small_tables):
     """깨끗한 변형(정당한 변경 포함)만 점검기로 확인한다."""
     variants, key = built
