@@ -245,7 +245,6 @@
 - kdigo_creatinine · `O.proxy.dialysis_procedure`: `procedures` code ∈ ['5A1D70Z'] — 설명서 procedures.code: 투석 처치는 AKI 무렵 (ICD-10-PCS 5A1D = 투석)
 - kdigo_creatinine · `O.proxy.aki_code`: `diagnoses` icd_code ∈ ['N17', '584'] — 설명서 diagnoses.icd_code: AKI 진단 코드 (ICD-9 584)
 - kdigo_creatinine · `O.proxy.aki_problem`: `problem_list` icd_code ∈ ['N17'] — 설명서 problem_list.icd_code: N17.9는 KDIGO 기준을 만족한 검사 보고 뒤에 기록
-- kdigo_creatinine · `O.proxy.diuretic`: `medications` drug ∈ ['loop_diuretic'] — 설명서 medications.drug: AKI 입원의 40%는 발생 6~48시간 뒤 이뇨제 처방이 더 있음
 - next_admission: 규칙표 목록 없음
 - diagnosis_code: 규칙표 목록 없음
 - diagnosis_code: 결과와 같은 코드의 `problem_list` 항목 (`O.proxy.same_code_problem`)

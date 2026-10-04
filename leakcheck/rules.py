@@ -330,7 +330,9 @@ OUTCOME_CHANGES = [
      "what": "진단 코드 체계 ICD-9 → ICD-10 (diagnoses.code_system)"},
 ]
 
-# 결과 정의별 대리 기록 (2층: 결과를 정하는 임상 과정에서 생기는 기록). 설계서의 proxies와 합쳐 쓴다.
+# 결과 정의별 대리 기록 (2층: 결과를 알아챈 뒤에 생기는 기록). 설계서의 proxies와 합쳐 쓴다.
+# 결과 전에도 흔히 생기는 기록(예: 이뇨제 처방, 설명서상 병동 15%·ICU 35%)은 목록에 두지 않는다 (2026-10-04 사용자 결정 A안).
+# 설계서가 대리 기록으로 보면 outcome.proxies에 적는다.
 OUTCOME_PROXIES: dict[str, list[dict]] = {
     "kdigo_creatinine": [
         {"id": "O.proxy.renal_orders", "source": "orders",
@@ -342,8 +344,6 @@ OUTCOME_PROXIES: dict[str, list[dict]] = {
          "basis": f"{_DICT} diagnoses.icd_code: AKI 진단 코드 (ICD-9 584)"},
         {"id": "O.proxy.aki_problem", "source": "problem_list", "filter": {"icd_code": ["N17"]},
          "basis": f"{_DICT} problem_list.icd_code: N17.9는 KDIGO 기준을 만족한 검사 보고 뒤에 기록"},
-        {"id": "O.proxy.diuretic", "source": "medications", "filter": {"drug": ["loop_diuretic"]},
-         "basis": f"{_DICT} medications.drug: AKI 입원의 40%는 발생 6~48시간 뒤 이뇨제 처방이 더 있음"},
     ],
     "next_admission": [],
     "diagnosis_code": [],   # 결과와 같은 코드의 문제 목록 항목을 실행 때 더한다

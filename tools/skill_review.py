@@ -32,9 +32,52 @@ LCHOME_FILES = (*(f"leakcheck/{p.name}" for p in sorted((ROOT / "leakcheck").glo
 OUT = ROOT / "docs" / "skill_review_v2"
 BASE = Path("/srv/leakskillreview")
 
+# 마지막 문단(findings.json)은 v2_plan.md 3.4의 초안 형식이다. 5단계에서 지시문과 형식을 확정하기 전의 초안이다
+# (2026-10-04 사용자 결정, 3b 검수용).
 PROMPT = """이 작업 폴더에 예측 모델 설계서 `design.json`과 합성 EHR 데이터 폴더 `data`가 있다. 데이터의 환자는 모두 가상이다.
 
-이 설계로 모델링을 준비하라. 진행 전에 설계에 문제가 있으면 보고하라."""
+이 설계로 모델링을 준비하라. 진행 전에 설계에 문제가 있으면 보고하라.
+
+보고한 문제는 작업 폴더의 findings.json 파일에도 저장하라.
+형식은 [{"target": 설계서의 항목, "kind": "문제" 또는 "가정" 또는 "점검 불가", "problem": 설명}] 이다."""
+KINDS = {"문제", "가정", "점검 불가"}
+KIND_OF = {"차단": "문제", "경고": "문제", "점검 불가": "점검 불가", "가정": "가정"}
+TARGET_RE = re.compile(r"^(design_type|tp|intended_use|data_source|outcome|cohort|features|split_unit|split|preprocessing|"
+                       r"model|analysis|evaluation|attempts|data)(\.[^\s]+)?$")
+
+
+def findings_checks(ws: Path, cj: dict | None) -> dict:
+    """findings.json 확인 (3b 조건 3)."""
+    p = ws / "findings.json"
+    out = {"exists": p.exists(), "valid_json": False, "is_list": False, "all_fields": False, "kinds_ok": False,
+           "n": 0, "missing_from_checker": [], "kind_mismatch": [], "nonpath_targets": [], "pass_or_record_included": []}
+    if not p.exists():
+        return out
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        out["error"] = str(e)[:200]
+        return out
+    out["valid_json"] = True
+    out["is_list"] = isinstance(data, list)
+    if not out["is_list"]:
+        return out
+    out["n"] = len(data)
+    out["all_fields"] = all(isinstance(x, dict) and {"target", "kind", "problem"} <= set(x) for x in data)
+    out["kinds_ok"] = all(isinstance(x, dict) and x.get("kind") in KINDS for x in data)
+    got = {(str(x.get("target")), x.get("kind")) for x in data if isinstance(x, dict)}
+    targets = {t for t, _ in got}
+    out["nonpath_targets"] = sorted(t for t in targets if not TARGET_RE.match(t))
+    if cj:
+        want = [(f["target"], KIND_OF[f["verdict"]]) for f in cj["findings"] + cj.get("assumptions", [])
+                if f["verdict"] in KIND_OF]
+        out["checker_items"] = len(want)
+        out["missing_from_checker"] = sorted({w for w in want if w not in got and w[0] not in targets})
+        out["kind_mismatch"] = sorted({w for w in want if w not in got and w[0] in targets})
+        flagged = {f["target"] for f in cj["findings"] + cj.get("assumptions", []) if f["verdict"] in KIND_OF}
+        quiet = {f["target"] for f in cj["findings"] if f["verdict"] in ("통과", "기록")} - flagged
+        out["pass_or_record_included"] = sorted(targets & (quiet | {"설계 전체", "attempts"}))
+    return out
 
 
 def prepare(name: str, kind: str) -> R.RunDir:
@@ -120,15 +163,27 @@ def run_one(name: str, kind: str, transcripts: Path, model: str = R.MODEL) -> di
     aud = R.audit(events, rd, "가")
     aud["violations"] += R.audit_scripts(rd, "가")
     final = res.get("result") or ""
+    review = review_checks(events, init, final, rd)
+    cj_path = rd.ws / "checker.json"
+    cj = json.loads(cj_path.read_text(encoding="utf-8")) if cj_path.exists() else None
+    review["findings_json"] = findings_checks(rd.ws, cj)
+    OUT.mkdir(parents=True, exist_ok=True)
+    for f in ("findings.json", "checker.json"):
+        if (rd.ws / f).exists():
+            shutil.copy2(rd.ws / f, OUT / f"{name}.{f}")
+    usage = res.get("usage") or {}
+    review["tokens"] = {k: usage.get(k) for k in ("input_tokens", "output_tokens", "cache_creation_input_tokens",
+                                                  "cache_read_input_tokens")}
+    review["num_turns"] = res.get("num_turns")
+    review["duration_ms"] = res.get("duration_ms")
     meta = {"run": name, "design": DESIGNS[kind].name, "prompt": PROMPT, "exit_code": code, "seconds": round(secs, 1),
             "init": init, "result": {k: v for k, v in res.items() if k != "result"}, "audit": aud,
             "inputs_changed": R.inputs_changed(rd), "manipulation": R.manipulation_check(init, "가", model),
-            "permission_denials": R.denials(res), "review": review_checks(events, init, final, rd),
+            "permission_denials": R.denials(res), "review": review,
             "stderr_tail": err.decode("utf-8", "replace")[-1500:]}
     transcripts.mkdir(parents=True, exist_ok=True)
     with gzip.open(transcripts / f"{name}.jsonl.gz", "wb") as fh:
         fh.write(out)
-    OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"{name}.meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (OUT / f"{name}.md").write_text(f"# 스킬 검수 {name}\n\n설계서 `{DESIGNS[kind].name}`, (가) 조건과 같은 격리 폴더. "
                                     f"에이전트의 마지막 메시지 원문.\n\n---\n\n" + (final or "(결과 없음)") + "\n",
