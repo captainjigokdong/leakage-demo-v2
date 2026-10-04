@@ -32,7 +32,19 @@
 **완료 기준**: v1 시험이 새 저장소에서 통과
 
 **결과 (2026-10-04)**: v1 `main`(9f1a59a)에서 복사. 시험 343 통과, 12 건너뜀, 실패 0.
-- 건너뜀 12개는 모두 복사하지 않은 v1 실행 기록·정답표를 확인하는 시험이다. 10개(`test_run.py`)는 v1에서도 "보관 기록 없음"이면 건너뛰게 되어 있었다. 2개는 이번에 같은 방식으로 바꿨다: `test_analyze.py::test_real_run_files_without_key`(실행 기록 없음), `test_inject.py::test_committed_variants`(변형 20개 검사는 그대로 하고, 정답표 봉인본 확인만 건너뜀).
+- 건너뜀 12개는 모두 복사하지 않은 v1 실행 기록·정답표를 확인하는 시험이다 (아래 표).
+  - `test_run.py`의 10개는 v1 코드에 "보관 기록 없음"이면 건너뛰는 조건이 원래 있었다. 다만 v1 저장소에는 기록이 있어서 **v1에서는 실제로 실행·통과**했고, v2에서 처음으로 건너뛴다.
+  - 2개는 0단계에서 같은 방식으로 바꿨다 (사용자 사후 승인 2026-10-04): `test_analyze.py::test_real_run_files_without_key`(실행 기록 없음), `test_inject.py::test_committed_variants`(변형 20개 검사는 그대로 하고, 정답표 봉인본 확인만 건너뜀).
+
+**건너뛰는 시험 12개** — 해당 단계에서 **건너뜀이 아니라 통과**여야 한다. 시험 안의 v1 숫자(변형 20개, 빈칸 1행, v1 실행 id)는 v2에 맞게 고쳐야 하며, 고치기 전에 사용자 승인을 받는다.
+
+| 시험 | 없어서 건너뛰는 파일 | 반드시 통과해야 하는 때 |
+|---|---|---|
+| `test_inject.py::test_committed_variants` | `sealed/answer_key.enc` (변형 검사는 실행됨, 정답표 확인만 건너뜀) | 4단계 완료 시 (v2 변형 30개·v2 정답표 기준) |
+| `test_run.py::test_pilot3_false_positives_cleared` ×4 | `experiment/pilot/_run3_20261003/discarded/` (v1 시험 실행 3차 기록) | 6단계 사전 점검 전 (v1 기록을 가져오거나 v2용 시험으로 대체) |
+| `test_run.py::test_pilot3_real_exploration_still_flagged` ×2 | 위와 같음 | 6단계 사전 점검 전 (같음) |
+| `test_run.py::test_pilot4_false_positives_cleared` ×4 | `experiment/pilot/_run4_20261003/discarded/` (v1 시험 실행 4차 기록) | 6단계 사전 점검 전 (같음) |
+| `test_analyze.py::test_real_run_files_without_key` | `experiment/runs/conditions.json` (본 실행 기록) | 6단계 완료 시 (v2 본 실행 120행 기준) |
 - `designs/variants/`의 20개와 `docs/` 안의 v1 기록 문서는 v1 것이다. 4단계에서 v2 것으로 바꾼다.
 - `tpot`(누수 효과 시연용)은 시험에 필요 없어 이 세션에 설치하지 않았다. 8단계에서 설치한다.
 
@@ -88,6 +100,7 @@
 - [ ] 깨끗한 설계서 검수: v1 약점 제거 → 스킬 없는 에이전트로 한 번 검토(검수용) → 지적마다 실제 약점이면 고치고, 못 고치는 것만 "정당한 지적" 목록에. 넣는 기준은 "설계서·데이터에서 사실로 확인되는가"
 - [ ] "정당한 지적" 목록을 해시로 잠금
 - [ ] 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인
+- [ ] `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 
 **완료 기준**: 변형·목록 해시 커밋, 정답표는 `*.enc`만
 
@@ -114,8 +127,11 @@
 - [ ] 허용 도구 6개(Read, Glob, Grep, Skill, Write, Bash). 자동 권한 검사가 막은 동작은 우회하지 않음
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
+- [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 - [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
+
+- [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 
 **완료 기준**: 사전 정한 통과 기준 충족, 120행 기록
 
