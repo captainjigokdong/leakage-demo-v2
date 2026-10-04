@@ -64,11 +64,13 @@ def test_csv_roundtrip(tmp_path):
 
 @pytest.mark.skipif(not PUBLIC_CSV.exists(), reason="추첨 전")
 def test_public_catalog_matches_plan():
+    """v2 2c: 공개 목록 = v1 18개 전부 (v1 공개 12 + v1 보류 6, 조정 전 원래 문장). v1의 12행·공개 배분에서 바꿈."""
     import csv
 
     with open(PUBLIC_CSV, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         assert reader.fieldnames == COLUMNS
         rows = list(reader)
-    assert len(rows) == 12
-    assert dict(Counter(r["question"] for r in rows)) == EXPECTED_PUBLIC
+    assert len(rows) == 18
+    assert dict(Counter(r["question"] for r in rows)) == ALLOCATION
+    assert catalog_hash(rows) == "0cd3b12bbe164899bb13c9f18ae478e115fb44c3d7c94dd18ed60706cd11f357"  # v1 기록값

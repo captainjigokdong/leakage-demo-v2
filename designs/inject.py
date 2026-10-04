@@ -66,7 +66,7 @@ def _walk(d: dict, path: str):
 
 
 def apply_ops(design: dict, ops: list[dict]) -> dict:
-    """패치 명령을 적용한 복사본. 명령: set, append, insert_after, remove."""
+    """패치 명령을 적용한 복사본. 명령: set, append, insert_after, insert_before, remove."""
     d = copy.deepcopy(design)
     for op in ops:
         parent, key = _walk(d, op["path"])
@@ -86,6 +86,10 @@ def apply_ops(design: dict, ops: list[dict]) -> dict:
             lst = parent[key]
             idx = next(i for i, x in enumerate(lst) if x.get("name") == op["after"])
             lst.insert(idx + 1, copy.deepcopy(op["value"]))
+        elif kind == "insert_before":
+            lst = parent[key]
+            idx = next(i for i, x in enumerate(lst) if x.get("name") == op["before"])
+            lst.insert(idx, copy.deepcopy(op["value"]))
         elif kind == "remove":
             if key not in parent:
                 raise KeyError(f"{op['path']}: 지울 칸이 없다")
@@ -101,7 +105,7 @@ def targets_of(ops: list[dict]) -> list[str]:
     for op in ops:
         first = op["path"].split(".")[0]
         head, item = _STEP.match(first).groups()
-        if op["op"] in ("append", "insert_after"):
+        if op["op"] in ("append", "insert_after", "insert_before"):
             t = f"{op['path']}:{op['value']['name']}"
         elif item is not None:
             t = f"{head}:{item}"
@@ -176,9 +180,10 @@ LEGIT_CHANGES: dict[str, dict] = {
 # --- 사례 목록 ---------------------------------------------------------------
 
 def public_cases(catalog_csv: Path = ROOT / "designs" / "error_catalog_public.csv") -> list[dict]:
+    """v1 변형 생성 경로의 공개 12개 (v2 2c에서 공개 목록이 18행이 됨. 4단계에서 v2로 다시 짠다)."""
     import csv
     with open(catalog_csv, newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+        rows = [r for r in csv.DictReader(f) if r["id"] in PUBLIC_PATCHES]
     return [case_entry(r, PUBLIC_PATCHES[r["id"]], holdout=False) for r in rows]
 
 
