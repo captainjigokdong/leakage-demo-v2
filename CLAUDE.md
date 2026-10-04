@@ -20,11 +20,11 @@ v1(`captainjigokdong/leakage-demo`, 2026-10-02~03)과 같은 질문을 **장치�
 2. `docs/v2_plan.md` — v2 계획 (v1 시행착오와 대응, 가설·기준 초안, 실행 규칙).
 3. `docs/research_plan.md` — 개념(Q1~Q7, 꼬리표, 규칙표). v1 문서지만 개념은 그대로 쓴다.
 
-v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `known_issues.md`, `success_criteria.md`, `step7_analysis_plan.md`)는 **v1 기록**이다. v2의 해당 문서는 각 단계에서 새로 만든다.
+v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `known_issues.md`(v2는 `known_issues_v2.md`), `success_criteria.md`, `step7_analysis_plan.md`)는 **v1 기록**이다. v2의 해당 문서는 각 단계에서 새로 만든다.
 
 ## 현재 단계
 
-**0단계 완료 (2026-10-04)** — v1 코드 복사(봉인 파일·실행 기록·결과 제외), 이 파일과 `docs/phases.md`를 v2용으로 작성. 다음은 **1단계(봉인)** 이고 새 세션에서 한다.
+**0단계 완료 (2026-10-04)** — v1 코드 복사(봉인 파일·실행 기록·결과 제외), 이 파일과 `docs/phases.md`를 v2용으로 작성. 0단계는 PR 없이 사용자가 이 브랜치에서 main을 직접 만든다. 다음은 **1단계(봉인)** 이고 새 세션에서 한다.
 
 ## 절대 규칙
 
@@ -32,7 +32,7 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
    - **3단계(스킬) 세션은 어떤 경우에도 봉인 파일을 열지 않는다.** 스킬 세션이 보는 것은 넓어진 설계서 형식과 v1의 공개 사례 18개(E01~E18)뿐이다.
    - **다른 세션의 대화 기록을 읽지 않는다.** 후보 작성·1단계 등 이전 세션의 기록(세션 목록·이벤트 조회 도구 포함)에는 암호와 후보 사례가 남아 있으므로, 어떤 경로로도 열거나 검색하지 않는다.
 2. **평문 후보 목록·주입 코드·정답표를 커밋하지 않는다.** 커밋되는 것은 암호화된 `*.enc` 파일과 해시뿐이다. 평문은 메모리나 `.gitignore`된 임시 경로에만 잠깐 존재한다. v1 암호를 재사용하지 않는다.
-3. **스킬 동결 후에만 보류 추첨.** 점검 코드와 스킬(`leakcheck/`, `skill_src/`)은 `skill-frozen-v2` 태그를 단 뒤로는 고치지 않는다. 버그를 발견하면 고치지 말고 v2의 알려진 문제 문서에 기록한다.
+3. **스킬 동결 후에만 보류 추첨.** 점검 코드와 스킬(`leakcheck/`, `skill_src/`)은 `skill-frozen-v2` 태그를 단 뒤로는 고치지 않는다. 버그를 발견하면 고치지 말고 `docs/known_issues_v2.md`에 기록한다.
 4. **개발 중인 스킬을 `.claude/skills/`에 두지 않는다.** 그 위치의 스킬은 자동으로 로드되어 (나) 조건을 오염시킨다. 스킬은 `skill_src/`에서 개발하고, 실험 실행 스크립트가 (가) 조건의 격리된 실행 폴더에만 복사한다.
 5. **특징(feature)은 출처를 기록하는 정해진 함수로만 만든다.** 이를 우회한 계산은 "출처 불명"으로 표시한다.
 6. **결정 잠금 전에는 모델 성능을 계산하지 않는다.** 코드로 강제한다.
@@ -44,13 +44,14 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
 ## 단계 진행 규칙
 
 - 각 단계는 **새 세션**에서 시작한다. 시작 전에 **앞 단계 PR이 main에 병합됐는지** 확인한다. 병합 안 됐으면 멈추고 사용자에게 알린다.
+  - 예외: 0단계는 PR 없이 main을 직접 만들었으므로, 1단계 시작 확인은 **"main에 0단계 커밋이 있는지"**로 한다.
 - 계획을 먼저 보여 주고 사용자 확인 후 실행한다.
 - 태그(`skill-frozen-v2`, `criteria-locked-v2`)는 세션에서 푸시하지 않는다. 사용자가 GitHub Releases에서 직접 만든다.
 - 단계가 끝나면: 시험 통과 확인 → `docs/phases.md` 체크 → 이 파일의 "현재 단계" 갱신 → 커밋·푸시.
 
 ## 코딩 규칙
 
-- Python 3.11+, pandas, numpy, scikit-learn, pytest. 필요한 패키지는 `requirements.txt`에 추가.
+- Python 3.11+, pandas, numpy, scikit-learn, pytest. 필요한 패키지는 `requirements.txt`에 추가하고, 설치한 버전은 `requirements-lock.txt`에 기록한다.
 - 폴더 구조
   ```
   synth/        합성 데이터 생성기

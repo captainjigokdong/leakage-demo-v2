@@ -5,7 +5,7 @@
 각 단계는 **새 세션**에서 "docs/phases.md의 N단계를 진행해"로 시작한다.
 
 **단계 시작 체크리스트** (모든 단계 공통, 시행착오 13)
-- [ ] 앞 단계 PR이 main에 병합됐는지 확인. 안 됐으면 멈추고 사용자에게 알린다.
+- [ ] 앞 단계 PR이 main에 병합됐는지 확인. 안 됐으면 멈추고 사용자에게 알린다. (1단계만: main에 0단계 커밋이 있는지로 확인)
 - [ ] 이번 단계가 봉인 파일을 열어도 되는 단계인지 아래 표로 확인.
 - [ ] 계획을 사용자에게 먼저 보여 주고 확인받는다.
 
@@ -13,7 +13,7 @@
 
 | 단계 | 봉인 파일 |
 |---|---|
-| 0, 3, 5, 6 | **열지 않음** (3단계 스킬 세션은 어떤 경우에도 보지 않는다) |
+| 0, 3, 5, 6, 8 | **열지 않음** (3단계 스킬 세션은 어떤 경우에도 보지 않는다) |
 | 1 | 후보 목록을 암호화만 한다 (사용자가 붙여 넣은 평문 → 바로 `*.enc`) |
 | 2 | 후보 30개를 열어 주입 코드 작성. 새 후보분 주입 코드는 봉인 |
 | 4 | 보류 추첨, 변형 생성, 정답표 봉인 |
@@ -45,8 +45,22 @@
 | `test_run.py::test_pilot3_real_exploration_still_flagged` ×2 | 위와 같음 | 6단계 사전 점검 전 (같음) |
 | `test_run.py::test_pilot4_false_positives_cleared` ×4 | `experiment/pilot/_run4_20261003/discarded/` (v1 시험 실행 4차 기록) | 6단계 사전 점검 전 (같음) |
 | `test_analyze.py::test_real_run_files_without_key` | `experiment/runs/conditions.json` (본 실행 기록) | 6단계 완료 시 (v2 본 실행 120행 기준) |
+
+**파일 변경을 잠그는 시험 (해시 검사)** — 지금 잠금 기준은 모두 **v1 문서·v1 파일**이다. 해당 단계에서 v2 것으로 바꾼다 (바꾸기 전에 사용자 승인).
+
+| 시험 | 잠그는 파일 → 대조 기준 | 다시 잠글 단계 |
+|---|---|---|
+| `test_synth.py::test_committed_data_matches_manifest_and_criteria` | `data/synth/` 7개 테이블 → `MANIFEST.json` | 2단계 |
+| `test_grader.py::test_verify_variants` | `designs/variants/` 20개 → `docs/injection_log.md` | 4단계 |
+| `test_grader.py::test_locked_files_match_success_criteria` | `experiment/agent_prompt.md`, `grader.py`, `scoring_rules.md` → `docs/success_criteria.md` | 5단계 |
+| `test_grader.py::test_prompt_fixed_and_neutral` | `experiment/agent_prompt.md` → `experiment/prompt.py`의 해시와 `docs/success_criteria.md` | 5단계 |
+
+잠금이 없는 것 (0단계에서 발견): `data/synth/outpatient_visits.csv.gz`(`OUTPATIENT_MANIFEST.json`에 해시는 있으나 대조 시험 없음), `leakcheck/`·`skill_src/`(태그와 규칙으로만 동결). 각각 2단계, 3단계에서 시험을 추가한다.
+
 - `designs/variants/`의 20개와 `docs/` 안의 v1 기록 문서는 v1 것이다. 4단계에서 v2 것으로 바꾼다.
 - `tpot`(누수 효과 시연용)은 시험에 필요 없어 이 세션에 설치하지 않았다. 8단계에서 설치한다.
+- 패키지 버전: `requirements-lock.txt`에 기록 (Python 3.11.15).
+- **main 만들기**: 0단계는 PR 없이 사용자가 이 브랜치(`claude/leakage-demo-v2-setup-1syhf2`)에서 GitHub의 main을 직접 만든다. 1단계 시작 확인은 "앞 단계 PR 병합" 대신 **"main에 0단계 커밋이 있는지"**로 한다.
 
 ---
 
@@ -71,6 +85,9 @@
 - [ ] 모든 테이블에 규칙표 규칙이 있는지 확인하는 시험 추가
 - [ ] 후보 30개 + v1 18개, 모두 48개의 주입 코드 작성. 새 후보 30개분 주입 코드는 봉인
 - [ ] 보조 데이터("환자 적고 변수 많은") 생성 (Q3 전처리 누수 시연용)
+- [ ] 외래 방문(`outpatient_visits`)을 포함해 **모든 데이터 테이블**에 해시 대조 시험이 있는지 확인
+- [ ] 데이터를 다시 만들 때는 `requirements-lock.txt`의 버전을 쓴다
+- [ ] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_synth.py`)
 
 **완료 기준**: 48개 모두 **조정 없이** 주입 가능함을 시험으로 확인. 표현이 안 되는 사례가 나오면 사례를 고치지 않고 형식을 고친다.
 
@@ -87,6 +104,7 @@
 - [ ] 에이전트 보고를 ① 점검기가 차단·경고한 것 ② 추가로 의심하는 것 ③ 가정(참고)으로 나누도록 지침서 작성
 - [ ] Q5: 포함·제외 기준마다 "언제 알 수 있는 정보인가" 꼬리표 판정. Q7: "결과 확인 범위" 칸 점검 규칙
 - [ ] 지침서에 "점검기 실행이 필수 첫 단계"를 명시
+- [ ] `leakcheck/`와 `skill_src/`의 해시 잠금 시험 추가. 해시를 커밋한 **뒤에** 사용자가 태그를 만든다
 
 **완료 기준**: 시험 통과 → 사용자가 GitHub Releases에서 `skill-frozen-v2` 태그 생성. 이후 `leakcheck/`, `skill_src/` 수정 금지.
 
@@ -101,6 +119,7 @@
 - [ ] "정당한 지적" 목록을 해시로 잠금
 - [ ] 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인
 - [ ] `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
+- [ ] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_verify_variants`)
 
 **완료 기준**: 변형·목록 해시 커밋, 정답표는 `*.enc`만
 
@@ -115,6 +134,7 @@
 - [ ] 채점기 검증 세트: v1 보고서 119개의 지적 문장에서 뽑아 만들고, 그 세트로 채점기를 검증
 - [ ] 가설 기준 확정 (H1a·H1b·H1c는 따로 판정, H2a, H2b는 기술)
 - [ ] 분석 계획 확정
+- [ ] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_locked_files_match_success_criteria`, `test_prompt_fixed_and_neutral`)
 
 **완료 기준**: 검증 세트 통과 → 사용자가 `criteria-locked-v2` 태그 생성
 
@@ -127,10 +147,10 @@
 - [ ] 허용 도구 6개(Read, Glob, Grep, Skill, Write, Bash). 자동 권한 검사가 막은 동작은 우회하지 않음
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
+- [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 - [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
-
 - [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 
 **완료 기준**: 사전 정한 통과 기준 충족, 120행 기록
@@ -152,5 +172,6 @@
 
 **할 일**
 - [ ] 누수 효과 시연: v1 설계 + 2단계 보조 데이터(환자 적고 변수 많은)
+- [ ] `tpot` 설치와 버전 기록 (`requirements-lock.txt`)
 
 **완료 기준**: 그림과 표
