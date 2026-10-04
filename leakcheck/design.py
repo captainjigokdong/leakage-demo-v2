@@ -12,6 +12,8 @@ from leakcheck import rules, timeline
 
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "designs" / "schema.json"
 PROVENANCE_OK = "leakcheck.features"
+UNKNOWN = "출처 불명"
+VALUE_TABLES = ("patients", "person_links", "admissions", "admission_info")
 
 
 class DesignError(ValueError):
@@ -54,7 +56,7 @@ def _windows(d: dict):
 
 
 def default_scope(source: str | None) -> str:
-    return "patient" if source == "patients" else "index_admission"
+    return "patient" if source in ("patients", "person_links") else "index_admission"
 
 
 def normalize(design: dict) -> dict:
@@ -81,7 +83,8 @@ def normalize(design: dict) -> dict:
             spec.setdefault("scope", default_scope(spec["source"]))
             spec.setdefault("filter", {})
             spec.setdefault("agg", "value" if spec["scope"] in ("patient", "index_admission")
-                            and spec["source"] in ("patients", "admissions") else "last")
+                            and spec["source"] in VALUE_TABLES else "last")
+        if "source" in spec or spec.get("derive"):
             spec.setdefault("made_by", PROVENANCE_OK)
     return d
 
@@ -96,7 +99,8 @@ def design_hash(design: dict) -> str:
 
 
 def provenance_known(spec: dict) -> bool:
-    return "source" in spec and spec.get("made_by", PROVENANCE_OK) == PROVENANCE_OK
+    """정해진 특징 함수로 만든 특징인가: 원본 테이블이 있거나 파생 특징이고, made_by가 정해진 함수."""
+    return ("source" in spec or bool(spec.get("derive"))) and spec.get("made_by", PROVENANCE_OK) == PROVENANCE_OK
 
 
 def frames(design: dict) -> list[timeline.Frame]:

@@ -205,6 +205,8 @@
 - [ ] (2b에서 넘김) 대조 조건 (나)에도 계정의 기본 제공 스킬 목록이 보인다 (2b 예비 검수에서 34개, `docs/prereview_v2/*.meta.json`의 `init.skills`). 누수 점검 스킬은 없었고 호출도 없었다. 두 조건에 어떻게 다룰지 정한다
 - [ ] `findings.json` 형식: `[{"target": 항목, "kind": "문제"|"가정"|"점검 불가", "problem": 설명}]`. 형식 검사 실패 시 "파일 형식만 고쳐 다시 제출" 1회 (두 조건 같게, 횟수 기록)
 - [ ] 채점기: "점검 불가"는 문장이 아니라 `kind` 칸으로 판정. 주 분석 항목 일치, 보조 분석 항목 + 종류. "가정"은 채점하지 않음
+- [ ] (3단계에서 넘김) 채점기의 항목 일치가 점검기·스킬의 target 표기(설계서 경로: `features.이름`, `cohort.inclusion.이름`, `cohort.exclusion.이름`, `preprocessing.이름`, `split.key`, `split_unit`, `model.tuning.cv_key`, `outcome.…` 등)를 받아야 한다
+- [ ] (3단계에서 정함, 2026-10-04 사용자 결정) `findings.json`의 kind는 `문제`·`가정`·`점검 불가` 세 개. 점검기의 경고도 `문제`로 낸다. 통과와 Q6 기록은 제출하지 않는다. ①(점검기)과 ②(에이전트 추가 의심)를 구분하는 칸은 두지 않는다 (두 조건의 제출 형식이 같아야 한다). 제출 파일의 이름·위치는 지시문이 정한다 (SKILL.md에 적지 않음)
 - [ ] 채점기 검증 세트: v1 보고서 119개의 지적 문장에서 뽑아 만들고, 그 세트로 채점기를 검증
 - [ ] 가설 기준 확정 (H1a·H1b·H1c는 따로 판정, H2a, H2b는 기술)
 - [ ] (2c에서 넘김) 채점 규칙에 여러 칸을 바꾸는 패치의 항목 일치 기준을 정한다
@@ -222,8 +224,10 @@
 - [ ] 실행 규칙 잠금: 첫 시도 채택. 재실행은 기계적 실패(인증, 시간 초과, 프로세스 오류)에만, 사유 기록. 폐기는 ① 봉인 파일·정답표·다른 실행의 출력물을 읽음 ② (나)가 스킬·점검 코드를 읽음 — 둘만. 단순한 폴더 탐색은 기록만.
 - [ ] 허용 도구 6개(Read, Glob, Grep, Skill, Write, Bash). 자동 권한 검사가 막은 동작은 우회하지 않음
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
+- [ ] (3단계에서 넘김) (가) 조건에서는 점검기 출력 파일 `checker.json`도 실행 스크립트가 따로 수거한다 (제출 형식과 별개, 두 조건의 제출 형식은 같다). 데이터 폴더 이름은 `data/`
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
 - [ ] (2b에서 넘김) 사전 점검에 넣는다: heredoc(`<<`), `find -exec` 같은 명령이 권한 규칙에 막히면 에이전트가 데이터를 열지 않고 끝낼 수 있다 (2b 예비 검수 4회 중 2회). 에이전트가 데이터를 읽으려면 시스템 python(`/usr/local/bin/python3`)에 numpy·pandas와 그 의존 패키지가 **에이전트의 HOME과 무관한 위치**에 있어야 한다. 2b 세션 컨테이너에는 numpy·pandas가 없어서 `requirements-lock.txt`로 설치했는데, python-dateutil은 `/root/.local`에만 있어 HOME을 따로 정한 에이전트에서는 `import pandas`가 실패했다 (예비 검수 에이전트는 csv 모듈로 우회해 데이터를 읽었다). 사전 점검 5번(패키지 import)을 에이전트와 같은 환경 변수로 확인한다
+- [ ] (3단계에서 확인한 원인) 세션 컨테이너 이미지의 `/root/.local/lib/python3.11/site-packages`에 python-dateutil이 처음부터 들어 있다 (다른 도구가 설치해 둔 것). 그래서 사용자 폴더를 무시하지 않고 `pip install`하면 pip가 "이미 있음"으로 보고 시스템 위치에 설치하지 않는다. `PYTHONNOUSERSITE=1 python3 -m pip install -r requirements-lock.txt`로 설치하면 시스템 위치(`/usr/local/lib/python3.11/dist-packages`)에 설치되고, `PYTHONNOUSERSITE=1`에서도 `import pandas`가 된다 (3단계 세션에서 확인). 사전 점검에 이 설치 방법과 확인을 넣는다
 - [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
 - [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
