@@ -402,3 +402,40 @@ def split_level(name: str) -> str:
         return SPLIT_ALIASES[name]
     except KeyError:
         raise RuleMissing(f"분할 단위·키 '{name}'가 규칙표의 위계에 없다") from None
+
+
+# ---------------------------------------------------------------- 판정 규칙 번호 (점검기 출력의 rule 칸)
+# 테이블 규칙(T.<테이블>.<열>), 층(O.strata.*), 대리 기록(O.proxy.*), 측정법 변경(O.change.*), 가정(A.*)은 위의 표에 있다.
+PRINCIPLES = {
+    "S.levels": "Q2: 분할 묶음(key)은 선언된 독립 단위(split_unit) 이상이어야 한다. 위계 index_row < admission < episode "
+                "< patient < person < family",
+    "S.entity": "Q2: 독립 단위와 분할 묶음은 개체 단위(사람) 이상이어야 한다",
+    "S.fallback": "Q2: 결측이 있는 묶음 열(family_id)의 대체 키(fallback_key)도 개체 단위(사람) 이상이어야 한다",
+    "S.temporal": "Q2: 시간 순 분할의 간격(gap)은 결과 창 길이 이상이어야 한다. 시간 순 분할의 해석: " + TEMPORAL_RULE,
+    "S.temporal_deploy": "Q1: 전향 사용(prospective_deployment)이 목적이면 시간 순으로 나눠야 한다 (경고)",
+    "S.dedup": "Q2: 중복 레코드는 분할 전에 지운다 (deduplication.when = before_split)",
+    "F.fit_scope": "Q3: 데이터에서 추정하는 것은 학습 부분에서만 (fit_scope ∈ " + ", ".join(sorted(FIT_SCOPES_OK)) + ")",
+    "F.fold_refit": "Q3: 조율을 교차검증으로 하면 추정 단계는 폴드마다 다시 맞춘다 (fit_scope = train_fold, 경고)",
+    "F.before_split": "Q3: 추정하는 단계를 분할 전에 하지 않는다",
+    "F.resample": "Q3: 재표본 추출은 학습 부분에만 적용한다",
+    "F.eval_data": "Q3: 성능은 학습·모형 결정에 쓰지 않은 부분에서 계산한다",
+    "F.test_reuse": "Q3: 평가 부분으로 성능을 한 번만 본다 (경고)",
+    "F.future_fill": "Q1: 뒤(나중) 행의 값을 쓰는 결측 대치(" + ", ".join(sorted(FUTURE_FILL_METHODS)) + ")는 tₚ에 알 수 없는 값을 쓴다",
+    "O.same_rows": "Q4: 결과를 정한 행과 같은 행(같은 테이블, 겹치는 필터·범위·시간 구간)을 특징으로 쓰지 않는다",
+    "O.window_reuse": "Q4: 특징의 시간 창이 결과 창과 겹치지 않아야 한다",
+    "O.proxy": "Q4: 결과의 대리 기록(규칙표 목록 + 설계서 outcome.proxies)과 일치하는 특징은 사람이 확인한다 (경고)",
+    "D.proxies": "Q4: 설계서 outcome.proxies에 적힌 대리 기록과 일치 (경고)",
+    "O.blind": "Q4: 결과를 예측변수 정보를 모른 채 정한다 (blind_to_predictors, 경고)",
+    "O.strata": "Q7: 결과 확인 강도가 층마다 같거나 층별로 다룬다 (by_stratum, 또는 한 층으로 제한)",
+    "O.match_key": "Q7: 이번 입원 밖의 결과는 같은 사람(person_id)의 모든 등록 번호에서 찾는다 (경고)",
+    "O.end_of_data": "Q7: 결과 창이 자료 추출 종료를 넘는 행은 exclude_incomplete 또는 survival_model로 다룬다 (경고)",
+    "O.death_source": "Q7: 사망을 결과에 넣고 결과 창 안에 퇴원할 수 있으면 사망 연계 자료를 쓴다 (경고)",
+    "C.time_compare": "Q5: 사건 시각 열을 시각 표현과 비교하는 기준(예: 퇴원 시각 > tp)은 그 시각 + 지연에 알려진다",
+    "C.sampling": "Q5: 결과를 보고 뽑는 표본 추출은 개발 데이터에만 적용한다",
+    "C.rows_last": "Q5: 단위마다 마지막 행을 고르려면 그 뒤에 행이 없음을 알아야 한다 (tₚ 뒤 정보)",
+    "C.post_tp_exclusion": "Q5: 결과 창 안의 사건(사망 등)으로 행을 빼지 않는다",
+    "C.pending": "Q5: tₚ 전에 생겼지만 tₚ 뒤에 알려진 결과 사건으로 행을 빼지 않는다",
+    "R.missing": "점검 불가: 규칙표에 없는 테이블·열·범위는 추측하지 않고 멈춘다",
+    "R.provenance": "점검 불가: 특징은 정해진 특징 함수로만 만든다 (원본 테이블 또는 파생 특징). 그 밖은 출처 불명",
+    "R.data": "점검 불가: 데이터 단계를 돌리지 못했다 (설계서 점검 결과만 있음)",
+}
