@@ -176,9 +176,10 @@ LEGIT_CHANGES: dict[str, dict] = {
 # --- 사례 목록 ---------------------------------------------------------------
 
 def public_cases(catalog_csv: Path = ROOT / "designs" / "error_catalog_public.csv") -> list[dict]:
+    """v1 변형 생성 경로의 공개 12개 (v2 2c에서 공개 목록이 18행이 됨. 4단계에서 v2로 다시 짠다)."""
     import csv
     with open(catalog_csv, newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+        rows = [r for r in csv.DictReader(f) if r["id"] in PUBLIC_PATCHES]
     return [case_entry(r, PUBLIC_PATCHES[r["id"]], holdout=False) for r in rows]
 
 
