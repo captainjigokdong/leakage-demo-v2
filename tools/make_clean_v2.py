@@ -80,9 +80,9 @@ def temporal(d: dict, cutoff: str, gap: str, time_note: str) -> dict:
     s.pop("test_fraction", None)
     s.update({"method": "temporal", "cutoff": cutoff, "gap": gap})
     d["split"] = s
-    d["notes_split"] = (f"시간 순 분할: 기준 시각은 tp ({time_note}). 묶음(family_id, 없으면 person_id)째로 움직인다. "
-                        f"묶음의 모든 행이 {cutoff[:10]} 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 "
-                        f"{cutoff[:10]} + {gap} 뒤 행만 평가에 쓴다.")
+    d["notes_split"] = (f"시간 순 분할: 기준 시각은 tp ({time_note}). 묶음(split.key, 결측이면 split.fallback_key)째로 움직인다. "
+                        "묶음의 모든 행이 경계 시각(split.cutoff) 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 "
+                        "경계 시각 + 간격(split.gap) 뒤 행만 평가에 쓴다.")
     return d
 
 
@@ -91,7 +91,7 @@ def research_only(d: dict, setting: str) -> dict:
     d["intended_use"] = {"purpose": "research_only",
                          "deployment_start": "해당 없음 (전향 사용 전의 내부 검증 연구)",
                          "setting": setting}
-    d["notes_split"] = "가족 단위 무작위 분할 (family_id, 없으면 person_id), 평가 30%."
+    d["notes_split"] = ""
     return d
 
 
@@ -99,7 +99,7 @@ def boosting(d: dict) -> dict:
     d["model"]["family"] = "gradient_boosting (결정 나무)"
     d["model"]["selection"]["method"] = "나무 깊이·학습률·나무 수 격자 탐색"
     d["model"]["early_stopping"] = {"method": "사용하지 않음 (나무 수는 격자 탐색으로 정함)"}
-    _step(d, "standardize")["description"] = REFIT_NOTE + ". 나무 모형에는 결과가 같지만 같은 입력 흐름을 유지한다"
+    _step(d, "standardize")["description"] = "나무 모형에는 결과가 같지만 같은 입력 흐름을 유지한다"
     return d
 
 
@@ -116,7 +116,7 @@ def missing_indicator(d: dict) -> dict:
         "name": "missing_flags", "kind": "transform", "method": "결측 여부 표시 열 추가 (값이 없으면 1)",
         "stateless": True, "applies_to": "train+test", "before_split": False, "uses_outcome": False,
         "columns": list(_step(d, "median_impute")["columns"]),
-        "description": "데이터에서 추정하는 것이 없는 단계. 표시 열을 만든 뒤 median_impute로 값을 채운다"})
+        "description": "표시 열을 만든 뒤 대치한다"})
     return d
 
 
@@ -210,11 +210,8 @@ def make_fixed(base: dict) -> dict[str, dict]:
 
 
 EMPTY_NOTE = {
-    "dynamic": "선택한 방법에 해당하지 않는 칸은 비워 두었다: cohort.sampling.by, cohort.sampling.fraction, "
-               "cohort.sampling.ratio (전체 사용), split.n_folds, features의 date_compare (날짜만 있는 열을 쓰지 않음)",
-    "fixed": "선택한 방법에 해당하지 않는 칸은 비워 두었다: outcome.filter, outcome.reference_window, outcome.reference "
-             "(입원으로 정하는 결과라 기준값이 없음), cohort.sampling.by, cohort.sampling.fraction, cohort.sampling.ratio "
-             "(전체 사용), split.n_folds, features의 date_compare (날짜만 있는 열을 쓰지 않음)",
+    "dynamic": "선택한 방법에 해당하지 않는 칸은 비워 두었다",
+    "fixed": "선택한 방법에 해당하지 않는 칸은 비워 두었다",
 }
 
 
@@ -222,9 +219,8 @@ EMPTY_NOTE = {
 
 JAFFE_NOTE = ("2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 "
               "jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계). 측정법 자체는 특징으로 "
-              "넣지 않는다")
-HISTORY_NOTE = ("이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 "
-                "tp에는 알 수 없다")
+              "")
+HISTORY_NOTE = "같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다"
 
 
 def _is_creatinine(f: dict) -> bool:
@@ -246,14 +242,14 @@ def round1_fixes(t: str, d: dict) -> None:
     d["preprocessing"].insert(0, {
         "name": "cr_method_align", "kind": "transform", "method": "jaffe 측정 크레아티닌 값에서 0.10 mg/dL을 뺀다",
         "stateless": True, "applies_to": "train+test", "before_split": False, "uses_outcome": False, "columns": cr,
-        "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이이고 데이터에서 추정하지 않는다. "
-                       "결과 판정(KDIGO)은 같은 측정법끼리만 비교하므로 이 보정을 쓰지 않는다"})
+        "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. "
+                       "결과 판정에는 쓰지 않는다 (결과 서술 참고)"})
     # D6: 이력 특징의 근거 한 문장
     for f in feats:
         if f.get("history_key") == "patient_id":
             _append_desc(f, HISTORY_NOTE)
     # 작은 명시: 조율 폴드 수
-    d["model"]["tuning"]["method"] = "group_kfold 5폴드 (family_id, 없으면 person_id)"
+    d["model"]["tuning"]["method"] = "group_kfold 5폴드 (묶음 열은 cv_key, 결측이면 fallback_key)"
     o = d["outcome"]
     if t == "dynamic":
         # D1a: 창이 있는 이번 입원 특징은 같은 에피소드 전체를 본다
@@ -262,7 +258,10 @@ def round1_fixes(t: str, d: dict) -> None:
                 f["episode"] = "index_episode"
         # D2: 결과 서술에 칸 대응
         _append_desc(o, "설계서 칸으로는 outcome.window (tp, tp+48h]가 채취 시각 창이고, tp 이전에 채취되어 tp에 아직 "
-                        "보고되지 않은 값은 outcome.pending_at_tp=count_as_outcome으로 같은 규칙에 들어간다")
+                        "보고되지 않은 값은 outcome.pending_at_tp 칸이 다룬다")
+        # D4 결과 쪽 (승인 C 전 결정, 2026-10-05): 형식에 결과 값을 보정하는 칸이 없고 점검기의 결과 계산도 측정법을
+        # 다루지 않아 결과는 원값으로 판정한다
+        _append_desc(o, "판정은 측정법 보정을 하지 않은 값으로 한다. jaffe 값을 0.10 내려 보정하면 14행이 음성에서 양성으로 바뀐다")
         # D3: 자료 추출 종료 무렵 입원 제외
         d["cohort"]["exclusion"].append({
             "name": "admit_near_extraction_end",
@@ -303,7 +302,7 @@ def round1_fixes(t: str, d: dict) -> None:
                 "method": "ICD-9 주진단 코드를 같은 병의 ICD-10 코드로 바꾼다 (데이터 설명서 diagnoses.code_system의 코드별 대응)",
                 "stateless": True, "applies_to": "train+test", "before_split": False, "uses_outcome": False,
                 "columns": ["prior_dx_group"],
-                "description": "고정 대응표를 쓰고 데이터에서 추정하지 않는다. 코드 체계는 2155-10-01에 ICD-9에서 ICD-10으로 바뀌었다"})
+                "description": "고정 대응표를 쓴다. 코드 체계는 2155-10-01에 ICD-9에서 ICD-10으로 바뀌었다"})
     # 가정·점검 불가 분류에서 고칠 수 있는 사실 (서술로 명시, 승인 B 확인 3)
     for f in feats:
         if f.get("source") == "diagnoses" and f.get("scope") == "prior_admissions":
@@ -313,7 +312,7 @@ def round1_fixes(t: str, d: dict) -> None:
     _append_desc(adult, "patients.age는 그 등록 번호의 첫 입원 때 나이라 인덱스 입원 때 나이는 그 이상이다")
     _append_desc(d["model"]["threshold"], "보정(calibration)한 확률에서 정한다", "method")
     if t == "dynamic":
-        _append_desc(o, "결과 창 끝(tp+48h)이 자료 추출 종료 뒤인 행은 뺀다 (end_of_data=exclude_incomplete)")
+        _append_desc(o, "결과 창 끝(tp+48h)이 자료 추출 종료 뒤인 행의 처리는 outcome.censoring.end_of_data 칸이 정한다")
     # D9: 결측 표시 단계는 대치하는 열 전부
     mf = next((x for x in d["preprocessing"] if x["name"] == "missing_flags"), None)
     if mf:
@@ -322,19 +321,40 @@ def round1_fixes(t: str, d: dict) -> None:
 
 
 EPISODE_NOTE = {
-    "dynamic": "두 입원 기록으로 이어진 에피소드에서 창이 있는 이번 입원 특징은 에피소드 전체를 본다. 결과·tp는 입원 기록 단위다",
-    "fixed": "두 입원 기록으로 이어진 에피소드에서 검사·활력·ICU·투석 특징은 에피소드 전체를, 퇴원약은 이번 퇴원을, "
-             "열 값 특징(los_h, unit 등)은 마지막 입원 기록을 본다",
+    "dynamic": "두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다",
+    "fixed": "두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. 열 값 특징은 인덱스 입원 기록의 값이다",
 }
+
+
+def text_cleanup(t: str, d: dict) -> None:
+    """서술이 다른 칸의 값을 되풀이하지 않게 한다 (승인 B 뒤 확인 2: 패치를 적용하면 어긋나는 문장).
+    - 전처리 단계 서술의 "폴드마다 다시 맞춘다"(fit_scope 값의 되풀이)를 지운다.
+    - 대리 기록 근거의 "특징으로 쓰지 않는다"(특징 목록의 되풀이)를 지운다.
+    - 동적 결과 서술의 병동별 보고 문장은 확인 방식(outcome.ascertainment.method)에만 둔다."""
+    for st in d["preprocessing"]:
+        desc = st.get("description", "")
+        desc = desc.replace(REFIT_NOTE, "").lstrip(". ").strip()
+        if desc:
+            st["description"] = desc
+        else:
+            st.pop("description", None)
+    for px in d["outcome"].get("proxies", []):
+        px["basis"] = px["basis"].replace(". 특징으로 쓰지 않는다", "").replace("특징으로 쓰지 않는다", "").strip(". ")
+    if t == "dynamic":
+        o = d["outcome"]
+        o["description"] = o["description"].replace(
+            " 창 안 퇴원 비율과 측정 빈도가 병동마다 다르므로 tp에 머문 병동별로 결과율·측정 빈도·창 안 퇴원 비율을 따로 보고한다.", "")
+        _append_desc(o["ascertainment"], "창 안 퇴원 비율도 병동별로 보고한다", "method")
 
 
 def finish(name: str, t: str, d: dict) -> dict:
     round1_fixes(t, d)
-    split_note = d.pop("notes_split") + " " + EPISODE_NOTE[t] + "."
+    text_cleanup(t, d)
+    split_note = (d.pop("notes_split") + " " + EPISODE_NOTE[t] + ".").strip()
     if d["split"]["method"] != "temporal":
-        extra = ", split.time_column, split.cutoff, split.gap (무작위 분할)"
+        extra = ""
     else:
-        extra = ", split.time_column (기준 시각은 tp), split.test_fraction (경계 시각으로 나눔)"
+        extra = ""
     d["design_id"] = name
     more = ["agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다",
             "평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단(특히 표본이 적은 B 병원)은 "
@@ -344,7 +364,7 @@ def finish(name: str, t: str, d: dict) -> dict:
     if t == "dynamic":
         more.append("outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다")
     else:
-        more.append("코호트는 에피소드의 마지막 입원을 먼저 고른 뒤 제외 기준을 적용한다")
+        more.append("코호트는 cohort.rows_per_unit으로 행을 고른 뒤 제외 기준을 적용한다")
     d["notes"] = EMPTY_NOTE[t] + extra + ". " + split_note + " " + ". ".join(more) + "."
     return d
 
