@@ -6,6 +6,7 @@ leakcheck.outcomes.label)를 그대로 써서, 설계서마다 아래를 센다.
 1. 분할: 학습·평가·미사용 행 수와 평가 쪽 결과 사건 수
 2. 동적 결과의 시각 기준: tp 전 채취·tp 뒤 보고(pending) 사건, 창 끝 직전 채취·창 뒤 보고 사건
 3. 공통 수정으로 바뀐 칸(분할, 전처리 적합 범위)을 대상으로 하는 공개 패치(E05~E08)의 전제를 새 설계서 기준으로 다시 확인
+5. (--d4) 결과 판정에도 jaffe −0.10 보정을 하면 KDIGO 사건 여부가 바뀌는 행 수
 4. (--star) "수상해 보이지만 정당한 항목" 4개의 근거: 점검기 특징 계산의 확인 가능 시각, 그리고 원자료로 따로 센 값
 
 실행: python -m tools.clean_v2_stats [--only 이름 ...]
@@ -137,6 +138,58 @@ def premises(d: dict, ctx, rows) -> dict:
         if np.nanmedian(x[train | test]) != np.nanmedian(x[train]):
             n_changed += int((miss & (train | test)).sum())
     out["E08"] = {"premise": n_test_miss, "missing_cells": n_miss, "difference": n_changed}
+    out.update(premises_round1(d, ctx, rows, base_lab))
+    return out
+
+
+def _feat_values(d: dict, ctx, rows, spec: dict) -> pd.Series:
+    specs = {f["name"]: f for f in d["features"]}
+    r = make_feature(ctx.tagged, spec, rows, specs)
+    return r.frame.set_index("index_id")["value"].reindex(rows["index_id"])
+
+
+def premises_round1(d: dict, ctx, rows, base_lab) -> dict:
+    """(E14·E15 패치에는 scope가 없어 이번 입원으로 세운다. 계산용일 뿐 패치는 바꾸지 않는다.)
+    검수 1회차 고침(D3·D4·F1·F2·F3)으로 바뀐 칸을 대상으로 하는 공개 패치: E02(cr_last), E09(특징·전처리),
+    E14·E15(코호트, D3로 바뀜). E08(전처리 목록)은 위에서 센다."""
+    from leakcheck.checks import _criterion_mask
+    t = d["design_type"]
+    out = {}
+    labs = ctx.tagged["labs"]
+    cr = labs[labs["test"] == "creatinine"]
+    m = rows[["index_id", "admission_id", "tp"]].merge(cr[["_admission_id", "collect_time", "report_time"]],
+                                                       left_on="admission_id", right_on="_admission_id")
+    # E02: cr_last의 시각 열을 채취 시각으로
+    pend = m[(m["collect_time"] <= m["tp"]) & (m["report_time"] > m["tp"])]["index_id"].nunique()
+    base = _feat_values(d, ctx, rows, next(f for f in d["features"] if f["name"] == "cr_last"))
+    pd_ = apply_ops(d, V1_CASE_PATCHES["E02"])
+    pat = _feat_values(pd_, ctx, rows, next(f for f in pd_["features"] if f["name"] == "cr_last"))
+    out["E02"] = {"premise": int(pend), "difference": int((base.fillna(-1) != pat.fillna(-1)).sum())}
+    if t == "fixed":
+        # E09: 이전 입원 주진단 범주에 전체 데이터로 결과율 인코딩
+        pd_ = apply_ops(d, V1_CASE_PATCHES["E09"])
+        code = _feat_values(pd_, ctx, rows, next(f for f in pd_["features"] if f["name"] == "prior_dx_main"))
+        y = outcome(d, ctx, rows)
+        lab = base_lab.to_numpy()
+        df = pd.DataFrame({"code": code.to_numpy(), "y": y, "test": lab == "test", "used": lab != splitting.UNUSED})
+        df = df[df["used"]].dropna(subset=["code"])
+        enc_all = df.groupby("code")["y"].mean()
+        enc_tr = df[~df["test"]].groupby("code")["y"].mean()
+        changed = df["code"].map(enc_all) != df["code"].map(enc_tr)
+        out["E09"] = {"premise": int(df["test"].sum()), "difference": int(changed.sum())}
+    else:
+        # E14: 재원 7일 이상 포함 기준 (재원 기간은 tp 뒤에 정해짐)
+        pd_ = apply_ops(d, V1_CASE_PATCHES["E14"])
+        spec = dict(next(c for c in pd_["cohort"]["inclusion"] if c["name"] == "los_7d"), scope="index_admission")
+        keep = _criterion_mask(ctx.tagged, spec, rows)
+        out["E14"] = {"premise": int((rows["discharge_time"] > rows["tp"]).sum()), "difference": int((~keep).sum())}
+        # E15: 입원 전체에서 크레아티닌 3회 이상 (tp 뒤 보고 포함)
+        pd_ = apply_ops(d, V1_CASE_PATCHES["E15"])
+        spec = dict(next(c for c in pd_["cohort"]["inclusion"] if c["name"] == "cr_monitored"), scope="index_admission")
+        to_tp = dict(spec, window={"start": "admit", "end": "tp"})
+        a, b = _criterion_mask(ctx.tagged, spec, rows), _criterion_mask(ctx.tagged, to_tp, rows)
+        late = m[m["report_time"] > m["tp"]]["index_id"].nunique()
+        out["E15"] = {"premise": int(late), "difference": int((a != b).sum()), "excluded": int((~a).sum())}
     return out
 
 
@@ -189,10 +242,62 @@ def star_evidence(d: dict, ctx, rows, tables) -> dict:
     return out
 
 
+JAFFE_OFFSET = 0.10   # 설명서 labs.value: 크레아티닌은 jaffe 측정이면 0.10 mg/dL 높음 (생성기 고정값)
+
+
+def _kdigo(h, v, events, same) -> bool:
+    """events 중 하나가 그보다 먼저 채취한 값(same이 있으면 같은 측정법만)과 비교해 KDIGO를 만족하는가."""
+    for j in np.flatnonzero(events):
+        prior = np.arange(len(v)) < j
+        if same is not None:
+            prior &= same == same[j]
+        rel = prior & (h >= h[j] - 168)
+        if rel.any() and v[j] >= 1.5 * v[rel].min() - 1e-9:
+            return True
+        ab = prior & (h >= h[j] - 48)
+        if ab.any() and v[j] - v[ab].min() >= 0.3 - 1e-9:
+            return True
+    return False
+
+
+def d4_outcome_flips(ctx, rows) -> dict:
+    """결과(크레아티닌 KDIGO)의 세 판정: A 지금 정의(같은 측정법끼리, 보정 없음), B jaffe −0.10 보정 뒤 측정법 무관 비교,
+    C jaffe −0.10 보정 뒤 같은 측정법끼리. 사건 = tp에 보고되지 않았고 tp+48h까지 채취된 값. 사망은 넣지 않는다."""
+    labs = ctx.tagged["labs"]
+    cr = labs[labs["test"] == "creatinine"][["_admission_id", "collect_time", "report_time", "value", "method"]]
+    m = rows[["index_id", "admission_id", "tp"]].merge(cr, left_on="admission_id", right_on="_admission_id")
+    m = m[(m["collect_time"] > m["tp"] - pd.Timedelta(hours=168)) &
+          (m["collect_time"] <= m["tp"] + pd.Timedelta(hours=48))].sort_values(["index_id", "collect_time"])
+    res = {"A": set(), "B": set(), "C": set()}
+    mixed = set()
+    for iid, g in m.groupby("index_id", sort=False):
+        h = (g["collect_time"] - g["collect_time"].iloc[0]).dt.total_seconds().to_numpy() / 3600
+        v = g["value"].to_numpy(dtype=float)
+        meth = g["method"].to_numpy()
+        ev = (g["report_time"] > g["tp"]).to_numpy()
+        adj = v - np.where(meth == "jaffe", JAFFE_OFFSET, 0.0)
+        if len(set(meth)) > 1:
+            mixed.add(iid)
+        if _kdigo(h, v, ev, meth):
+            res["A"].add(iid)
+        if _kdigo(h, adj, ev, None):
+            res["B"].add(iid)
+        if _kdigo(h, adj, ev, meth):
+            res["C"].add(iid)
+    a = res["A"]
+    out = {"rows": int(len(rows)), "rows_mixed_method_window": len(mixed), "positive_A_current": len(a)}
+    for k in ("B", "C"):
+        out[f"{k}_pos_to_neg"] = len(a - res[k])
+        out[f"{k}_neg_to_pos"] = len(res[k] - a)
+        out[f"{k}_flips_in_mixed"] = len((a ^ res[k]) & mixed)
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--star", action="store_true", help="★ 항목 근거만")
+    ap.add_argument("--d4", action="store_true", help="결과 판정에 jaffe 보정을 할 때 바뀌는 행 수 (동적만)")
     args = ap.parse_args(argv)
     tables = load_tables(DATA)
     res = {}
@@ -201,6 +306,10 @@ def main(argv: list[str] | None = None) -> int:
             continue
         d = dz.normalize(json.loads(p.read_text(encoding="utf-8")))
         ctx, rows = cohort(d, tables)
+        if args.d4:
+            if d["design_type"] == "dynamic":
+                print(p.stem, json.dumps(d4_outcome_flips(ctx, rows), ensure_ascii=False), flush=True)
+            continue
         if args.star:
             if d["design_id"] in STAR:
                 print(p.stem, json.dumps(star_evidence(d, ctx, rows, tables), ensure_ascii=False), flush=True)

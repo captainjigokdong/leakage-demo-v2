@@ -218,14 +218,134 @@ EMPTY_NOTE = {
 }
 
 
+# --- 검수 1회차 반영 (승인 B, 2026-10-05). 번호는 docs/clean_review_v2.md의 분류표 -------------------
+
+JAFFE_NOTE = ("2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 "
+              "jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계). 측정법 자체는 특징으로 "
+              "넣지 않는다")
+HISTORY_NOTE = ("이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 "
+                "tp에는 알 수 없다")
+
+
+def _is_creatinine(f: dict) -> bool:
+    return f.get("source") == "labs" and (f.get("filter") or {}).get("test") == ["creatinine"]
+
+
+def _append_desc(obj: dict, text: str, key: str = "description") -> None:
+    obj[key] = (obj[key].rstrip(". ") + ". " + text) if obj.get(key) else text
+
+
+def round1_fixes(t: str, d: dict) -> None:
+    feats = d["features"]
+    # D4: jaffe 값 보정 (데이터에서 추정하지 않는 고정값)
+    cr = [f["name"] for f in feats if _is_creatinine(f)]
+    for f in feats:
+        if f["name"] in cr:
+            _append_desc(f, "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다")
+    _feature(d, "cr_last")["assessment"]["method"] = JAFFE_NOTE
+    d["preprocessing"].insert(0, {
+        "name": "cr_method_align", "kind": "transform", "method": "jaffe 측정 크레아티닌 값에서 0.10 mg/dL을 뺀다",
+        "stateless": True, "applies_to": "train+test", "before_split": False, "uses_outcome": False, "columns": cr,
+        "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이이고 데이터에서 추정하지 않는다. "
+                       "결과 판정(KDIGO)은 같은 측정법끼리만 비교하므로 이 보정을 쓰지 않는다"})
+    # D6: 이력 특징의 근거 한 문장
+    for f in feats:
+        if f.get("history_key") == "patient_id":
+            _append_desc(f, HISTORY_NOTE)
+    # 작은 명시: 조율 폴드 수
+    d["model"]["tuning"]["method"] = "group_kfold 5폴드 (family_id, 없으면 person_id)"
+    o = d["outcome"]
+    if t == "dynamic":
+        # D1a: 창이 있는 이번 입원 특징은 같은 에피소드 전체를 본다
+        for f in feats:
+            if f.get("scope") == "index_admission" and "time_column" in f and "episode" not in f:
+                f["episode"] = "index_episode"
+        # D2: 결과 서술에 칸 대응
+        _append_desc(o, "설계서 칸으로는 outcome.window (tp, tp+48h]가 채취 시각 창이고, tp 이전에 채취되어 tp에 아직 "
+                        "보고되지 않은 값은 outcome.pending_at_tp=count_as_outcome으로 같은 규칙에 들어간다")
+        # D3: 자료 추출 종료 무렵 입원 제외
+        d["cohort"]["exclusion"].append({
+            "name": "admit_near_extraction_end",
+            "description": "자료 추출 종료(2160-01-01) 30일(재원 기간 상한) 전 뒤에 시작한 입원. 종료 때 아직 입원 중인 입원은 "
+                           "데이터에 없어 이 기간의 입원은 짧게 끝난 것만 남는다. 입원 시각은 tp에 알려져 있다",
+            "source": "admissions", "column": "admit_time", "scope": "index_admission", "agg": "value",
+            "op": ">", "value": "2159-12-02 00:00:00"})
+        # D7·D8: 확인 방식 서술
+        _append_desc(o["ascertainment"], "병동 채혈 빈도는 연구 기간 동안 늘어나므로(데이터 설명서), 측정 빈도와 결과율을 "
+                                         "병동 × 연도별로도 보고한다", "method")
+        _append_desc(o["ascertainment"], "결과 판정은 규칙 코드(KDIGO)로 하고 예측값을 보지 않는다. KDIGO의 기준값은 정의상 "
+                                         "이전 크레아티닌이다", "method")
+        # 작은 명시: 제외 기준 kdigo_aki의 비교 규칙
+        ex = next(x for x in d["cohort"]["exclusion"] if x["name"] == "aki_known_by_tp")
+        _append_desc(ex, "판정 규칙은 결과와 같다 (각 값을 먼저 채취한 같은 측정법의 값과 비교, 48시간 +0.3 mg/dL 또는 "
+                         "7일 1.5배). tp까지 보고된 값만 쓴다")
+    else:
+        # F1: 퇴원약은 이번 퇴원(인덱스 입원)의 것만
+        for name in ("n_discharge_meds", "dc_diuretic"):
+            f = next((x for x in feats if x["name"] == name), None)
+            if f:
+                f.pop("episode", None)
+                _append_desc(f, "이번 퇴원(인덱스 입원)의 퇴원약만 센다. 같은 에피소드 앞 입원(전원 퇴원)의 퇴원약은 넣지 않는다")
+        # F2: 검사·활력 특징은 에피소드 전체, 열 값 특징은 마지막 입원 기록 기준임을 적음
+        for f in feats:
+            if f.get("scope") == "index_admission" and "time_column" in f and "episode" not in f \
+                    and f["name"] not in ("n_discharge_meds", "dc_diuretic"):
+                f["episode"] = "index_episode"
+        for name in ("los_h", "unit"):
+            _append_desc(_feature(d, name), "두 입원 기록으로 나뉜 에피소드에서는 마지막 입원 기록(인덱스 입원) 기준이다")
+        # F3: ★ 진단 범주의 ICD-9 → ICD-10
+        f = next((x for x in feats if x["name"] == "prior_dx_group"), None)
+        if f:
+            _append_desc(f, "ICD-9 코드는 dx_code_map 단계에서 ICD-10 코드로 바꾼 뒤 범주로 쓴다")
+            idx = next(i for i, x in enumerate(d["preprocessing"]) if x["name"] == "one_hot")
+            d["preprocessing"].insert(idx, {
+                "name": "dx_code_map", "kind": "transform",
+                "method": "ICD-9 주진단 코드를 같은 병의 ICD-10 코드로 바꾼다 (데이터 설명서 diagnoses.code_system의 코드별 대응)",
+                "stateless": True, "applies_to": "train+test", "before_split": False, "uses_outcome": False,
+                "columns": ["prior_dx_group"],
+                "description": "고정 대응표를 쓰고 데이터에서 추정하지 않는다. 코드 체계는 2155-10-01에 ICD-9에서 ICD-10으로 바뀌었다"})
+    # 가정·점검 불가 분류에서 고칠 수 있는 사실 (서술로 명시, 승인 B 확인 3)
+    for f in feats:
+        if f.get("source") == "diagnoses" and f.get("scope") == "prior_admissions":
+            _append_desc(f, "같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다 (n_prior_adm은 입원 수라 같은 에피소드를 뺀다)")
+    _append_desc(_feature(d, "age"), "데이터의 나이는 95에서 잘려 있다 (데이터 설명서 patients.age)")
+    adult = next(c for c in d["cohort"]["inclusion"] if c["name"] == "adult")
+    _append_desc(adult, "patients.age는 그 등록 번호의 첫 입원 때 나이라 인덱스 입원 때 나이는 그 이상이다")
+    _append_desc(d["model"]["threshold"], "보정(calibration)한 확률에서 정한다", "method")
+    if t == "dynamic":
+        _append_desc(o, "결과 창 끝(tp+48h)이 자료 추출 종료 뒤인 행은 뺀다 (end_of_data=exclude_incomplete)")
+    # D9: 결측 표시 단계는 대치하는 열 전부
+    mf = next((x for x in d["preprocessing"] if x["name"] == "missing_flags"), None)
+    if mf:
+        mf["columns"] = list(_step(d, "median_impute")["columns"])
+        _append_desc(mf, "결측이 없는 열의 표시 열은 모두 0이라 모형에 영향이 없다")
+
+
+EPISODE_NOTE = {
+    "dynamic": "두 입원 기록으로 이어진 에피소드에서 창이 있는 이번 입원 특징은 에피소드 전체를 본다. 결과·tp는 입원 기록 단위다",
+    "fixed": "두 입원 기록으로 이어진 에피소드에서 검사·활력·ICU·투석 특징은 에피소드 전체를, 퇴원약은 이번 퇴원을, "
+             "열 값 특징(los_h, unit 등)은 마지막 입원 기록을 본다",
+}
+
+
 def finish(name: str, t: str, d: dict) -> dict:
-    split_note = d.pop("notes_split")
+    round1_fixes(t, d)
+    split_note = d.pop("notes_split") + " " + EPISODE_NOTE[t] + "."
     if d["split"]["method"] != "temporal":
         extra = ", split.time_column, split.cutoff, split.gap (무작위 분할)"
     else:
         extra = ", split.time_column (기준 시각은 tp), split.test_fraction (경계 시각으로 나눔)"
     d["design_id"] = name
-    d["notes"] = EMPTY_NOTE[t] + extra + ". " + split_note
+    more = ["agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다",
+            "평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단(특히 표본이 적은 B 병원)은 "
+            "신뢰구간과 함께 보고한다"]
+    if d["split"]["method"] != "temporal":
+        more.append("split.test_fraction은 묶음 수의 비율이다")
+    if t == "dynamic":
+        more.append("outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다")
+    else:
+        more.append("코호트는 에피소드의 마지막 입원을 먼저 고른 뒤 제외 기준을 적용한다")
+    d["notes"] = EMPTY_NOTE[t] + extra + ". " + split_note + " " + ". ".join(more) + "."
     return d
 
 

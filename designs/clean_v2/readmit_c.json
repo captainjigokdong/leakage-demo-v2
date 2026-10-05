@@ -2,7 +2,7 @@
   "design_id": "readmit_c",
   "design_type": "fixed",
   "question": "성인 입원 환자가 살아서 퇴원하는 시각에, 퇴원 뒤 30일 안에 예정되지 않은 재입원 또는 사망이 있을지 예측한다.",
-  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다: outcome.filter, outcome.reference_window, outcome.reference (입원으로 정하는 결과라 기준값이 없음), cohort.sampling.by, cohort.sampling.fraction, cohort.sampling.ratio (전체 사용), split.n_folds, features의 date_compare (날짜만 있는 열을 쓰지 않음), split.time_column (기준 시각은 tp), split.test_fraction (경계 시각으로 나눔). 시간 순 분할: 기준 시각은 tp (퇴원 시각). 묶음(family_id, 없으면 person_id)째로 움직인다. 묶음의 모든 행이 2156-07-01 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 2156-07-01 + 30d 뒤 행만 평가에 쓴다.",
+  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다: outcome.filter, outcome.reference_window, outcome.reference (입원으로 정하는 결과라 기준값이 없음), cohort.sampling.by, cohort.sampling.fraction, cohort.sampling.ratio (전체 사용), split.n_folds, features의 date_compare (날짜만 있는 열을 쓰지 않음), split.time_column (기준 시각은 tp), split.test_fraction (경계 시각으로 나눔). 시간 순 분할: 기준 시각은 tp (퇴원 시각). 묶음(family_id, 없으면 person_id)째로 움직인다. 묶음의 모든 행이 2156-07-01 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 2156-07-01 + 30d 뒤 행만 평가에 쓴다. 두 입원 기록으로 이어진 에피소드에서 검사·활력·ICU·투석 특징은 에피소드 전체를, 퇴원약은 이번 퇴원을, 열 값 특징(los_h, unit 등)은 마지막 입원 기록을 본다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단(특히 표본이 적은 B 병원)은 신뢰구간과 함께 보고한다. 코호트는 에피소드의 마지막 입원을 먼저 고른 뒤 제외 기준을 적용한다.",
   "tp": {
     "anchor": "discharge",
     "offsets_h": [
@@ -105,7 +105,8 @@
         "column": "age",
         "agg": "value",
         "op": ">=",
-        "value": 18
+        "value": 18,
+        "description": "patients.age는 그 등록 번호의 첫 입원 때 나이라 인덱스 입원 때 나이는 그 이상이다"
       }
     ],
     "exclusion": [
@@ -155,7 +156,7 @@
       "column": "age",
       "scope": "patient",
       "agg": "value",
-      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수.",
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수. 데이터의 나이는 95에서 잘려 있다 (데이터 설명서 patients.age)",
       "age_reference": "index_admission"
     },
     {
@@ -167,7 +168,7 @@
     },
     {
       "name": "unit",
-      "description": "처음 배정된 병동",
+      "description": "처음 배정된 병동. 두 입원 기록으로 나뉜 에피소드에서는 마지막 입원 기록(인덱스 입원) 기준이다",
       "source": "admissions",
       "column": "unit",
       "scope": "index_admission",
@@ -197,7 +198,7 @@
       "column": "length_of_stay_h",
       "scope": "index_admission",
       "agg": "value",
-      "description": "재원 시간 = (discharge_time − admit_time) 시간. 데이터 설명서의 파생 열"
+      "description": "재원 시간 = (discharge_time − admit_time) 시간. 데이터 설명서의 파생 열. 두 입원 기록으로 나뉜 에피소드에서는 마지막 입원 기록(인덱스 입원) 기준이다"
     },
     {
       "name": "discharge_status",
@@ -230,13 +231,13 @@
         "end": "tp"
       },
       "agg": "count",
-      "description": "같은 등록 번호의 이전 입원 수 (인덱스 입원과 같은 에피소드의 앞 입원은 빼고, 지난 365일 안에 퇴원한 것)",
+      "description": "같은 등록 번호의 이전 입원 수 (인덱스 입원과 같은 에피소드의 앞 입원은 빼고, 지난 365일 안에 퇴원한 것). 이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다",
       "history_key": "patient_id",
       "episode": "exclude_index_episode"
     },
     {
       "name": "prior_dx_ckd",
-      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (ICD-10 N18, ICD-9 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (ICD-10 N18, ICD-9 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다. 같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다 (n_prior_adm은 입원 수라 같은 에피소드를 뺀다)",
       "source": "diagnoses",
       "filter": {
         "icd_code": [
@@ -255,7 +256,7 @@
     },
     {
       "name": "prior_dx_chf",
-      "description": "이전 입원에서 tp까지 코딩이 끝난 심부전 진단 (I50, 428) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 심부전 진단 (I50, 428) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다. 같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다 (n_prior_adm은 입원 수라 같은 에피소드를 뺀다)",
       "source": "diagnoses",
       "filter": {
         "icd_code": [
@@ -274,7 +275,7 @@
     },
     {
       "name": "problem_ckd_active",
-      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다",
       "source": "problem_list",
       "filter": {
         "icd_code": [
@@ -315,8 +316,10 @@
         "by_stratum": [
           "method"
         ],
-        "method": "2155-01-01 전은 jaffe(약 0.10 mg/dL 높음), 뒤는 enzymatic. 측정법이 다른 값이 섞인 채로 쓴다. 측정법 자체는 특징으로 넣지 않는다 (측정 날짜로 정해지는 값이고, 사용 시점에는 enzymatic 하나뿐이다)"
-      }
+        "method": "2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계). 측정법 자체는 특징으로 넣지 않는다"
+      },
+      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다",
+      "episode": "index_episode"
     },
     {
       "name": "hgb_min",
@@ -333,7 +336,8 @@
         "start": "admit",
         "end": "tp"
       },
-      "agg": "min"
+      "agg": "min",
+      "episode": "index_episode"
     },
     {
       "name": "sbp_last",
@@ -350,7 +354,8 @@
         "start": "tp-24h",
         "end": "tp"
       },
-      "agg": "last"
+      "agg": "last",
+      "episode": "index_episode"
     },
     {
       "name": "n_discharge_meds",
@@ -367,7 +372,7 @@
         "end": "tp"
       },
       "agg": "count",
-      "episode": "index_episode"
+      "description": "이번 퇴원(인덱스 입원)의 퇴원약만 센다. 같은 에피소드 앞 입원(전원 퇴원)의 퇴원약은 넣지 않는다"
     },
     {
       "name": "dialysis_ordered",
@@ -399,7 +404,7 @@
     },
     {
       "name": "dc_diuretic",
-      "description": "퇴원약에 루프 이뇨제가 있음",
+      "description": "퇴원약에 루프 이뇨제가 있음. 이번 퇴원(인덱스 입원)의 퇴원약만 센다. 같은 에피소드 앞 입원(전원 퇴원)의 퇴원약은 넣지 않는다",
       "source": "medications",
       "filter": {
         "drug": [
@@ -415,8 +420,7 @@
         "start": "admit",
         "end": "tp"
       },
-      "agg": "any",
-      "episode": "index_episode"
+      "agg": "any"
     },
     {
       "name": "prior_cr_last",
@@ -433,7 +437,8 @@
         "end": "tp"
       },
       "agg": "last",
-      "history_key": "patient_id"
+      "history_key": "patient_id",
+      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다. 이력은 등록 번호(patient_id)로 모은다. 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다"
     }
   ],
   "split_unit": "family",
@@ -447,6 +452,20 @@
     "gap": "30d"
   },
   "preprocessing": [
+    {
+      "name": "cr_method_align",
+      "kind": "transform",
+      "method": "jaffe 측정 크레아티닌 값에서 0.10 mg/dL을 뺀다",
+      "stateless": true,
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "cr_last",
+        "prior_cr_last"
+      ],
+      "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이이고 데이터에서 추정하지 않는다. 결과 판정(KDIGO)은 같은 측정법끼리만 비교하므로 이 보정을 쓰지 않는다"
+    },
     {
       "name": "median_impute",
       "kind": "impute",
@@ -509,7 +528,7 @@
   "model": {
     "family": "gradient_boosting (결정 나무)",
     "tuning": {
-      "method": "group_kfold (family_id, 없으면 person_id)",
+      "method": "group_kfold 5폴드 (family_id, 없으면 person_id)",
       "cv_key": "family_id",
       "fit_scope": "train",
       "fallback_key": "person_id"
@@ -523,7 +542,7 @@
       "method": "사용하지 않음 (나무 수는 격자 탐색으로 정함)"
     },
     "threshold": {
-      "method": "학습 부분 교차검증 예측에서 민감도 0.8이 되는 값",
+      "method": "학습 부분 교차검증 예측에서 민감도 0.8이 되는 값. 보정(calibration)한 확률에서 정한다",
       "fit_scope": "train_fold",
       "metric": "sensitivity"
     },
