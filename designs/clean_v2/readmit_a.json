@@ -2,7 +2,7 @@
   "design_id": "readmit_a",
   "design_type": "fixed",
   "question": "성인 입원 환자가 살아서 퇴원하는 시각에, 퇴원 뒤 30일 안에 예정되지 않은 재입원 또는 사망이 있을지 예측한다.",
-  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 시간 순 분할: 기준 시각은 tp (퇴원 시각). 묶음(split.key, 결측이면 split.fallback_key)째로 움직인다. 묶음의 모든 행이 경계 시각(split.cutoff) 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 경계 시각 + 간격(split.gap) 뒤 행만 평가에 쓴다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. 열 값 특징은 인덱스 입원 기록의 값이다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단(특히 표본이 적은 B 병원)은 신뢰구간과 함께 보고한다. 코호트는 cohort.rows_per_unit으로 행을 고른 뒤 제외 기준을 적용한다.",
+  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 시간 순 분할: 기준 시각은 tp (퇴원 시각). 묶음(split.key, 결측이면 split.fallback_key)째로 움직인다. 묶음의 모든 행이 경계 시각(split.cutoff) 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 경계 시각 + 간격(split.gap) 뒤 행만 평가에 쓴다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. 열 값 특징은 인덱스 입원 기록의 값이다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단은 신뢰구간과 함께 보고한다 (B 병원은 표본이 적다). 코호트는 cohort.rows_per_unit으로 행을 고른 뒤 제외 기준을 적용한다.",
   "tp": {
     "anchor": "discharge",
     "offsets_h": [
@@ -316,7 +316,7 @@
         "by_stratum": [
           "method"
         ],
-        "method": "2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계). 측정법 자체는 특징으로 "
+        "method": "2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계)"
       },
       "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다",
       "episode": "index_episode"
@@ -425,7 +425,7 @@
       "columns": [
         "cr_last"
       ],
-      "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. 결과 판정에는 쓰지 않는다 (결과 서술 참고)"
+      "description": "columns는 이 보정이 들어가는 특징이다. 보정은 그 특징을 만들 때 labs 값 단위로(집계 전에) 한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. 결과 판정에는 쓰지 않는다 (결과 서술 참고)"
     },
     {
       "name": "median_impute",

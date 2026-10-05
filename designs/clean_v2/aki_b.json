@@ -2,7 +2,7 @@
   "design_id": "aki_b",
   "design_type": "dynamic",
   "question": "성인 입원 중 매일(입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 급성 신손상(AKI)이 생기거나 원내에서 사망할지 예측한다.",
-  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단(특히 표본이 적은 B 병원)은 신뢰구간과 함께 보고한다. split.test_fraction은 묶음 수의 비율이다. outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다.",
+  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단은 신뢰구간과 함께 보고한다. split.test_fraction은 묶음 수의 비율이다. outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다.",
   "tp": {
     "anchor": "admit",
     "offsets_h": [
@@ -130,7 +130,7 @@
       }
     ],
     "ascertainment": {
-      "method": "입원 중 채혈한 크레아티닌으로만 판정한다. 병동은 ICU보다 채혈이 드물어 결과가 덜 잡히므로 머문 병동별로 측정 빈도와 결과율을 따로 보고하고, 이를 한계로 적는다. 병동 채혈 빈도는 연구 기간 동안 늘어나므로(데이터 설명서), 측정 빈도와 결과율을 병동 × 연도별로도 보고한다. 결과 판정은 규칙 코드(KDIGO)로 하고 예측값을 보지 않는다. KDIGO의 기준값은 정의상 이전 크레아티닌이다. 창 안 퇴원 비율도 병동별로 보고한다",
+      "method": "입원 중 채혈한 크레아티닌으로만 판정한다. 병동은 ICU보다 채혈이 드물어 결과가 덜 잡히므로 머문 병동별로 측정 빈도와 결과율을 따로 보고하고, 이를 한계로 적는다. 병동 채혈 빈도는 연구 기간 동안 늘어나므로(데이터 설명서), 층마다 측정 빈도와 결과율의 연도별 추이도 함께 보고한다. 결과 판정은 규칙 코드(KDIGO)로 하고 예측값을 보지 않는다. KDIGO의 기준값은 정의상 이전 크레아티닌이다. 창 안 퇴원 비율도 병동별로 보고한다",
       "by_stratum": [
         "unit_at_tp"
       ],
@@ -333,7 +333,7 @@
         "by_stratum": [
           "method"
         ],
-        "method": "2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계). 측정법 자체는 특징으로 "
+        "method": "2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계)"
       },
       "episode": "index_episode",
       "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다"
@@ -397,8 +397,7 @@
         ],
         "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"
       },
-      "episode": "index_episode",
-      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다"
+      "episode": "index_episode"
     },
     {
       "name": "cr_rise",
@@ -543,7 +542,7 @@
     },
     {
       "name": "prior_dx_ckd",
-      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (N18, 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다. 같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다 (n_prior_adm은 입원 수라 같은 에피소드를 뺀다)",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (N18, 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다. 같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다",
       "source": "diagnoses",
       "filter": {
         "icd_code": [
@@ -642,10 +641,9 @@
       "columns": [
         "cr_last",
         "cr_min_adm",
-        "cr_max_48h",
-        "n_cr"
+        "cr_max_48h"
       ],
-      "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. 결과 판정에는 쓰지 않는다 (결과 서술 참고)"
+      "description": "columns는 이 보정이 들어가는 특징이다. 보정은 그 특징을 만들 때 labs 값 단위로(집계 전에) 한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. 결과 판정에는 쓰지 않는다 (결과 서술 참고)"
     },
     {
       "name": "median_impute",

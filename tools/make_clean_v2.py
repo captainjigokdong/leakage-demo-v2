@@ -182,7 +182,7 @@ def make_fixed(base: dict) -> dict[str, dict]:
     add_feature(b, {"name": "prior_dx_group", "source": "diagnoses", "column": "icd_code", "filter": {"seq": [1]},
                     "scope": "prior_admissions", "time_column": "coded_time",
                     "window": {"start": "-inf", "end": "tp"}, "agg": "last", "history_key": "patient_id",
-                    "description": "가장 최근 이전 입원의 주진단 코드 (tp까지 코딩이 끝난 것). 범주형"},
+                    "description": "이전 입원의 주진단 코드 가운데 tp까지 코딩이 끝난 것 중 코딩이 가장 늦게 끝난 것. 범주형"},
                 impute=False, scale=False, encode=True)
     out["readmit_b"] = b
 
@@ -195,7 +195,7 @@ def make_fixed(base: dict) -> dict[str, dict]:
                 impute=False, scale=False)
     # 수상해 보이지만 정당한 항목: 이전 입원의 마지막 크레아티닌 (보고 시각 ≤ tp)
     add_feature(cc, {"name": "prior_cr_last", "source": "labs", "column": "value", "filter": CR,
-                     "scope": "prior_admissions", "time_column": "report_time", "window": {"end": "tp"},
+                     "scope": "prior_admissions", "time_column": "report_time", "window": {"start": "-inf", "end": "tp"},
                      "agg": "last", "history_key": "patient_id"})
     out["readmit_c"] = cc
 
@@ -218,13 +218,14 @@ EMPTY_NOTE = {
 # --- 검수 1회차 반영 (승인 B, 2026-10-05). 번호는 docs/clean_review_v2.md의 분류표 -------------------
 
 JAFFE_NOTE = ("2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 "
-              "jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계). 측정법 자체는 특징으로 "
-              "")
+              "jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계)")
 HISTORY_NOTE = "같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다"
 
 
 def _is_creatinine(f: dict) -> bool:
-    return f.get("source") == "labs" and (f.get("filter") or {}).get("test") == ["creatinine"]
+    """크레아티닌 값을 집계하는 특징 (개수는 값 보정과 무관하므로 뺀다)."""
+    return (f.get("source") == "labs" and (f.get("filter") or {}).get("test") == ["creatinine"]
+            and f.get("agg") != "count")
 
 
 def _append_desc(obj: dict, text: str, key: str = "description") -> None:
@@ -242,7 +243,8 @@ def round1_fixes(t: str, d: dict) -> None:
     d["preprocessing"].insert(0, {
         "name": "cr_method_align", "kind": "transform", "method": "jaffe 측정 크레아티닌 값에서 0.10 mg/dL을 뺀다",
         "stateless": True, "applies_to": "train+test", "before_split": False, "uses_outcome": False, "columns": cr,
-        "description": "집계 전 값 단위로 적용한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. "
+        "description": "columns는 이 보정이 들어가는 특징이다. 보정은 그 특징을 만들 때 labs 값 단위로(집계 전에) 한다. "
+                       "0.10은 데이터 설명서(labs.value)의 고정 차이다. "
                        "결과 판정에는 쓰지 않는다 (결과 서술 참고)"})
     # D6: 이력 특징의 근거 한 문장
     for f in feats:
@@ -270,8 +272,8 @@ def round1_fixes(t: str, d: dict) -> None:
             "source": "admissions", "column": "admit_time", "scope": "index_admission", "agg": "value",
             "op": ">", "value": "2159-12-02 00:00:00"})
         # D7·D8: 확인 방식 서술
-        _append_desc(o["ascertainment"], "병동 채혈 빈도는 연구 기간 동안 늘어나므로(데이터 설명서), 측정 빈도와 결과율을 "
-                                         "병동 × 연도별로도 보고한다", "method")
+        _append_desc(o["ascertainment"], "병동 채혈 빈도는 연구 기간 동안 늘어나므로(데이터 설명서), 층마다 측정 빈도와 "
+                                         "결과율의 연도별 추이도 함께 보고한다", "method")
         _append_desc(o["ascertainment"], "결과 판정은 규칙 코드(KDIGO)로 하고 예측값을 보지 않는다. KDIGO의 기준값은 정의상 "
                                          "이전 크레아티닌이다", "method")
         # 작은 명시: 제외 기준 kdigo_aki의 비교 규칙
@@ -306,7 +308,8 @@ def round1_fixes(t: str, d: dict) -> None:
     # 가정·점검 불가 분류에서 고칠 수 있는 사실 (서술로 명시, 승인 B 확인 3)
     for f in feats:
         if f.get("source") == "diagnoses" and f.get("scope") == "prior_admissions":
-            _append_desc(f, "같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다 (n_prior_adm은 입원 수라 같은 에피소드를 뺀다)")
+            _append_desc(f, "같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다"
+                         + (" (n_prior_adm은 입원 수라 같은 에피소드를 뺀다)" if t == "fixed" else ""))
     _append_desc(_feature(d, "age"), "데이터의 나이는 95에서 잘려 있다 (데이터 설명서 patients.age)")
     adult = next(c for c in d["cohort"]["inclusion"] if c["name"] == "adult")
     _append_desc(adult, "patients.age는 그 등록 번호의 첫 입원 때 나이라 인덱스 입원 때 나이는 그 이상이다")
@@ -357,8 +360,8 @@ def finish(name: str, t: str, d: dict) -> dict:
         extra = ""
     d["design_id"] = name
     more = ["agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다",
-            "평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단(특히 표본이 적은 B 병원)은 "
-            "신뢰구간과 함께 보고한다"]
+            "평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단은 신뢰구간과 함께 보고한다"
+            + (" (B 병원은 표본이 적다)" if t == "fixed" else "")]
     if d["split"]["method"] != "temporal":
         more.append("split.test_fraction은 묶음 수의 비율이다")
     if t == "dynamic":
