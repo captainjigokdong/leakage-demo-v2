@@ -1,0 +1,52 @@
+[
+  {
+    "target": "features.cr_last / cr_min_adm / cr_max_48h / cr_rise (assessment: 측정법 섞인 채 사용)",
+    "kind": "문제",
+    "problem": "2155-01-01 전 크레아티닌은 jaffe(+0.10 mg/dL)이고 사용 시점에는 enzymatic뿐인데, 설계는 보정 없이 섞어 쓴다. 학습 행의 cr_last 72.5%가 jaffe다(학습 중앙값 jaffe 1.07, enzymatic 0.97). 모형이 학습하는 크레아티닌 눈금이 배포 때와 0.1 mg/dL 어긋나, 기준값 근처 분할점과 보정(calibration)이 체계적으로 틀어진다. 측정법을 특징으로 넣지 않으므로 모형이 차이를 흡수할 수도 없다. 제안: 특징 계산 전에 jaffe 값에서 0.10을 빼서 enzymatic 눈금으로 맞추거나, 학습을 2155년 이후 자료로 제한한다."
+  },
+  {
+    "target": "split (notes: 뒤의 행이 있는 묶음은 학습에서 뺀다)",
+    "kind": "문제",
+    "problem": "묶음에 2157-01-01 뒤 행이 하나라도 있으면 그 묶음의 이전 행을 학습에서 모두 뺀다. 이는 미래 정보(살아서 퇴원한 뒤 2157년 이후 다시 입원했는지)로 학습 코호트를 고르는 것이다. 기준 시각 이전 17,586행 중 2,257행(12.8%)이 빠진다. 빠진 행의 원내 사망률은 0.40%로 남은 행(0.80%)의 절반이고, 경계에 가까울수록 많이 빠진다(2150년 12% → 2156년 23%). 결과적으로 학습 자료는 생존자가 덜 들어간 쪽으로 치우치고, 학습 교차검증 예측으로 맞추는 Platt 보정과 임계값에도 그 치우침이 들어간다. 제안: 기준 시각 이전 행은 모두 학습에 두고, 학습에 나온 묶음은 평가에서 빼거나 겹침을 허용하고 보고한다."
+  },
+  {
+    "target": "outcome.scope / outcome.reference.sources.scope / tp.anchor / cohort.inclusion.in_hospital_at_tp (index_admission vs index_episode)",
+    "kind": "문제",
+    "problem": "입원 기록 두 건으로 나뉜 진료 에피소드가 220개 있다(이어진 기록은 0~60분 뒤 시작하고, 96개는 병원이 바뀐다). 제외 기준과 일부 특징(cr_last, cr_min_adm, n_cr)은 index_episode를 쓰지만, 결과·KDIGO 기준값·tp 기준점·'tp에 입원 중' 조건·나머지 특징은 입원 기록(index_admission) 단위다. 그래서 (1) 앞 기록의 행 348개는 결과 창이 앞 기록의 '퇴원'(실제로는 이동)에서 잘려 모두 음성이 된다. 그중 2행은 이어진 기록에서 창 안 AKI가 있다. (2) 이어진 기록은 자기 입원 시각부터 다시 24~168시간 tp를 만들어 727행이 생긴다. 같은 재원 안에서 tp 기준이 어긋나고 행이 겹친다. (3) KDIGO가 앞 기록의 값을 기준값으로 쓰지 못해 AKI 판정 3건을 놓친다. 제안: 예측 단위·tp 기준점·결과·KDIGO 기준값·특징 범위를 모두 episode_id 단위로 통일한다."
+  },
+  {
+    "target": "outcome.censoring.end_of_data (exclude_incomplete) / 평가 자료 끝부분",
+    "kind": "문제",
+    "problem": "자료 추출 종료 때 아직 퇴원하지 않은 입원은 데이터에 아예 없다. 그래서 종료 직전에 시작한 입원은 짧게 끝난 것만 남는다(재원 상한 30일). AKI 입원은 재원이 길어지므로 끝부분의 결과율이 낮게 나온다. 종료 전 15일 안 tp는 0%(23행), 15~30일은 3.2%, 30~60일은 3.7%로, 그 전 기간의 약 6~7.5%보다 낮다. 이 구간은 모두 평가 자료에 들어가 평가를 치우치게 한다. 설계의 exclude_incomplete는 결과 창 절단만 다루고, 이 선택(입원 자체의 누락)은 다루지 않는다. 제안: admit_time이 2160-01-01 − 30일(재원 상한) 이후인 입원은 코호트에서 뺀다."
+  },
+  {
+    "target": "outcome.window.start (tp, collect_time) vs outcome.description / outcome.pending_at_tp (count_as_outcome)",
+    "kind": "문제",
+    "problem": "description과 pending_at_tp는 'tp에 아직 보고되지 않은' 값(tp 전에 채취하고 tp 뒤에 보고된 값)도 결과로 센다. 그러나 window.start는 채취 시각 기준 tp라서 이런 값을 뺀다. 두 규칙이 다른 행은 25개다(창 안 AKI 없이 보류 결과로만 양성). 또 보류 결과로 세는 사건은 사건 시각(채취 시각)이 tp 앞이라, 이미 일어난 사건을 '예측'하는 것이 된다. 어느 규칙을 쓸지 정해야 한다. 이번 점검에서는 description을 따라 양성으로 셌다."
+  },
+  {
+    "target": "features.prior_dx_ckd / problem_ckd_active / n_admissions_to_tp / age (history_key: patient_id)",
+    "kind": "가정",
+    "problem": "등록 번호가 둘인 사람이 111명이고, 이들의 코호트 행은 962개다. patient_id 기준 이력은 다른 번호로 기록된 과거 입원·진단·문제 목록을 놓친다. person_links의 연결은 자료 추출 때 한 번에 만들어지므로 배포 시점에는 쓸 수 없다고 보고, 설계대로 patient_id 기준을 유지하는 것을 가정으로 둔다(배포 때와 같은 정보 제약). 분할에는 person_id를 쓴다."
+  },
+  {
+    "target": "outcome.ascertainment (by_stratum: unit_at_tp) / features.n_cr",
+    "kind": "가정",
+    "problem": "결과는 측정된 크레아티닌으로만 판정한다. 그런데 병동 채혈 간격이 기간에 따라 줄어서, 창 안에 크레아티닌이 없는 병동 행이 2157년 전 30.4%에서 2157년 뒤 25.3%로 줄었다(ICU는 6.8% → 6.3%). 따라서 결과 확인률과 n_cr의 분포가 학습과 평가 사이에 다르다. 설계는 병동별로만 나눠 보고하므로, 기간별(학습/평가) 측정 빈도도 함께 보고한다고 가정한다. 창 안 퇴원 비율: ICU 33%, 병동 51%."
+  },
+  {
+    "target": "split.key (family_id, 없으면 person_id)",
+    "kind": "점검 불가",
+    "problem": "family_id는 80.4%가 비어 있다. 설명서에 따르면 기록되지 않은 가족도 잠재 위험을 공유한다. 기록되지 않은 가족 구성원이 학습과 평가에 나뉘어 들어가는지는 데이터로 확인할 수 없다."
+  },
+  {
+    "target": "outcome.planned / outcome.planned_by / outcome.match_key",
+    "kind": "가정",
+    "problem": "예약 입원(elective)·patient_id 매칭 항목은 재입원 결과에 쓰는 칸으로 보이며, 원내 AKI·사망 결과에는 해당하지 않는다. 결과 정의에 쓰지 않는 것으로 가정한다."
+  },
+  {
+    "target": "cohort.inclusion.adult (patients.age)",
+    "kind": "가정",
+    "problem": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이는 이보다 크거나 같고, 실측 최솟값이 18이므로 결과에 영향이 없다. 그대로 쓴다고 가정한다."
+  }
+]
