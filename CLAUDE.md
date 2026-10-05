@@ -24,7 +24,7 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
 
 ## 현재 단계
 
-**2단계(장치) 완료** — 2a(형식·테이블·데이터 설명서 확정), 2b(데이터 전체 재생성·잠금, 형식 10칸 보탬), 2c(공개 목록 18행, 48개 주입 코드·시험, 새 후보분 봉인 `sealed/stage2c_record.enc`) 완료 (2026-10-04). 다음은 **3단계(스킬)** 이고 새 세션에서 한다. 시작 전에 2c PR이 main에 병합됐는지 확인한다. **3단계는 봉인 파일을 열지 않고, 2단계 커밋의 변경 기록을 보지 않는다.** 할 일은 `docs/phases.md` 3단계. 4단계 추첨은 2c에서 정한 추첨 전 규칙 R1~R3(`docs/injection_log_v2.md`)을 따른다.
+**3단계(스킬) 완료** (2026-10-05) — 3a(17개 테이블 규칙표, 자체 로더, 점검기 확장, 공개 18개 통과), 3b(SKILL.md·rules.md, 스킬 검수 3회, 해시 잠금 `docs/skill_freeze_v2.json`). 다음은 **4단계(변형)** 이고 새 세션에서 한다. 시작 전에 **3단계 PR이 main에 병합됐는지와 main에 `skill-frozen-v2` 태그가 있는지** 확인한다. 태그 뒤에는 `leakcheck/`, `skill_src/`, `designs/schema.json`을 고치지 않는다 (해시 잠금 시험 `tests/test_skill_freeze.py`). 버그는 `docs/known_issues_v2.md`에 적는다. 할 일은 `docs/phases.md` 4단계 (첫머리의 확인 두 가지부터).
 
 ## 절대 규칙
 

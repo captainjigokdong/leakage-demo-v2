@@ -170,22 +170,26 @@
 - [x] (2b에서 넘김) 2b에서 형식에 보탠 10칸(`outcome.match_key`, `outcome.planned_by`, `outcome.pending_at_tp`, `outcome.reference.compare_to`, `rowset.episode`, `rowset.history_key`, `rowset.version_order`, `rowset.age_reference`)을 점검기가 해석하는지 확인한다
 - [x] 모든 테이블에 규칙표 규칙이 있는지 확인하는 시험 추가 (`synth/tables_v2.py`의 테이블 목록 기준)
 - [x] 2단계 건너뜀 표에서 "3단계 완료 시 반드시 통과"인 시험(점검기가 넓어진 형식·새 공개 사례를 아직 판정하지 못해 실패하던 것)이 통과
-- [ ] 규칙표를 스킬 폴더 안에 읽을 수 있는 형태로 넣고, SKILL.md 첫머리에 위치를 적는다
+- [x] 규칙표를 스킬 폴더 안에 읽을 수 있는 형태로 넣고, SKILL.md 첫머리에 위치를 적는다
 - [x] 점검기 출력의 판정마다 "어느 규칙, 어느 값 때문에" 한 줄 표시
 - [x] 3층 규칙(불확실, 보수적 기본값)을 적용한 곳은 "가정"으로 따로 출력. 코딩 지연 일수 등은 규칙표에서 조정 가능하게
-- [ ] 에이전트 보고를 ① 점검기가 차단·경고한 것 ② 추가로 의심하는 것 ③ 가정(참고)으로 나누도록 지침서 작성
+- [x] 에이전트 보고를 ① 점검기가 차단·경고한 것 ② 추가로 의심하는 것 ③ 가정(참고)으로 나누도록 지침서 작성
 - [x] Q5: 포함·제외 기준마다 "언제 알 수 있는 정보인가" 꼬리표 판정. Q7: "결과 확인 범위" 칸 점검 규칙
-- [ ] 지침서에 "점검기 실행이 필수 첫 단계"를 명시
-- [ ] `leakcheck/`와 `skill_src/`의 해시 잠금 시험 추가. 해시를 커밋한 **뒤에** 사용자가 태그를 만든다
+- [x] 지침서에 "점검기 실행이 필수 첫 단계"를 명시
+- [x] `leakcheck/`와 `skill_src/`의 해시 잠금 시험 추가. 해시를 커밋한 **뒤에** 사용자가 태그를 만든다
 - [x] (2b에서 넘김) 시험용 작은 데이터 `tests/conftest.py`의 `small_tables`를 v1 생성기(`synth.generate`)에서 v2 생성기(`synth.generate_v2`)로 바꾼다. 2b는 `rules.py`에 v2 테이블 규칙이 없어 v1 생성기를 그대로 두었다. 이를 쓰는 시험(`test_checks`, `test_tagging`, `test_features`, `test_lock`, `test_inject` 일부)이 v2 데이터로 통과해야 한다
 - [x] (2b에서 넘김) `skill_src/leakage-check/scripts/run_check.py`의 `--data` 읽기를 `synth.generate.load`(v1 6개 테이블)에서 `synth.generate_v2.load`(17개 테이블)로 바꾼다 → 점검기 자체 로더 `leakcheck.data.load`로 바꿈 (D7, 값은 `generate_v2.load`와 같음을 시험으로 확인)
 - [x] (2b에서 넘김) `tests/test_inject.py::test_load_reads_only_six_tables`는 v1 로더의 6개 테이블을 확인하는 v1 시험이다. v2 로더 기준(17개)으로 바꾼다 (고치기 전 사용자 승인)
 
 **완료 기준**: 시험 통과 → 사용자가 GitHub Releases에서 `skill-frozen-v2` 태그 생성. 이후 `leakcheck/`, `skill_src/` 수정 금지.
 
+**3단계 결과 (2026-10-05)**: 3a — 규칙표 17개 테이블(설명서 대조 시험), 자체 로더(D7), 점검기 확장(조건 1 승인 표, D1~D10), 공개 18개 22행 모두 기대 판정(사례 실패로 고친 원리 없음), 원리 시험 41개, 보고 `docs/stage3a_report.md`. 3b — SKILL.md(규칙표 위치, 점검기 필수 첫 단계, 보고 세 칸), rules.md(자동 생성), 대리 기록 A안(이뇨제 제외), 점검기 출력 덮어쓰기 방지·설계서 해시, `O.end_of_data` 확장, 스킬 검수 3회(`docs/skill_review_v2.md`, SKILL.md 1줄 수정), 한계 `docs/known_issues_v2.md`. 해시 잠금 `docs/skill_freeze_v2.json`(`leakcheck/`, `skill_src/`, `designs/schema.json`), 시험 `tests/test_skill_freeze.py`.
+
 ---
 
 ## 4단계. 변형
+
+**4단계 시작 시 먼저 확인: main에 `skill-frozen-v2` 태그가 있고, 해시 잠금 시험(`tests/test_skill_freeze.py`)이 통과하는지 확인한다.** (3단계 사용자 지시, 2026-10-05)
 
 **4단계 시작 시 암호를 넣고 주입·실질 확인 시험 5개(`tests/test_injectability_v2.py`의 암호 필요 시험)가 3단계 점검 코드에서도 통과하는지 먼저 확인한다. 실패하면 멈추고 번호와 문제의 종류만 보고한다.** (3단계 사용자 지시, 2026-10-04)
 
@@ -196,7 +200,7 @@
 - [ ] 깨끗한 설계서 검수: v1 약점 제거 → 스킬 없는 에이전트로 한 번 검토(검수용) → 지적마다 실제 약점이면 고치고, 못 고치는 것만 "정당한 지적" 목록에. 넣는 기준은 "설계서·데이터에서 사실로 확인되는가"
 - [ ] (2b에서 넘김) 깨끗한 설계서 8개를 만들 때 `docs/prereview_v2.md`의 "설계서로 풀림" 지적을 모두 반영한다. "고칠 수 없음" 지적은 "정당한 지적" 목록의 후보로 검토한다. 형식에 표현할 칸이 없던 지적(B3, B5, B8, B14, B21, B23, B24, B26, B27)은 **4단계로 넘기지 않고 2b에서 형식에 칸을 보탰다** (`docs/prereview_v2.md` "형식에 보탠 칸"). 4단계는 그 칸을 채우기만 한다
 - [ ] (3단계에서 넘김) 깨끗한 설계서 8개를 점검기에 돌려 차단·경고·가정을 건별로 보고한다. 차단이나 경고가 나오면 설계서의 실제 약점인지 판단해, 맞으면 설계서를 고친다. 점검기는 동결됐으므로 고치지 않는다. 사실이 아닌 판정이 남으면 그대로 두고 `docs/known_issues_v2.md`에 기록한다.
-- [ ] (3단계에서 넘김) 깨끗한 설계서 8개를 만들 때 `docs/skill_review_v2.md`의 지적도 반영한다 ("4단계로 넘기는 것" 표 R1~R6: 측정법 특징 누락, 질문과 복합 결과 불일치, 이력의 등록 번호 묶음 — 수정안 person_id는 Q1 차단, 창 안 퇴원을 음성으로 셈, end_of_data, 결과 서술과 정의 불일치)
+- [ ] (3단계에서 넘김) 깨끗한 설계서 8개를 만들 때 `docs/skill_review_v2.md`의 지적도 반영한다 ("4단계로 넘기는 것" 표 R1~R7: 측정법 특징 누락, 질문과 복합 결과 불일치, 이력의 등록 번호 묶음 — 수정안 person_id는 Q1 차단, 창 안 퇴원을 음성으로 셈, end_of_data, 결과 서술과 정의 불일치, 사망 연계 반영일)
 - [ ] "정당한 지적" 목록을 해시로 잠금
 - [ ] 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인
 - [ ] `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
@@ -237,7 +241,7 @@
 - [ ] 허용 도구 6개(Read, Glob, Grep, Skill, Write, Bash). 자동 권한 검사가 막은 동작은 우회하지 않음
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] (3단계에서 넘김) (가) 조건에서는 점검기 출력 파일 `checker.json`도 실행 스크립트가 따로 수거한다 (제출 형식과 별개, 두 조건의 제출 형식은 같다). 데이터 폴더 이름은 `data/`
-- [ ] (3단계에서 넘김) **점검기 출력 수거 규칙**: 점검기는 실행마다 새 파일에 쓴다 (`checker.json`, 다시 돌리면 `checker_2.json`, `checker_3.json` …. 기존 파일을 덮어쓰지 않는다). 실행 스크립트는 작업 폴더의 `checker*.json`을 모두 수거하고, 각 파일의 `checked.design_file`·`checked.design_sha256`으로 "원래 설계서(입력으로 준 파일, 같은 해시)를 점검한 결과"를 고른다. 같은 설계서를 여러 번 점검했으면 번호가 가장 작은(처음) 것을 쓴다. 고친 설계서를 점검한 결과는 기록으로만 보관한다 (`tools/skill_review.py`가 같은 규칙으로 고른다)
+- [ ] (3단계에서 넘김) **점검기 출력 수거 규칙**: 점검기는 실행마다 새 파일에 쓴다 (`checker.json`, 다시 돌리면 `checker_2.json`, `checker_3.json` …. 기존 파일을 덮어쓰지 않는다). 실행 스크립트는 작업 폴더의 `checker*.json`을 모두 수거하고, 각 파일의 `checked.design_file`·`checked.design_sha256`으로 "원래 설계서(입력으로 준 파일, 같은 해시)를 점검한 결과"를 고른다. 같은 설계서를 여러 번 점검했으면 번호가 가장 작은(처음) 것을 쓴다. 점검기는 결과를 **실행한 폴더**에 쓰므로, 에이전트가 다른 폴더(자기 임시 폴더 등)에서 고친 설계서를 점검한 결과는 작업 폴더에 없다 (3b 3회차에서 확인). 실행 폴더 전체에서 `checker*.json`을 찾을지 6단계 계획에서 정한다. 고친 설계서를 점검한 결과는 기록으로만 보관한다 (`tools/skill_review.py`가 같은 규칙으로 고른다)
 - [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
 - [ ] (2b에서 넘김) 사전 점검에 넣는다: heredoc(`<<`), `find -exec` 같은 명령이 권한 규칙에 막히면 에이전트가 데이터를 열지 않고 끝낼 수 있다 (2b 예비 검수 4회 중 2회). 에이전트가 데이터를 읽으려면 시스템 python(`/usr/local/bin/python3`)에 numpy·pandas와 그 의존 패키지가 **에이전트의 HOME과 무관한 위치**에 있어야 한다. 2b 세션 컨테이너에는 numpy·pandas가 없어서 `requirements-lock.txt`로 설치했는데, python-dateutil은 `/root/.local`에만 있어 HOME을 따로 정한 에이전트에서는 `import pandas`가 실패했다 (예비 검수 에이전트는 csv 모듈로 우회해 데이터를 읽었다). 사전 점검 5번(패키지 import)을 에이전트와 같은 환경 변수로 확인한다
 - [ ] (3단계에서 확인한 원인) 세션 컨테이너 이미지의 `/root/.local/lib/python3.11/site-packages`에 python-dateutil이 처음부터 들어 있다 (다른 도구가 설치해 둔 것). 그래서 사용자 폴더를 무시하지 않고 `pip install`하면 pip가 "이미 있음"으로 보고 시스템 위치에 설치하지 않는다. `PYTHONNOUSERSITE=1 python3 -m pip install -r requirements-lock.txt`로 설치하면 시스템 위치(`/usr/local/lib/python3.11/dist-packages`)에 설치되고, `PYTHONNOUSERSITE=1`에서도 `import pandas`가 된다 (3단계 세션에서 확인). 사전 점검에 이 설치 방법과 확인을 넣는다

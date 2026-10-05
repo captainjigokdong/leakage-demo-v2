@@ -1,0 +1,26 @@
+{
+  "tag": "skill-frozen-v2",
+  "covers": [
+    "leakcheck/",
+    "skill_src/",
+    "designs/schema.json"
+  ],
+  "files": {
+    "designs/schema.json": "1333715c2f072d5682fa886515296cf3496af9134242574d16102a13a3f0418c",
+    "leakcheck/__init__.py": "07ccc673b1a16973acc6acca862941b855f88b7a280692eaf6703814d0f4c767",
+    "leakcheck/checks.py": "104c1ddee7edd63deb85e76d61ee35937a0c2572425f521c0c7e5b82af2a6bae",
+    "leakcheck/data.py": "223a448651b7d1aa62929c8bdbf15df82f8aeb6e411dc300a1e7f0cad29adddb",
+    "leakcheck/design.py": "d9b800fbe77fd69f1b32519917bf0fbd8410f13f5999ae57be8daa2bead7d101",
+    "leakcheck/features.py": "8f10b6756262565fd79add18915bfe5122e13b66d2296f8f1e468ebf1d77c94c",
+    "leakcheck/kdigo.py": "90a1217e703835dd89d15cf05e14681917f34be394a2a195c06b34d6b0dbfb3f",
+    "leakcheck/lock.py": "7e5cfe71d9de7175b2c55dd29a07a5c3b7d1ce88e80cfa0c24a74b78a418482f",
+    "leakcheck/outcomes.py": "d2c69572bd63a4a9827924f0c2a202a57afff9b1ac8404ae70469da74e02be43",
+    "leakcheck/rules.py": "99bd78e8e01192eb062e3d4fc50c72990f2d74286e7109cd4d5a6747bc82b486",
+    "leakcheck/splitting.py": "8f5c794f1fd83a6203ded908bd2c6b4dced4cd397cf593c1669fadbb961a24ff",
+    "leakcheck/tagging.py": "87ce5bb19ac30481d65ea52f7d8a42e58ee37ea1d0691e47457028d030649e1c",
+    "leakcheck/timeline.py": "3099b1b4eb4d4449c7b994265af50aa69ed0b2989f0ec0c42f907f9ca2f50605",
+    "skill_src/leakage-check/SKILL.md": "ea2e242ab5e993f0e0052a3a396febb98c27143ea47c9e8a76d3de4e37caa52d",
+    "skill_src/leakage-check/rules.md": "c16b4c56cfacf6ebc7bd9710b362880f1fcd7f97f429992b99f754c92094b409",
+    "skill_src/leakage-check/scripts/run_check.py": "9a520e30c8d6e75fd700b8021491b3b37772f687e87c5e41c9c7b9ea64d46e8c"
+  }
+}
