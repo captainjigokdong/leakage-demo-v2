@@ -399,13 +399,8 @@
     },
     {
       "name": "n_clinic_365d",
-      "description": "tp 전 365일 안 정기 외래 방문 수 (방문 시각 기준). 추적 외래(follow_up)는 결과의 대리 기록 목록에 있어 세지 않는다",
+      "description": "tp 전 365일 안 외래 방문 수 (방문 시각 기준)",
       "source": "outpatient_visits",
-      "filter": {
-        "visit_type": [
-          "routine"
-        ]
-      },
       "scope": "patient_history",
       "time_column": "visit_time",
       "window": {

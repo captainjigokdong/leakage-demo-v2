@@ -174,11 +174,8 @@ def make_fixed(base: dict) -> dict[str, dict]:
 
     b = research_only(copy.deepcopy(c), "A·B 병원의 성인 퇴원 환자 (ICU·병동), 후향 자료")
     b = boosting(b)
-    add_feature(b, {"name": "n_clinic_365d",
-                    "description": "tp 전 365일 안 정기 외래 방문 수 (방문 시각 기준). 추적 외래(follow_up)는 결과의 대리 "
-                                   "기록 목록에 있어 세지 않는다",
-                    "source": "outpatient_visits", "filter": {"visit_type": ["routine"]}, "scope": "patient_history",
-                    "time_column": "visit_time",
+    add_feature(b, {"name": "n_clinic_365d", "description": "tp 전 365일 안 외래 방문 수 (방문 시각 기준)",
+                    "source": "outpatient_visits", "scope": "patient_history", "time_column": "visit_time",
                     "window": {"start": "tp-365d", "end": "tp"}, "agg": "count", "history_key": "patient_id"},
                 impute=False)
     # 수상해 보이지만 정당한 항목: 이전 입원의 주진단 코드 범주 (코딩 완료 시각 ≤ tp), 학습 폴드에서 맞춘 one-hot
