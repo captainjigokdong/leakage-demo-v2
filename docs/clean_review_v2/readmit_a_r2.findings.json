@@ -1,0 +1,37 @@
+[
+  {
+    "target": "features[cr_last].assessment.method",
+    "kind": "문제",
+    "problem": "설명 문장이 '측정법 자체는 특징으로 '에서 끊겨 있어, 측정법(jaffe/enzymatic)을 특징으로 넣지 않는다는 뜻인지 확정할 수 없다. 특징 목록에 측정법이 없으므로 '넣지 않는다'로 보고 준비했다. 설계서 문구를 고쳐야 한다. 참고로 같은 환자 안 jaffe−enzymatic 중앙값 차이는 0.10 mg/dL(172명)이고, 두 병원 모두 2155-01-01을 경계로 측정법이 바뀌어 보정 규칙 자체는 데이터와 맞다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup",
+    "kind": "가정",
+    "problem": "타 병원 전원 퇴원(discharge_status=transfer, 코호트 751건, 평가 152건)은 A·B 밖 재입원이 보이지 않는데도 음성으로 센다. 결과율은 transfer 12.5%, home 14.7%다. discharge_status가 예측 변수이기도 해서 모델이 이 확인 차이를 위험 차이로 배울 수 있다. 설계대로 퇴원처별 결과율과 성능을 따로 보고해야 하고, transfer 군의 예측값은 결과를 낮게 잡은 것일 수 있다고 해석해야 한다."
+  },
+  {
+    "target": "features[n_prior_adm], features[prior_dx_ckd], features[prior_dx_chf], features[problem_ckd_active]",
+    "kind": "가정",
+    "problem": "자료는 2150-01-01부터 시작하므로(환자 번호 507개가 2150년에 첫 입원) 학습 초기 인덱스 입원은 과거 이력이 잘려 있다. 특히 창이 -inf인 진단·문제 목록 특징은 학습(2150~2156)보다 평가(2157~2158)에서 볼 수 있는 이력이 더 길다. 따라서 학습과 평가 사이에 분포 이동이 생길 수 있다. 설계대로 준비했고, 고정된 되돌아보기 창이나 세탁 기간(washout)을 두는 방법을 검토할 수 있다."
+  },
+  {
+    "target": "features[age]",
+    "kind": "점검 불가",
+    "problem": "patients.age가 그 등록 번호의 첫 입원 때 나이라는 정의와 95세 절단은 데이터 설명서에 근거한다고 하지만, 작업 폴더에 설명서가 없다. 데이터에는 생년월일이 없어 정의를 확인할 수 없다. 데이터에서 확인한 사실은 최댓값 95(103명)와 18세 미만 0명뿐이다. 95로 잘린 환자(입원 176건)의 유도 나이는 하한값이다 (준비된 표의 최댓값 97.8)."
+  },
+  {
+    "target": "features[n_prior_adm].history_key / features[prior_dx_*].history_key",
+    "kind": "점검 불가",
+    "problem": "person_id가 자료 추출 때 연결되어 tp에는 알 수 없다는 전제는 데이터로 확인할 수 없다 (연결 시각 열이 없다). 이 전제에 따라 이력 특징은 patient_id 기준, 결과는 person_id 기준으로 만들었다. 등록 번호가 둘 이상인 사람은 111명이다."
+  },
+  {
+    "target": "features[sbp_last].time_column",
+    "kind": "가정",
+    "problem": "'last'의 순서를 측정 시각(charted_time)이 아닌 입력 시각(entered_time)으로 정하므로, 7,724건 중 44건의 입원에서 가장 늦게 잰 값이 아닌 값이 선택된다. tp에 알 수 있는지는 entered_time으로 판단하는 것이 맞다. 설계 문구대로 준비했다."
+  },
+  {
+    "target": "evaluation.subgroups (site=B)",
+    "kind": "가정",
+    "problem": "B 병원은 평가 47건(사건 7), 학습 156건(사건 20)뿐이다. 하위 집단 추정치는 매우 불안정하므로 설계대로 신뢰구간과 함께 보고하고, 점추정만으로 결론을 내리지 않는다."
+  }
+]

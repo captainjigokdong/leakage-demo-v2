@@ -1,0 +1,42 @@
+[
+  {
+    "target": "features[cr_last].assessment.method",
+    "kind": "가정",
+    "problem": "설명이 '측정법 자체는 특징으로 '에서 끊겨 있어 측정법(method)을 특징으로 쓸지 정해져 있지 않다. features 목록에 측정법 특징이 없으므로 쓰지 않는 것으로 보았다. 측정법은 2155-01-01 전 채취와 정확히 겹쳐(jaffe 14,545건 전부 2155년 전) 넣으면 시대 표시가 된다."
+  },
+  {
+    "target": "features[cr_last], features[prior_cr_last], preprocessing[cr_method_align]",
+    "kind": "점검 불가",
+    "problem": "근거로 든 데이터 설명서(labs.value의 0.10 mg/dL 고정 차이)가 작업 폴더에 없어 직접 확인할 수 없다. 데이터에서 크레아티닌 연도별 중앙값은 2150~2154년 1.10~1.14, 2155년 이후 0.96~1.01로 약 0.1 차이라 서술과 맞는다. 보정 기준은 method == 'jaffe'로 했고, 이는 '2155-01-01 전 채취'와 100% 일치한다."
+  },
+  {
+    "target": "features[age]",
+    "kind": "가정",
+    "problem": "patients.age는 95에서 잘려 있는데(설명서는 없어 확인 불가, 데이터 최댓값 95·95세 103명), 설계대로 첫 입원 뒤 경과 연수를 더하면 코호트 61행이 95를 넘는다. 원 자료와 같은 눈금을 유지하려고 인덱스 나이를 95에서 잘랐다."
+  },
+  {
+    "target": "features[los_h]",
+    "kind": "가정",
+    "problem": "admissions에 length_of_stay_h 열이 없다. 설계 서술대로 인덱스 입원의 (discharge_time − admit_time) 시간으로 만들었다."
+  },
+  {
+    "target": "features[icu_any, cr_last, hgb_min, dialysis_ordered].window.start",
+    "kind": "가정",
+    "problem": "episode=index_episode인 특징의 창 시작 'admit'을 에피소드 첫 입원의 admit_time으로 보았다 (두 입원 기록 에피소드 220개, 기록 사이 간격 1시간 이내)."
+  },
+  {
+    "target": "features[prior_cr_last]",
+    "kind": "가정",
+    "problem": "창 시작과 episode 칸이 없다. 창 시작은 -inf로, 범위는 prior_dx_* 서술과 같이 같은 patient_id의 인덱스 입원 전에 시작한 모든 입원(같은 에피소드 앞 입원 포함)으로 보았다. 같은 에피소드 앞 입원 값은 cr_last와 겹칠 수 있다. 결측률 66.6%."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup",
+    "kind": "가정",
+    "problem": "A·B 밖 병원 재입원은 보이지 않아 음성으로 센다(설계 명시). 전원 퇴원 결과율(학습 13.7%, 평가 11.5%)이 자택 퇴원(15.1%, 14.8%)보다 낮아 과소 확인이 의심되므로 설계대로 discharge_status·site별로 따로 보고해야 한다."
+  },
+  {
+    "target": "evaluation.subgroups (site)",
+    "kind": "가정",
+    "problem": "평가 집합의 B 병원은 55행, 사건 9건뿐이다. B 병원 지표는 신뢰구간이 매우 넓을 것이므로 추정치로 해석하지 않고 신뢰구간과 함께만 보고한다는 설계 전제를 따른다."
+  }
+]

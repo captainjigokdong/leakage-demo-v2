@@ -1,0 +1,32 @@
+[
+  {
+    "target": "preprocessing.cr_method_align.columns (features.n_cr)",
+    "kind": "문제",
+    "problem": "jaffe 값에서 0.10 mg/dL을 빼는 보정 대상에 n_cr(크레아티닌 측정 횟수)이 들어 있다. n_cr은 개수라 값 보정이 의미가 없고, 집계 뒤 열에 그대로 적용하면 2155년 전 행의 측정 횟수가 0.10씩 줄어든다. features.n_cr.description에도 같은 문장('jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다')이 잘못 붙어 있다. 또 이 단계의 columns는 집계된 특징 열인데 description은 '집계 전 값 단위로 적용'이라 해서 서로 맞지 않는다. n_cr은 빼고, 보정은 집계 전 labs 값 단위로 적용해야 한다."
+  },
+  {
+    "target": "tp.anchor / outcome.scope / cohort.exclusion.aki_known_by_tp (episode 처리)",
+    "kind": "문제",
+    "problem": "데이터에 두 입원 기록이 이어진 에피소드가 220개 있다. 모두 같은 환자이고 첫 입원이 transfer로 끝난 뒤 1시간 안에 다음 입원이 시작되며, 44%는 병원(site)이 바뀐다. 설계는 tp를 각 입원의 admit에서 잡고(rows_per_unit=admission), 결과와 KDIGO 기준값은 index_admission 안에서만 보며, 특징은 index_episode로 본다. 그 결과 (1) 둘째 입원에서 725행이 생기고, 이 중 314행은 에피소드 시작 뒤 168시간을 넘어 질문의 '입원 24시간~7일' 범위를 벗어난다. 첫 입원의 tp와도 날짜가 겹친다. (2) 이 725행은 모두 첫 입원의 크레아티닌이 있는데도 결과·제외 판정의 기준값이 전원 시점에 초기화된다. (3) 창 안에 transfer로 퇴원한 행은 퇴원 뒤가 결과 창에서 빠진다. 이 때문에 이어진 입원에서 tp+48h 안에 생긴 AKI 6건이 음성으로 표시된다. (4) aki_known_by_tp는 scope=index_admission이면서 episode=index_episode라 기준값 범위가 모호하다. 에피소드를 하나의 입원으로 보고 tp·결과·제외를 맞출지 정해야 한다."
+  },
+  {
+    "target": "features.cr_last.assessment.method",
+    "kind": "가정",
+    "problem": "문장이 '측정법 자체는 특징으로 '에서 끊겨 있다. '측정법(method)은 특징으로 쓰지 않는다'로 가정한다. features 목록에도 method 특징은 없다."
+  },
+  {
+    "target": "preprocessing.cr_method_align.method (jaffe 0.10 mg/dL 고정 차이)",
+    "kind": "가정",
+    "problem": "근거로 든 데이터 설명서(labs.value)가 작업 폴더에 없어 원문은 확인하지 못했다. 데이터에서는 측정법이 2155-01-01 채취분부터 정확히 바뀐다(A·B 병원, 입원·외래 모두). 같은 외래 환자의 2154년(jaffe)과 2155년(enzymatic) 평균 차이는 n=43명에서 평균 0.109, 중앙값 0.130이다. 입원 첫 값 중앙값도 1.07~1.08에서 0.95~0.97로 내려간다. 0.10은 데이터와 대체로 맞으므로 그대로 쓴다고 가정한다. 결과 판정을 보정하지 않은 값으로 하면 보정할 때보다 14행이 음성으로 남는다. 이는 설계서 서술과 일치한다."
+  },
+  {
+    "target": "features.age (patients.age 정의, 95세 절단) / cohort.inclusion.adult",
+    "kind": "점검 불가",
+    "problem": "데이터 설명서가 없어 patients.age가 '그 등록 번호의 첫 입원 때 나이'라는 정의는 확인하지 못했다. 첫 입원이 연구 기간(2150) 전이어서 데이터에 없으면 인덱스 나이 계산이 틀어진다. 이 경우도 확인할 수 없다. 데이터의 나이는 18~95이고 95세가 103명이어서 절단과는 모순이 없다. 18세 미만은 없어서 inclusion.adult가 첫 입원 나이를 쓰는 점은 실제 결과에 영향이 없다."
+  },
+  {
+    "target": "cohort.deduplication.key (landmark_row_id)",
+    "kind": "가정",
+    "problem": "데이터에 landmark_row_id 열이 없다. admission_id + tp 오프셋(24~168h)으로 만든다고 가정한다. 이렇게 만들면 중복은 없다."
+  }
+]
