@@ -96,11 +96,12 @@ def inject(case_id: str, kind: str) -> dict:
 # --- 수상해 보이지만 정당한 특징 (동적 AKI 설계에 더함) ---
 
 TRICKY_DYNAMIC = {
-    # 이전 입원의 진단 코드: 진단 코드는 퇴원 시각에 알려지고, 이전 입원은 이번 입원 전에 퇴원했다.
+    # 이전 입원의 진단 코드: tₚ까지 코딩이 끝난 것만(coded_time 창). v2 데이터에서는 코딩이 퇴원 뒤
+    # 최대 90일 걸려, 창 없이 쓰면 이전 입원 코드도 tₚ 뒤에 알려질 수 있다 (3단계 승인 ②로 창을 더함).
     # AKI 코드(N17)가 들어 있어도 다른 입원의 기록이라 결과의 대리 변수가 아니다.
     "prior_admission_dx": {"name": "prior_dx_renal_cardiac", "source": "diagnoses",
                            "scope": "prior_admissions", "filter": {"icd_code": ["N17", "N18", "I50"]},
-                           "agg": "any"},
+                           "time_column": "coded_time", "window": {"end": "tp"}, "agg": "any"},
     # 보고 시각으로 거른 검사: tₚ 직전 6시간 안에 보고된 것까지만.
     "report_time_lab_near_tp": {"name": "k_last_6h", "source": "labs", "filter": {"test": ["potassium"]},
                                 "time_column": "report_time", "window": {"start": "tp-6h", "end": "tp"},

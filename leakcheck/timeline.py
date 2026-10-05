@@ -14,8 +14,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-import pandas as pd
-
 INF = float("inf")
 ANCHORS = ("tp", "admit", "discharge")
 
@@ -90,6 +88,23 @@ class Frame:
         return self.bounds(e.anchor)[1] + e.offset_h
 
 
+_DUR = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([hd])\s*$")
+
+
+def parse_duration_h(s) -> float | None:
+    """간격 문자열(예: 30d, 720h, tp+30d의 간격 부분)을 시간으로. 읽을 수 없으면 None."""
+    if s is None:
+        return None
+    m = _DUR.match(str(s))
+    if m:
+        return float(m.group(1)) * (24 if m.group(2) == "d" else 1)
+    try:
+        e = parse(s)
+    except ValueError:
+        return None
+    return abs(e.offset_h) if e.anchor not in ("-inf", "inf") else None
+
+
 def fmt_h(x: float) -> str:
     """tₚ 대비 시간을 읽기 좋게."""
     if x == INF:
@@ -101,14 +116,22 @@ def fmt_h(x: float) -> str:
     return f"tₚ{'+' if x > 0 else ''}{x:g}h"
 
 
-# --- 데이터 단계 ---
+# --- 데이터 단계 (pandas는 여기서만 불러온다: 설계서 점검은 pandas 없이 돈다) ---
 
-T_MIN = pd.Timestamp.min
-T_MAX = pd.Timestamp.max
+def t_min():
+    import pandas as pd
+    return pd.Timestamp.min
 
 
-def resolve(e: TimeExpr | str, index_rows: pd.DataFrame) -> pd.Series:
+def t_max():
+    import pandas as pd
+    return pd.Timestamp.max
+
+
+def resolve(e, index_rows):
     """예측 행마다 실제 시각. -inf/inf는 Timestamp.min/max."""
+    import pandas as pd
+    T_MIN, T_MAX = t_min(), t_max()
     e = parse(e) if isinstance(e, str) else e
     n = len(index_rows)
     if e.anchor == "-inf":

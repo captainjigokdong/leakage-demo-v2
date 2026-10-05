@@ -1,0 +1,42 @@
+[
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "문제",
+    "problem": "[점검기 차단, Q5 선택 시점] pending_at_tp=exclude_row는 tp 전에 채취했지만 tp 뒤에 보고된 크레아티닌(labs.collect_time ≤ tp < report_time)이 있는 예측 행을 뺀다. tp 뒤에야 알 수 있는 정보로 표본을 고르는 것이다(규칙 C.pending, 채취→보고 지연 상한 6h). 수정안: count_as_outcome 또는 ignore. 수정한 설계서 사본에서 count_as_outcome이 점검을 통과함을 확인했다."
+  },
+  {
+    "target": "split.method",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q1 가용 시점] intended_use.purpose=prospective_deployment(배포 시작: 자료 추출 종료 뒤)인데 split.method=group_holdout이라 평가 기간보다 뒤의 데이터가 학습에 들어간다(규칙 S.temporal_deploy). 2155-01-01 크레아티닌 측정법 전환 같은 시기 효과가 학습·평가에 섞인다. 수정안: split.method=temporal, key family_id/fallback person_id 유지, gap은 결과 창 이상(≥48h, 규칙 S.temporal), cutoff를 지정한다(예: 2157-01-01). 사본에서 점검을 통과함을 확인했다."
+  },
+  {
+    "target": "outcome.censoring.end_of_data",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q7 결과 확인 균질성] end_of_data=not_applicable인데, 결과 창 끝(tp+48h)이 자료 추출 종료(2160-01-01)를 넘는 예측 행이 있다(25,834행 중 2행). 이 행들은 결과를 덜 확인한다(규칙 O.end_of_data). 수정안: exclude_incomplete."
+  },
+  {
+    "target": "data_source.death_source",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q7 결과 확인 균질성] 결과가 AKI 또는 사망의 복합인데(censoring.death=composite_outcome) 원내 사망만 쓴다. 결과 창 안에 퇴원하면 음성으로 처리되므로(lost_to_followup=count_as_negative) 원외 사망을 놓친다(규칙 O.death_source). 수정안: linked_registry. 단, 아래 data_source.death_source 추가 항목을 참고."
+  },
+  {
+    "target": "data_source.death_source",
+    "kind": "문제",
+    "problem": "[추가 의심, Q7] linked_registry로 바꾸더라도 extract_info.death_linkage_through=2159-07-01이라 원외 사망 연계가 자료 추출 종료(2160-01-01)보다 6개월 일찍 끝난다(deaths의 원외 사망 336건은 모두 registry_link 출처). 퇴원이 2159-07-01 뒤인 입원이 399/7,724건이며, 이 기간의 결과 창 안 퇴원 행은 원외 사망을 확인할 수 없다. 점검기는 이를 판정하지 않았다(수정한 사본도 통과). 수정안: 결과 창 끝(tp+48h)이 2159-07-01을 넘는 행을 빼거나, 사망 연계 종료를 결과 확인 종료로 보고 그 뒤 기간을 층별로 다룬다. 원외 사망 없이 '원내 사망'만 결과로 정의하는 방법도 있지만, 그 경우 창 안 퇴원을 음성으로 둔다는 한계를 명시해야 한다."
+  },
+  {
+    "target": "features.cr_last",
+    "kind": "문제",
+    "problem": "[추가 의심, Q7 · 서술과 칸 불일치] cr_last.assessment.method에 '측정법을 함께 넣는다'고 적혀 있지만 features에 측정법(labs.method) 특징이 없다. 데이터에서 크레아티닌 평균은 jaffe 1.32, enzymatic 1.18 mg/dL이다. 측정법 정보가 없으면 cr_last, cr_min_adm, cr_max_48h, cr_rise가 2155-01-01 전후로 같은 척도가 아니다(측정법이 섞인 입원 7건). 시간 순 분할(학습=주로 jaffe 시기 포함, 평가=enzymatic)에서는 분포 이동이 된다. 수정안: cr_method_last(labs.method, report_time ≤ tp, agg=last) 특징을 추가하거나 jaffe 값을 보정한다. 추가한 사본에서 점검을 통과함을 확인했다(labs.method는 report_time에 알려짐)."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.family_missing, Q2] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키 person_id로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다(patients 중 family_id 결측 80.4%)."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.family_missing, Q2] family_id가 비어 있는 행은 대체 키 person_id로 묶는다. 기록되지 않은 가족은 교차검증 폴드 사이에 나뉠 수 있다."
+  }
+]

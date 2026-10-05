@@ -1,0 +1,42 @@
+[
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "문제",
+    "problem": "[점검기 차단 · Q5 · 규칙 C.pending] pending_at_tp=exclude_row: tp 전에 채취됐지만 tp 뒤에 보고된 크레아티닌(labs.collect_time ≤ tp < report_time, 지연 상한 6h)이 있는 행을 뺀다. tp 뒤에 알려지는 정보로 표본을 고르므로 선택 시점 위반이다. 수정안: count_as_outcome(권장: 그 값이 KDIGO를 만족하면 tp에서 경보를 낼 대상이므로 결과로 셈) 또는 ignore로 바꾸고 행은 남긴다."
+  },
+  {
+    "target": "split.method",
+    "kind": "문제",
+    "problem": "[점검기 경고 · Q1 · 규칙 S.temporal_deploy] 목적이 전향 사용(2160-01-01 뒤 배치)인데 group_holdout(가족 단위 무작위)으로 나눈다. 평가 기간보다 뒤의 진료 관행·측정법(2155년 jaffe→enzymatic 전환 포함)이 학습에 들어간다. 수정안: split.method=temporal, 묶음 키 family_id(대체 person_id) 유지, split.time_column=tp, cutoff 지정, gap ≥ 결과 창 48h."
+  },
+  {
+    "target": "data_source.death_source",
+    "kind": "문제",
+    "problem": "[점검기 경고 · Q7 · 규칙 O.death_source] 사망을 복합 결과에 넣으면서 원내 사망 기록만 쓴다. 데이터에서 예측 행의 46.8%(13,454/28,761)가 결과 창 안에 퇴원하므로 창 안 원외 사망을 놓친다. 수정안: death_source=linked_registry. 단 extract_info.death_linkage_through=2159-07-01이므로 그 뒤 결과 창은 사망 확인이 불완전하다는 점을 함께 다뤄야 한다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup",
+    "kind": "문제",
+    "problem": "[추가 의심 · Q7] 결과 창 안에 퇴원하면 AKI를 확인하지 않고 음성으로 센다(outcome.description, ascertainment.min_followup='tp'). 데이터에서 창 안 퇴원 비율이 병동 52.5%, ICU 34.7%(admissions.unit 기준)로 층마다 크게 달라, 측정 빈도 차이에 더해 확인 기간 자체가 층마다 다르다. by_stratum=unit_at_tp 보고만으로는 퇴원 때문에 생기는 미확인을 드러내지 못한다. 수정안: 행을 빼지 말고(빼면 C.post_tp_exclusion 위반) 결과를 '퇴원 전 원내 AKI'로 명시해 정의하거나, 창 안 퇴원 여부를 층으로 추가해 결과율·성능을 따로 보고한다. 퇴원 뒤 외래 크레아티닌(outpatient_labs, person_id로 연결)을 결과 확인에 쓰는 방안도 검토한다."
+  },
+  {
+    "target": "features.cr_last",
+    "kind": "문제",
+    "problem": "[추가 의심 · 서술과 칸 불일치] assessment.method에 '측정법을 함께 넣는다'(jaffe는 약 0.10 mg/dL 높음)고 적었으나 features에 측정법 특징이 없고, cr_min_adm·cr_max_48h·cr_rise도 측정법을 구분하지 않는다. 결과 정의는 측정법이 다른 값끼리 비교하지 않는데 특징은 섞어 쓴다(데이터: 측정법이 섞인 입원 7건). 수정안: tp까지 보고된 마지막 크레아티닌의 labs.method를 특징으로 추가(report_time ≤ tp이므로 Q1 문제 없음)하고, cr_rise는 같은 측정법 값끼리만 계산한다."
+  },
+  {
+    "target": "outcome.censoring.end_of_data",
+    "kind": "문제",
+    "problem": "[추가 의심 · Q7] end_of_data=not_applicable이지만 데이터에서 결과 창(tp+48h)이 자료 추출 종료(2160-01-01)를 넘는 예측 행이 2개 있다. 행 수가 적어 영향은 작지만 칸 값이 사실과 다르다. 수정안: exclude_incomplete로 명시한다."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정 · Q2 · A.family_missing] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(person_id)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정 · Q2 · A.family_missing] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(person_id)로 묶는다. 기록되지 않은 가족은 교차검증 폴드 사이에 나뉠 수 있다."
+  }
+]

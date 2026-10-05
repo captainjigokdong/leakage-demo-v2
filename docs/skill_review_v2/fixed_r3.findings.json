@@ -1,0 +1,47 @@
+[
+  {
+    "target": "split.method",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q1 가용 시점, 규칙 S.temporal_deploy] intended_use.purpose=prospective_deployment(배치 시작은 2160-01-01 뒤)인데 split.method=group_holdout이라 학습·평가를 시간 순으로 나누지 않았다. 평가 기간보다 뒤의 진료 관행·측정법이 학습에 들어간다. 수정안: split.method=temporal로 바꾸고 묶음 키 family_id(대체 키 person_id)는 유지하며, split.gap은 결과 창 이상(30d)으로 둔다. 이렇게 고친 설계로 점검기를 다시 돌려 경고 0을 확인했다."
+  },
+  {
+    "target": "preprocessing.median_impute",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q3 적합 범위, 규칙 F.fold_refit] 조율(C 격자 탐색, 임계값, Platt 보정)은 group k-fold 교차검증으로 하는데, 중앙값 대치는 학습 부분 전체(fit_scope=train)에서 한 번만 적합한다. 그래서 검증 폴드의 정보가 대치값에 들어간다. 수정안: fit_scope=train_fold(폴드마다 다시 적합하는 파이프라인)."
+  },
+  {
+    "target": "preprocessing.one_hot",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q3 적합 범위, 규칙 F.fold_refit] 교차검증으로 조율하는데 원-핫 인코딩은 학습 부분 전체(fit_scope=train)에서 한 번만 적합한다. 검증 폴드의 범주 정보가 인코딩에 들어간다. 수정안: fit_scope=train_fold."
+  },
+  {
+    "target": "preprocessing.standardize",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q3 적합 범위, 규칙 F.fold_refit] 교차검증으로 조율하는데 z-점수 척도화는 학습 부분 전체(fit_scope=train)에서 한 번만 적합한다. 검증 폴드의 평균·표준편차가 척도화에 들어간다. 수정안: fit_scope=train_fold."
+  },
+  {
+    "target": "features.cr_last",
+    "kind": "문제",
+    "problem": "[추가 의심, Q7/Q1 측정법 변경] features.cr_last.assessment.method에는 '2155-01-01 전은 jaffe(약 0.10 mg/dL 높음), 뒤는 enzymatic. 측정법을 함께 넣는다'라고 적혀 있다. 그런데 features와 preprocessing 어디에도 측정법(labs.method) 특징이나 보정 단계가 없어 서술과 칸 값이 맞지 않는다. 데이터에는 크레아티닌 jaffe 14,545건, enzymatic 16,661건이 있다. split.method의 수정안대로 시간 순 분할을 쓰면 학습은 주로 jaffe, 평가와 배치는 enzymatic이 되어 체계적 편이가 생긴다. cr_last_over_hgb도 같은 영향을 받는다. 수정안: labs.method(test=creatinine, report_time 기준, 창 admit~tp, agg=last)를 특징으로 넣는다(T.labs.method는 report_time에 알려지므로 tp 이전이다). 또는 jaffe 값을 보정한다. 이 특징을 더한 설계로 점검기를 다시 돌려 위반이 없음을 확인했다."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.family_missing] family_id가 비어 있는 행은 가족 관계를 모른다. 이 행은 대체 키(person_id)로 묶으므로, 기록되지 않은 가족은 학습·평가에 나뉠 수 있다. 데이터에서 patients.family_id의 결측은 80.4%다."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.family_missing] family_id가 비어 있는 행은 대체 키(person_id)로 묶는다. 그래서 기록되지 않은 가족은 조율 교차검증의 폴드 사이에 나뉠 수 있다."
+  },
+  {
+    "target": "cohort.rows_per_unit",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.episode_last] 에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어지는 입원이 없음을 알아야 한다. 점검기는 이를 퇴원 때 안다고 본다."
+  },
+  {
+    "target": "outcome.ascertainment.scope.sites",
+    "kind": "가정",
+    "problem": "[점검기 가정 A.outside_sites] A·B 밖 병원의 재입원은 데이터에 없어 보이지 않는다(lost_to_followup=count_as_negative). 설계는 퇴원처·병원별로 층화해 보고한다(by_stratum). 결정 카드상 결과율은 전원 29.1%, 자택 14.7%다."
+  }
+]

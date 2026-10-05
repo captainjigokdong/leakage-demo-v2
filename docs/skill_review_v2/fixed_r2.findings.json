@@ -1,0 +1,12 @@
+[
+  {"target": "split.method", "kind": "문제", "problem": "[점검기 경고 Q1, 규칙 S.temporal_deploy] intended_use.purpose=prospective_deployment인데 split.method=group_holdout으로 시간 순서 없이 나눈다. 평가 기간보다 뒤의 진료 관행·측정법(예: 2155-01-01 크레아티닌 측정법 변경)이 학습에 들어간다. 수정안: split.method=temporal (key=family_id, fallback_key=person_id 유지), cutoff와 gap(결과 창 30일 이상)을 정한다."},
+  {"target": "preprocessing.median_impute", "kind": "문제", "problem": "[점검기 경고 Q3, 규칙 F.fold_refit] 조율을 group_kfold 교차검증으로 하는데 중앙값 대치를 학습 부분 전체(fit_scope=train)에서 한 번 적합한다. 검증 폴드 정보가 조율·임계값·보정 결정에 들어간다. 수정안: fit_scope=train_fold (폴드마다 파이프라인으로 다시 적합)."},
+  {"target": "preprocessing.one_hot", "kind": "문제", "problem": "[점검기 경고 Q3, 규칙 F.fold_refit] 조율 교차검증인데 원-핫 인코딩을 학습 부분 전체(fit_scope=train)에서 한 번 적합한다. 수정안: fit_scope=train_fold."},
+  {"target": "preprocessing.standardize", "kind": "문제", "problem": "[점검기 경고 Q3, 규칙 F.fold_refit] 조율 교차검증인데 z-점수 척도화를 학습 부분 전체(fit_scope=train)에서 한 번 적합한다. 수정안: fit_scope=train_fold."},
+  {"target": "features.cr_last", "kind": "문제", "problem": "[추가 의심 Q7/서술-칸 불일치] features.cr_last.assessment.method는 '측정법을 함께 넣는다'고 적었지만 features에 측정법(labs.method) 특징이 없다. 데이터: 크레아티닌 평균이 jaffe(2150~2154) 1.32, enzymatic(2155~) 1.18 mg/dL로 측정법이 연구 기간 중간에 바뀐다. 시간 순 분할로 바꾸면 학습은 주로 jaffe, 평가·배포는 enzymatic이 되어 계수가 어긋난다. 수정안: labs.method(cr_last와 같은 행, report_time ≤ tp)를 특징으로 추가하거나 jaffe 값을 보정해 하나의 척도로 맞추고, 이를 설계서에 명시한다."},
+  {"target": "outcome.definition", "kind": "문제", "problem": "[추가 의심 Q4/서술-칸 불일치] outcome.description은 '창 안에 예정 입원이 먼저 있어도 그 뒤 응급 입원이 있으면 양성'이라고 하지만 outcome.definition=next_admission은 다음 입원 하나만 보는 정의로 읽힌다. 데이터: 30일 안 첫 입원이 elective이고 그 뒤 예정되지 않은 입원이 있는 입원이 4건 있다(코호트 제한 전 전체 입원 기준). 정의 구현이 어느 쪽인지에 따라 결과 라벨이 달라진다. 수정안: 결과를 '창 (tp, tp+30d] 안의 모든 비예정 입원(person_id 기준) 또는 사망'으로 구현하고 description과 칸을 일치시킨다."},
+  {"target": "split.key", "kind": "가정", "problem": "[점검기 가정 A.family_missing] family_id가 비어 있는 행은 대체 키 person_id로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다. (데이터: patients의 family_id 결측 80.4%)"},
+  {"target": "model.tuning.cv_key", "kind": "가정", "problem": "[점검기 가정 A.family_missing] family_id가 비어 있는 행은 대체 키 person_id로 묶는다. 기록되지 않은 가족은 교차검증 폴드 사이에 나뉠 수 있다."},
+  {"target": "cohort.rows_per_unit", "kind": "가정", "problem": "[점검기 가정 A.episode_last] 에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없음을 알아야 한다. 퇴원 때 안다고 본다."},
+  {"target": "outcome.ascertainment.scope.sites", "kind": "가정", "problem": "[점검기 가정 A.outside_sites] A·B 밖 병원의 사건은 데이터에 없다. 결과 확인 범위 밖에서 생긴 재입원은 보이지 않는다 (lost_to_followup=count_as_negative로 음성 처리됨)."}
+]
