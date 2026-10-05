@@ -1,0 +1,27 @@
+[
+  {
+    "target": "features (los_h, unit, cr_last, hgb_min, k_last, sbp_last)",
+    "kind": "문제",
+    "problem": "코호트는 에피소드의 마지막 입원을 인덱스로 쓴다. icu_any, n_discharge_meds, dialysis_ordered는 에피소드 전체(episode: index_episode)를 보지만, los_h·unit·검사·활력 특징은 마지막 입원만 본다. 입원 두 건으로 나뉜 에피소드에 속한 인덱스 행 190건에서는 los_h가 실제 재원보다 짧다(중앙값 85시간, 에피소드 전체는 187시간). unit도 에피소드의 첫 병동이 아니라 두 번째 입원의 첫 병동이 된다(35%가 다름). 에피소드 ICU도 85건 가운데 51건만 마지막 입원에 있어서, 같은 에피소드인데 특징마다 범위가 다르다. 설계서에 적힌 대로 마지막 입원 기준으로 만들었다. 에피소드 기준이 의도였다면 설계서를 고쳐야 한다."
+  },
+  {
+    "target": "features (n_prior_adm, prior_dx_ckd, prior_dx_chf, problem_ckd_active).history_key",
+    "kind": "가정",
+    "problem": "이력 특징은 patient_id로 모으고, 결과는 person_id로 정한다. person_id 연결은 자료를 추출할 때 한 번에 하므로 tp에는 알 수 없다고 보고, patient_id 기준을 의도한 설계로 받아들였다. 등록 번호가 둘인 사람의 인덱스 행은 242건이다. person_id로 모았을 때와 비교하면 n_prior_adm은 78행에서 적게 세어지고, prior_dx_ckd는 307건 대 316건, prior_dx_chf는 369건 대 385건으로 적다."
+  },
+  {
+    "target": "split (family_id, fallback person_id)",
+    "kind": "점검 불가",
+    "problem": "family_id는 인덱스 행의 80.8%에서 비어 있다. 설명서에 따르면 기록되지 않은 가족도 잠재 위험을 함께 가진다. 이런 가족 구성원은 학습과 평가에 나뉘어 들어갈 수 있는데, 데이터로는 찾을 수 없다. 그래서 평가 성능이 낙관적으로 나올 수 있다."
+  },
+  {
+    "target": "outcome.ascertainment / censoring.lost_to_followup",
+    "kind": "점검 불가",
+    "problem": "A·B 밖의 병원에 다시 입원한 경우는 데이터에 없고, 음성으로 센다. 실제 결과율은 자택 퇴원 14.7%, 전원 퇴원 12.5%로, 전원 퇴원이 더 낮다. 이것이 과소 확인 때문인지는 데이터로 가를 수 없다. 설계서대로 퇴원처별·병원별 결과율을 함께 보고해야 한다."
+  },
+  {
+    "target": "preprocessing.missing_flags.columns",
+    "kind": "가정",
+    "problem": "analysis.missing_data는 indicator 방식인데, missing_flags 목록에 k_last가 빠져 있다. 현재 데이터에서 k_last 결측은 0%여서 영향은 없다. 그래서 목록에서 빠진 것을 의도로 보고 설계서대로 두었다. 반대로 cr_last와 sbp_last도 결측이 0%라서, 이 둘의 표시 열은 모든 값이 0인 상수 열이 된다."
+  }
+]
