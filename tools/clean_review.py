@@ -145,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
         metas = list(ex.map(lambda n: run_one(args.round, n, args.transcripts), names))
     for m in metas:
         print(m["run"], "exit", m["exit_code"], f"{m['seconds']}s", "위반", len(m["audit"]["violations"]),
-              "거부", len(m["permission_denials"] or []), "조작확인", m["manipulation"] or "ok",
+              "거부", (m["permission_denials"] or {}).get("count"), "조작확인", m["manipulation"] or "ok",
               "입력변경", m["inputs_changed"] or "없음", "findings", m["findings_json"])
     return 0
 
