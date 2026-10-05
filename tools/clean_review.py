@@ -95,7 +95,8 @@ def run_one(rnd: str, name: str, transcripts: Path, model: str = R.MODEL) -> dic
     aud["violations"] += R.audit_scripts(rd, "나")
     tools: dict[str, int] = {}
     for e in events:
-        for c in (e.get("message") or {}).get("content") or []:
+        msg = e.get("message")
+        for c in (msg.get("content") if isinstance(msg, dict) else None) or []:
             if isinstance(c, dict) and c.get("type") == "tool_use":
                 tools[c["name"]] = tools.get(c["name"], 0) + 1
     OUT.mkdir(parents=True, exist_ok=True)
