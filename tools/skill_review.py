@@ -173,12 +173,18 @@ def run_one(name: str, kind: str, transcripts: Path, model: str = R.MODEL) -> di
     orig_sha = rd.inputs.get("design.json")
     cands = sorted(rd.ws.glob("checker*.json"), key=lambda p: (len(p.stem), p.stem))
     cj = None
+    files = []
     for cp in cands:
         c = json.loads(cp.read_text(encoding="utf-8"))
-        if c.get("checked", {}).get("design_sha256", orig_sha) == orig_sha:
+        ch = c.get("checked") or {}
+        files.append({"file": cp.name, "design_file": ch.get("design_file"), "design_sha256": ch.get("design_sha256"),
+                      "matches_original": ch.get("design_sha256") == orig_sha})
+        if cj is None and ch.get("design_sha256") == orig_sha:
             cj = c
-            break
+    review_checker_files = {"files": files, "original_found": cj is not None,
+                            "all_have_hash": bool(files) and all(f["design_sha256"] for f in files)}
     review["findings_json"] = findings_checks(rd.ws, cj)
+    review["checker_files"] = review_checker_files
     OUT.mkdir(parents=True, exist_ok=True)
     for f in ["findings.json", *(p.name for p in sorted(rd.ws.glob("checker*.json")))]:
         if (rd.ws / f).exists():
