@@ -169,11 +169,18 @@ def run_one(name: str, kind: str, transcripts: Path, model: str = R.MODEL) -> di
     aud["violations"] += R.audit_scripts(rd, "가")
     final = res.get("result") or ""
     review = review_checks(events, init, final, rd)
-    cj_path = rd.ws / "checker.json"
-    cj = json.loads(cj_path.read_text(encoding="utf-8")) if cj_path.exists() else None
+    # 점검기는 실행마다 checker.json, checker_2.json …에 저장한다. 원래 설계서(design.json, 같은 해시)를 점검한 첫 결과를 쓴다
+    orig_sha = rd.inputs.get("design.json")
+    cands = sorted(rd.ws.glob("checker*.json"), key=lambda p: (len(p.stem), p.stem))
+    cj = None
+    for cp in cands:
+        c = json.loads(cp.read_text(encoding="utf-8"))
+        if c.get("checked", {}).get("design_sha256", orig_sha) == orig_sha:
+            cj = c
+            break
     review["findings_json"] = findings_checks(rd.ws, cj)
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in ("findings.json", "checker.json"):
+    for f in ["findings.json", *(p.name for p in sorted(rd.ws.glob("checker*.json")))]:
         if (rd.ws / f).exists():
             shutil.copy2(rd.ws / f, OUT / f"{name}.{f}")
     usage = res.get("usage") or {}

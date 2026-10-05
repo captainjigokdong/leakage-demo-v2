@@ -47,7 +47,20 @@ pandas(데이터 단계 확인) / 보고 세 칸 / findings.json JSON·세 칸 /
 - 고정: `cr_last` 같은 지적, `outcome.description`과 `definition=next_admission`의 뜻이 어긋남
 - 원문: `dynamic_r2.md`, `fixed_r2.md`, 제출 파일 `*.findings.json`, 점검기 출력 `*.checker.json`
 
+## 4단계로 넘기는 것: 검수 4회의 ② 지적 전부 (깨끗한 설계서 8개를 만들 때 반영)
+
+중복을 묶어 6가지. 대상은 2b 시험용 기본 설계서(`designs/prereview/`)이고, 4단계 깨끗한 설계서에 같은 약점을 남기지 않는다.
+
+| # | 지적 | 나온 실행 | 대상 | 반영할 때 주의 |
+|---|---|---|---|---|
+| R1 | `cr_last.assessment.method`에 "측정법을 함께 넣는다"고 적었지만 측정법 특징(`labs.method`)이 없다. 크레아티닌 특징은 측정법(jaffe/enzymatic)이 섞인 값으로 계산되고, 결과 정의(같은 측정법끼리 비교)와 다르다 | 4회 모두 | 동적·고정 | 측정법 특징은 같은 행(`report_time ≤ tp`)에서 가져오면 Q1 문제 없음. 2b 예비 검수 B11(측정법은 사실상 연도 표시, 배포 때 값 하나)과 함께 판단 |
+| R2 | `question`은 "AKI"인데 결과는 AKI 또는 원내 사망 복합이다 (`outcome.name`, `censoring.death=composite_outcome`) | 동적 1 | 동적 | 2b 예비 검수 B25와 같은 지적 |
+| R3 | 이력 특징(`prior_dx_ckd`, `problem_ckd_active`)을 `history_key=patient_id`로 묶어 같은 사람의 다른 등록 번호 이력을 놓친다 | 동적 1 | 동적 | 에이전트의 수정안 `history_key=person_id`는 점검기가 **Q1 차단**한다 (사람 연결은 자료 추출 때 생김, 2b 예비 검수 B20·B23). 반영하려면 다른 표현이 필요하고, 없으면 "정당한 지적" 후보 |
+| R4 | 결과 창 안에 퇴원하면 AKI를 확인하지 않고 음성으로 센다. 창 안 퇴원 비율이 병동 52.5%, ICU 34.7%로 층마다 다르다 | 동적 2 | 동적 | 행을 빼면 Q5 차단(`C.post_tp_exclusion`). 결과를 "퇴원 전 원내 AKI"로 명시하거나 층으로 보고 |
+| R5 | `end_of_data=not_applicable`인데 결과 창(tp+48h)이 자료 추출 종료를 넘는 예측 행이 있다 (에이전트가 센 값 2개) | 동적 2 | 동적 | 검수 뒤 점검기가 같은 원리로 경고하도록 고침 (`O.end_of_data`, 2026-10-05). `exclude_incomplete`로 피함 |
+| R6 | `outcome.description`("예정 입원 뒤 응급 입원이 있으면 양성")과 `definition=next_admission`(다음 입원 하나)의 뜻이 어긋난다 | 고정 2 | 고정 | 2b 예비 검수 B5와 관련. 결과를 "창 안 모든 비예정 입원(사람 기준) 또는 사망"으로 쓰고 서술과 칸을 맞춤 |
+
 ## 6단계로 넘기는 것
 
 - 셸 반복문 권한 거부 (위). 실행 시간 약 100~120초, 출력 토큰 약 7,600~9,000, 캐시 읽기 약 21만~42만 토큰.
-- 실행 폴더의 `checker.json`은 점검기가 기본으로 쓰는 파일이다. 6단계 실행기가 `findings.json`과 함께 수거한다.
+- 점검기는 실행마다 새 파일에 결과를 쓴다 (`checker.json`, 다시 돌리면 `checker_2.json`, `checker_3.json` …, 덮어쓰지 않음, 2026-10-05 검수 뒤 고침). 각 파일의 `checked`에 점검한 설계서 파일 이름·경로·sha256이 있다. 수거 규칙은 phases.md 6단계.

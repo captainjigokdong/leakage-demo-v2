@@ -24,10 +24,11 @@ KINDS = {"동적": ["dynamic"], "고정": ["fixed"], "둘다": ["dynamic", "fixe
 TYPES = ["dynamic", "fixed"]
 
 # 깨끗한 기본 설계서에서 나오는 판정은 조건 1 승인 표에 있는 것뿐이다 (2026-10-04 사용자 승인).
-# 동적: D2(pending_at_tp) 차단, D5 경고, D3 경고 / 고정: D5 경고, D4 경고(전처리 단계마다)
+# 동적: D2(pending_at_tp) 차단, D5 경고, D3 경고, 결과 창이 추출 종료를 넘는데 not_applicable(검수 뒤 2026-10-05, O.end_of_data)
+# 고정: D5 경고, D4 경고(전처리 단계마다)
 CLEAN_PROBLEMS = {
     "dynamic": {("Q5", BLOCK, "outcome.pending_at_tp"), ("Q1", WARN, "split.method"),
-                ("Q7", WARN, "data_source.death_source")},
+                ("Q7", WARN, "data_source.death_source"), ("Q7", WARN, "outcome.censoring.end_of_data")},
     "fixed": {("Q1", WARN, "split.method"), ("Q3", WARN, "preprocessing.median_impute"),
               ("Q3", WARN, "preprocessing.one_hot"), ("Q3", WARN, "preprocessing.standardize")},
 }

@@ -148,3 +148,29 @@ def test_every_rule_id_in_checker_is_explained():
     for i in ids:
         assert f"`{i}`" in md, i
     assert set(checks.A_QUESTION) == set(rules.ASSUMPTIONS)
+
+
+def test_repeated_runs_never_overwrite_and_record_design(tmp_path):
+    """같은 폴더에서 두 번 돌리면 결과 파일 두 개가 남고 첫 파일은 그대로다. 각 결과에 점검한 설계서의 이름·해시가 있다
+    (6단계에서 원래 설계서를 점검한 결과를 골라낸다)."""
+    import hashlib
+    orig = tmp_path / "design.json"
+    orig.write_bytes((TEST_BASE_DIR / "fixed_readmission.json").read_bytes())
+    first = _run(orig, cwd=tmp_path)
+    assert first.returncode == 0, first.stderr
+    saved1 = (tmp_path / "checker.json").read_bytes()
+    fixed = tmp_path / "design_fixed.json"
+    d = json.loads(orig.read_text(encoding="utf-8"))
+    d["split"]["method"] = "temporal"
+    fixed.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    second = _run(fixed, cwd=tmp_path)
+    third = _run(orig, "--json", "checker.json", cwd=tmp_path)    # 이름을 직접 줘도 덮어쓰지 않는다
+    assert second.returncode in (0, 1) and third.returncode == 0
+    assert sorted(p.name for p in tmp_path.glob("checker*.json")) == ["checker.json", "checker_2.json", "checker_3.json"]
+    assert (tmp_path / "checker.json").read_bytes() == saved1
+    runs = [json.loads((tmp_path / n).read_text(encoding="utf-8"))["checked"]
+            for n in ("checker.json", "checker_2.json", "checker_3.json")]
+    assert [r["design_file"] for r in runs] == ["design.json", "design_fixed.json", "design.json"]
+    sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+    assert [r["design_sha256"] for r in runs] == [sha(orig), sha(fixed), sha(orig)]
+    assert "checker_2.json" in second.stdout

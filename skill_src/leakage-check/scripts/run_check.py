@@ -2,7 +2,7 @@
 """설계서 누수 점검 실행기.
 
 사용:
-  python3 run_check.py 설계서.json                          # 설계서만 점검 (결과 JSON은 ./checker.json)
+  python3 run_check.py 설계서.json                          # 설계서만 점검 (결과 JSON은 ./checker.json, 있으면 checker_2.json …)
   python3 run_check.py 설계서.json --data data              # 데이터로 행 단위 재확인까지
   python3 run_check.py 설계서.json --data data --json checker.json   # 구조화된 결과 저장
   python3 run_check.py 설계서.json --data data --card       # 결정 카드(기술 통계만) 출력
@@ -40,12 +40,26 @@ def _done(code: int) -> int:
     return code
 
 
+def _write_new(path: Path, text: str) -> Path:
+    """기존 파일을 덮어쓰지 않는다: path가 있으면 <이름>_2, _3 … 중 비어 있는 첫 이름에 새로 만든다."""
+    n = 1
+    while True:
+        target = path if n == 1 else path.with_name(f"{path.stem}_{n}{path.suffix}")
+        try:
+            with open(target, "x", encoding="utf-8") as fh:
+                fh.write(text)
+            return target
+        except FileExistsError:
+            n += 1
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="설계서 누수 점검 (Q1~Q7)")
     ap.add_argument("design", type=Path, nargs="?")
     ap.add_argument("--data", type=Path, help="합성 EHR 폴더 (*.csv.gz)")
     ap.add_argument("--json", type=Path, default=Path("checker.json"),
-                    help="결과 JSON 저장 경로 (기본: 실행한 폴더의 checker.json. 6단계 실행기가 수거한다)")
+                    help="결과 JSON 저장 경로 (기본: 실행한 폴더의 checker.json). 이미 있으면 덮어쓰지 않고 "
+                         "checker_2.json, checker_3.json … 중 비어 있는 첫 이름에 저장한다")
     ap.add_argument("--card", action="store_true", help="결정 카드 출력 (--data 필요)")
     ap.add_argument("--rules", action="store_true", help="규칙표(rules.md와 같은 내용) 출력")
     args = ap.parse_args(argv)
@@ -101,8 +115,18 @@ def main(argv: list[str] | None = None) -> int:
         return _done(2)
 
     print(report.to_text())
-    args.json.write_text(report.to_json() + "\n", encoding="utf-8")
-    print(f"\n결과 JSON(판정마다 kind 칸 포함): {args.json}")
+    import hashlib
+    from datetime import datetime, timezone
+    out = report.to_dict()
+    out["checked"] = {
+        "design_file": args.design.name, "design_path": str(args.design),
+        "design_sha256": hashlib.sha256(args.design.read_bytes()).hexdigest(),
+        "data_folder": str(args.data) if args.data else None,
+        "time_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    saved = _write_new(args.json, json.dumps(out, ensure_ascii=False, indent=2) + "\n")
+    print(f"\n결과 JSON(판정마다 kind 칸 포함, 점검한 설계서 {args.design.name} sha256 "
+          f"{out['checked']['design_sha256'][:12]}): {saved}")
 
     if args.card:
         if tables is None:

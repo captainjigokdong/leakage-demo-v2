@@ -777,6 +777,37 @@ def _resolve_strata(d: dict, names) -> set[tuple[str, str]]:
     return out
 
 
+def _window_can_pass_extraction(d: dict) -> bool:
+    """결과 창이 자료 추출 종료를 넘을 수 있는가. 창 끝이 tₚ 이전이거나, 이번 입원 범위에서 창 끝이 퇴원 시각 이전이면
+    넘을 수 없다 (설명서: 퇴원이 자료 추출 종료 뒤인 입원은 데이터에 없다)."""
+    o = d["outcome"]
+    end = timeline.parse(o["window"].get("end", "inf"))
+    if end.anchor == "inf":
+        return False
+    if end.anchor == "discharge" and end.offset_h <= 0 and o["scope"] == "index_admission":
+        return False
+    return any(fr.hi(end) > TOL for fr in dz.frames(d))
+
+
+def _end_of_data(d: dict, ctx: DataCtx | None) -> list[Finding]:
+    o = d["outcome"]
+    val = o.get("censoring", {}).get("end_of_data")
+    if val in ("exclude_incomplete", "survival_model") or not _window_can_pass_extraction(d):
+        return []
+    note = ""
+    if ctx is not None and "extract_info" in ctx.tagged:
+        end_t = ctx.tagged["extract_info"]["extraction_end_time"].iloc[0]
+        we = timeline.resolve(o["window"]["end"], ctx.cohort)
+        n = int((we > end_t).sum())
+        note = f" 데이터: {n:,}/{len(ctx.cohort):,} 예측 행의 결과 창이 자료 추출 종료({end_t})를 넘는다."
+    return [Finding("Q7", WARN, "outcome.censoring.end_of_data",
+                    f"결과 창 끝({o['window']['end']})이 자료 추출 종료를 넘을 수 있는데 그런 행의 처리가 "
+                    f"{val or '없음'}이다. 종료 뒤의 사건·보고는 데이터에 없어 연구 끝 무렵 행은 결과를 덜 확인한다. "
+                    f"exclude_incomplete 또는 survival_model로 쓸 수 있다.{note}",
+                    "O.end_of_data", f"규칙 O.end_of_data(설명서: 자료 추출 종료 뒤의 사건·보고는 행이 없다) · 값: "
+                                     f"end_of_data={val}, 결과 창 끝 {o['window']['end']}")]
+
+
 def _beyond_index(o: dict) -> bool:
     return o["scope"] in ("patient_history", "next_admission") or o["definition"] == "next_admission"
 
@@ -839,14 +870,7 @@ def check_q7(d: dict, ctx: DataCtx | None) -> tuple[list[Finding], list[Finding]
                                f"결과를 같은 등록 번호({o.get('match_key', 'patient_id')})에서만 찾는다. 같은 사람의 다른 "
                                f"등록 번호에서 생긴 결과를 놓친다. match_key=person_id로 쓸 수 있다.", "O.match_key",
                                f"규칙 O.match_key(2층: {rules.ENTITY_BASIS}) · 값: match_key={o.get('match_key', '없음')}"))
-        end_ok = ("exclude_incomplete", "survival_model")
-        if timeline.parse(o["window"].get("end", "inf")).anchor != "inf" and \
-                o.get("censoring", {}).get("end_of_data") not in end_ok:
-            out.append(Finding("Q7", WARN, "outcome.censoring.end_of_data",
-                               f"결과 창이 자료 추출 종료를 넘을 수 있는데 그런 행의 처리가 "
-                               f"{o.get('censoring', {}).get('end_of_data', '없음')}이다. 연구 끝 무렵 행은 결과를 덜 확인한다.",
-                               "O.end_of_data", f"규칙 O.end_of_data(설명서: 자료 추출 종료 뒤 사건은 없다) · 값: "
-                                                f"end_of_data={o.get('censoring', {}).get('end_of_data')}"))
+    out += _end_of_data(d, ctx)
     period = d.get("data_source", {}).get("study_period", {})
     for ch in rules.OUTCOME_CHANGES:
         if ch["source"] != o["source"] or not _filters_compatible(o["filter"], ch["filter"]):
