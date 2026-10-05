@@ -6,6 +6,7 @@ leakcheck.outcomes.label)를 그대로 써서, 설계서마다 아래를 센다.
 1. 분할: 학습·평가·미사용 행 수와 평가 쪽 결과 사건 수
 2. 동적 결과의 시각 기준: tp 전 채취·tp 뒤 보고(pending) 사건, 창 끝 직전 채취·창 뒤 보고 사건
 3. 공통 수정으로 바뀐 칸(분할, 전처리 적합 범위)을 대상으로 하는 공개 패치(E05~E08)의 전제를 새 설계서 기준으로 다시 확인
+4. (--star) "수상해 보이지만 정당한 항목" 4개의 근거: 점검기 특징 계산의 확인 가능 시각, 그리고 원자료로 따로 센 값
 
 실행: python -m tools.clean_v2_stats [--only 이름 ...]
 """
@@ -139,9 +140,59 @@ def premises(d: dict, ctx, rows) -> dict:
     return out
 
 
+STAR = {"aki_b": ("k_last_6h", "labs", "report_time"), "aki_c": ("n_admissions_to_tp", "admissions", "admit_time"),
+        "readmit_b": ("prior_dx_group", "diagnoses", "coded_time"), "readmit_c": ("prior_cr_last", "labs", "report_time")}
+
+
+def star_evidence(d: dict, ctx, rows, tables) -> dict:
+    """★ 항목: (1) 점검기 특징 계산의 확인 가능 시각 > tp인 행 수 (2) 원자료로 따로: 특징이 읽는 행의 '알려지는 시각' 열."""
+    name, table, tcol = STAR[d["design_id"]]
+    specs = {f["name"]: f for f in d["features"]}
+    spec = specs[name]
+    r = make_feature(ctx.tagged, spec, rows, specs)
+    late = int(r.leaks(rows).sum())
+    has = int(r.frame["value"].notna().sum()) if spec["agg"] != "count" else int((r.frame["value"] > 0).sum())
+    out = {"feature": name, "rows": int(len(rows)), "rows_with_value": has, "checker_available_after_tp": late}
+    # 원자료: 같은 등록 번호의 행 중 특징이 읽는 행을 직접 고른다
+    T = tables
+    ir = rows[["index_id", "patient_id", "admission_id", "tp"]]
+    if name == "k_last_6h":
+        src = T["labs"][T["labs"]["test"] == "potassium"][["admission_id", "collect_time", "report_time"]]
+        m = ir.merge(src, on="admission_id")
+        used = m[(m["report_time"] > m["tp"] - pd.Timedelta(hours=6)) & (m["report_time"] <= m["tp"])]
+        out["collected_before_tp_all"] = bool((used["collect_time"] <= used["tp"]).all())
+    elif name == "n_admissions_to_tp":
+        src = T["admissions"][["patient_id", "admission_id", "admit_time", "discharge_time"]]
+        m = ir.merge(src, on="patient_id", suffixes=("", "_h"))
+        used = m[m["admit_time"] <= m["tp"]]
+        out["index_admission_counted_rows"] = int((used["admission_id_h"] == used["admission_id"]).groupby(used["index_id"]).any().sum())
+        out["other_admission_ongoing_at_tp"] = int(((used["admission_id_h"] != used["admission_id"]) &
+                                                   (used["discharge_time"] > used["tp"])).sum())
+    elif name == "prior_dx_group":
+        dx = T["diagnoses"][T["diagnoses"]["seq"] == 1].merge(T["admissions"][["admission_id", "patient_id"]],
+                                                                on="admission_id")
+        m = ir.merge(dx[["patient_id", "admission_id", "icd_code", "coded_time"]], on="patient_id", suffixes=("", "_h"))
+        m = m[m["admission_id_h"] != m["admission_id"]]
+        used = m[m["coded_time"] <= m["tp"]]
+        out["prior_dx_coded_after_tp_not_used"] = int((m["coded_time"] > m["tp"]).sum())
+        out["categories"] = int(used["icd_code"].nunique())
+    else:
+        src = T["labs"][T["labs"]["test"] == "creatinine"].merge(T["admissions"][["admission_id", "patient_id"]],
+                                                                  on="admission_id")
+        m = ir.merge(src[["patient_id", "admission_id", "report_time"]], on="patient_id", suffixes=("", "_h"))
+        m = m[m["admission_id_h"] != m["admission_id"]]
+        used = m[m["report_time"] <= m["tp"]]
+        out["prior_reported_after_tp_not_used"] = int((m["report_time"] > m["tp"]).sum())
+    used_t = used[tcol]
+    out["source_rows_used"] = int(len(used))
+    out["max_hours_known_minus_tp"] = float(((used_t - used["tp"]).dt.total_seconds() / 3600).max())
+    return out
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", nargs="*")
+    ap.add_argument("--star", action="store_true", help="★ 항목 근거만")
     args = ap.parse_args(argv)
     tables = load_tables(DATA)
     res = {}
@@ -150,6 +201,10 @@ def main(argv: list[str] | None = None) -> int:
             continue
         d = dz.normalize(json.loads(p.read_text(encoding="utf-8")))
         ctx, rows = cohort(d, tables)
+        if args.star:
+            if d["design_id"] in STAR:
+                print(p.stem, json.dumps(star_evidence(d, ctx, rows, tables), ensure_ascii=False), flush=True)
+            continue
         y = outcome(d, ctx, rows)
         r = {"rows": int(len(rows)), "events": int(y.sum()), "split": split_table(d, rows, y)}
         if d["design_type"] == "dynamic":
