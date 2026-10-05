@@ -1,0 +1,562 @@
+{
+  "design_id": "readmit_b",
+  "design_type": "fixed",
+  "question": "성인 입원 환자가 살아서 퇴원하는 시각에, 퇴원 뒤 30일 안에 예정되지 않은 재입원 또는 사망이 있을지 예측한다.",
+  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다: outcome.filter, outcome.reference_window, outcome.reference (입원으로 정하는 결과라 기준값이 없음), cohort.sampling.by, cohort.sampling.fraction, cohort.sampling.ratio (전체 사용), split.n_folds, features의 date_compare (날짜만 있는 열을 쓰지 않음), split.time_column, split.cutoff, split.gap (무작위 분할). 가족 단위 무작위 분할 (family_id, 없으면 person_id), 평가 30%.",
+  "tp": {
+    "anchor": "discharge",
+    "offsets_h": [
+      0
+    ]
+  },
+  "intended_use": {
+    "purpose": "research_only",
+    "deployment_start": "해당 없음 (전향 사용 전의 내부 검증 연구)",
+    "setting": "A·B 병원의 성인 퇴원 환자 (ICU·병동), 후향 자료"
+  },
+  "data_source": {
+    "extraction_end": "2160-01-01 00:00:00",
+    "sites": [
+      "A",
+      "B"
+    ],
+    "study_period": {
+      "start": "2150-01-01",
+      "end": "2160-01-01"
+    },
+    "death_source": "linked_registry"
+  },
+  "outcome": {
+    "name": "unplanned_readmit_or_death_30d",
+    "description": "퇴원 뒤 30일 안에 같은 사람(person_id로 묶은 모든 등록 번호)의 예정되지 않은 입원이 시작되거나 사망. 결과 계산(definition=next_admission)은 창 안에 시작되는 그 사람의 입원을 모두 본다 (창 안 첫 입원 하나만 보는 것이 아니다). 예정 입원(admission_info.admission_type == elective)은 사건으로 세지 않으므로, 창 안에 예정 입원이 먼저 있어도 그 뒤 응급 입원이 있으면 양성이다. 사망은 deaths.death_time이 창 안이면 양성. 같은 에피소드 안에서 바로 이어진 입원은 재입원으로 보지 않는다 (코호트가 에피소드의 마지막 입원만 쓴다).",
+    "definition": "next_admission",
+    "prespecified": true,
+    "definition_source": "30일 재입원 (예정 입원 제외) + 30일 안 사망을 합친 복합 결과",
+    "source": "admissions",
+    "scope": "patient_history",
+    "time_column": "admit_time",
+    "window": {
+      "start": "tp",
+      "end": "tp+30d"
+    },
+    "planned": "exclude",
+    "proxies": [
+      {
+        "source": "admission_bookings",
+        "basis": "admission_id 열은 예약 입원이 이루어진 뒤에 채워진다. 특징으로 쓰지 않는다"
+      },
+      {
+        "source": "outpatient_visits",
+        "filter": {
+          "visit_type": [
+            "follow_up"
+          ]
+        },
+        "basis": "퇴원 뒤 추적 외래는 재입원 전에만 열린다. 특징으로 쓰지 않는다"
+      }
+    ],
+    "ascertainment": {
+      "method": "A·B 두 병원의 입원 기록과 사망 연계 자료에서 결과를 찾는다. 다른 병원 입원은 보이지 않으므로 퇴원처(자택·전원)와 병원별로 결과율을 따로 보고한다.",
+      "by_stratum": [
+        "discharge_status",
+        "site"
+      ],
+      "scope": {
+        "sites": [
+          "A",
+          "B"
+        ],
+        "settings": [
+          "inpatient"
+        ],
+        "sources": [
+          "admissions",
+          "admission_info",
+          "person_links",
+          "deaths"
+        ]
+      },
+      "min_followup": "tp+30d",
+      "blind_to_predictors": true
+    },
+    "history": [],
+    "censoring": {
+      "end_of_data": "exclude_incomplete",
+      "death": "composite_outcome",
+      "lost_to_followup": "count_as_negative"
+    },
+    "pending_at_tp": "ignore",
+    "match_key": "person_id",
+    "planned_by": {
+      "source": "admission_info",
+      "filter": {
+        "admission_type": [
+          "elective"
+        ]
+      }
+    }
+  },
+  "cohort": {
+    "index_time": "tp",
+    "inclusion": [
+      {
+        "name": "adult",
+        "source": "patients",
+        "column": "age",
+        "agg": "value",
+        "op": ">=",
+        "value": 18
+      }
+    ],
+    "exclusion": [
+      {
+        "name": "died_in_hospital",
+        "source": "admissions",
+        "column": "discharge_status",
+        "agg": "value",
+        "op": "==",
+        "value": "died"
+      },
+      {
+        "name": "followup_incomplete",
+        "description": "퇴원 뒤 30일 안 사망이 사망 연계에 모두 반영되지 않는 퇴원. 원외 사망은 사망 14~180일 뒤 기록되고 연계 반영일은 2159-07-01이므로, 2158-12-01 뒤 퇴원은 제외한다",
+        "source": "admissions",
+        "column": "discharge_time",
+        "agg": "value",
+        "op": ">",
+        "value": "2158-12-01 00:00:00"
+      }
+    ],
+    "subgroups": [
+      "unit",
+      "site",
+      "discharge_status"
+    ],
+    "sampling": {
+      "method": "all",
+      "uses_outcome": false,
+      "applies_to": "both"
+    },
+    "rows_per_unit": {
+      "unit": "episode",
+      "choose": "last"
+    },
+    "deduplication": {
+      "key": [
+        "admission_id"
+      ],
+      "when": "before_split"
+    }
+  },
+  "features": [
+    {
+      "name": "age",
+      "source": "patients",
+      "column": "age",
+      "scope": "patient",
+      "agg": "value",
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수.",
+      "age_reference": "index_admission"
+    },
+    {
+      "name": "sex",
+      "source": "patients",
+      "column": "sex",
+      "scope": "patient",
+      "agg": "value"
+    },
+    {
+      "name": "unit",
+      "description": "처음 배정된 병동",
+      "source": "admissions",
+      "column": "unit",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "icu_any",
+      "source": "transfers",
+      "column": "unit",
+      "filter": {
+        "unit": [
+          "ICU"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "in_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "any",
+      "episode": "index_episode"
+    },
+    {
+      "name": "los_h",
+      "source": "admissions",
+      "column": "length_of_stay_h",
+      "scope": "index_admission",
+      "agg": "value",
+      "description": "재원 시간 = (discharge_time − admit_time) 시간. 데이터 설명서의 파생 열"
+    },
+    {
+      "name": "discharge_status",
+      "source": "admissions",
+      "column": "discharge_status",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "site",
+      "source": "admission_info",
+      "column": "site",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "service",
+      "source": "admission_info",
+      "column": "service",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "n_prior_adm",
+      "source": "admissions",
+      "scope": "prior_admissions",
+      "time_column": "discharge_time",
+      "window": {
+        "start": "tp-365d",
+        "end": "tp"
+      },
+      "agg": "count",
+      "description": "같은 등록 번호의 이전 입원 수 (인덱스 입원과 같은 에피소드의 앞 입원은 빼고, 지난 365일 안에 퇴원한 것)",
+      "history_key": "patient_id",
+      "episode": "exclude_index_episode"
+    },
+    {
+      "name": "prior_dx_ckd",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (ICD-10 N18, ICD-9 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "source": "diagnoses",
+      "filter": {
+        "icd_code": [
+          "N18",
+          "585"
+        ]
+      },
+      "scope": "prior_admissions",
+      "time_column": "coded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "agg": "any",
+      "history_key": "patient_id"
+    },
+    {
+      "name": "prior_dx_chf",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 심부전 진단 (I50, 428) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "source": "diagnoses",
+      "filter": {
+        "icd_code": [
+          "I50",
+          "428"
+        ]
+      },
+      "scope": "prior_admissions",
+      "time_column": "coded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "agg": "any",
+      "history_key": "patient_id"
+    },
+    {
+      "name": "problem_ckd_active",
+      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등).",
+      "source": "problem_list",
+      "filter": {
+        "icd_code": [
+          "N18"
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "scope": "patient_history",
+      "time_column": "recorded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "as_of": "tp",
+      "agg": "any",
+      "history_key": "patient_id",
+      "version_order": "version_then_filter"
+    },
+    {
+      "name": "cr_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "assessment": {
+        "by_stratum": [
+          "method"
+        ],
+        "method": "2155-01-01 전은 jaffe(약 0.10 mg/dL 높음), 뒤는 enzymatic. 측정법이 다른 값이 섞인 채로 쓴다. 측정법 자체는 특징으로 넣지 않는다 (측정 날짜로 정해지는 값이고, 사용 시점에는 enzymatic 하나뿐이다)"
+      }
+    },
+    {
+      "name": "hgb_min",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "hemoglobin"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min"
+    },
+    {
+      "name": "sbp_last",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "sbp"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "n_discharge_meds",
+      "source": "medications",
+      "filter": {
+        "med_type": [
+          "discharge"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "order_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "count",
+      "episode": "index_episode"
+    },
+    {
+      "name": "dialysis_ordered",
+      "source": "orders",
+      "filter": {
+        "order_type": [
+          "dialysis_order"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "order_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "any",
+      "episode": "index_episode"
+    },
+    {
+      "name": "cr_last_over_hgb",
+      "derive": {
+        "op": "ratio",
+        "of": [
+          "cr_last",
+          "hgb_min"
+        ]
+      },
+      "made_by": "leakcheck.features"
+    },
+    {
+      "name": "n_clinic_365d",
+      "description": "tp 전 365일 안 정기 외래 방문 수 (방문 시각 기준). 추적 외래(follow_up)는 결과의 대리 기록 목록에 있어 세지 않는다",
+      "source": "outpatient_visits",
+      "filter": {
+        "visit_type": [
+          "routine"
+        ]
+      },
+      "scope": "patient_history",
+      "time_column": "visit_time",
+      "window": {
+        "start": "tp-365d",
+        "end": "tp"
+      },
+      "agg": "count",
+      "history_key": "patient_id"
+    },
+    {
+      "name": "prior_dx_group",
+      "source": "diagnoses",
+      "column": "icd_code",
+      "filter": {
+        "seq": [
+          1
+        ]
+      },
+      "scope": "prior_admissions",
+      "time_column": "coded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "agg": "last",
+      "history_key": "patient_id",
+      "description": "가장 최근 이전 입원의 주진단 코드 (tp까지 코딩이 끝난 것). 범주형"
+    }
+  ],
+  "split_unit": "family",
+  "split": {
+    "key": "family_id",
+    "fallback_key": "person_id",
+    "method": "group_holdout",
+    "test_fraction": 0.3,
+    "seed": 20261040,
+    "by_site": false
+  },
+  "preprocessing": [
+    {
+      "name": "median_impute",
+      "kind": "impute",
+      "method": "median",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "cr_last",
+        "hgb_min",
+        "sbp_last",
+        "cr_last_over_hgb"
+      ],
+      "description": "조율 중에는 교차검증 학습 폴드마다 다시 맞추고, 최종 모형은 학습 부분 전체에 맞춘다"
+    },
+    {
+      "name": "one_hot",
+      "kind": "encode",
+      "method": "one_hot",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "sex",
+        "unit",
+        "discharge_status",
+        "site",
+        "service",
+        "prior_dx_group"
+      ],
+      "description": "조율 중에는 교차검증 학습 폴드마다 다시 맞추고, 최종 모형은 학습 부분 전체에 맞춘다"
+    },
+    {
+      "name": "standardize",
+      "kind": "scale",
+      "method": "z_score",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "age",
+        "los_h",
+        "n_prior_adm",
+        "cr_last",
+        "hgb_min",
+        "sbp_last",
+        "n_discharge_meds",
+        "cr_last_over_hgb",
+        "n_clinic_365d"
+      ],
+      "description": "조율 중에는 교차검증 학습 폴드마다 다시 맞추고, 최종 모형은 학습 부분 전체에 맞춘다. 나무 모형에는 결과가 같지만 같은 입력 흐름을 유지한다"
+    }
+  ],
+  "model": {
+    "family": "gradient_boosting (결정 나무)",
+    "tuning": {
+      "method": "group_kfold (family_id, 없으면 person_id)",
+      "cv_key": "family_id",
+      "fit_scope": "train",
+      "fallback_key": "person_id"
+    },
+    "selection": {
+      "method": "나무 깊이·학습률·나무 수 격자 탐색",
+      "fit_scope": "train_fold",
+      "metric": "AUROC"
+    },
+    "early_stopping": {
+      "method": "사용하지 않음 (나무 수는 격자 탐색으로 정함)"
+    },
+    "threshold": {
+      "method": "학습 부분 교차검증 예측에서 민감도 0.8이 되는 값",
+      "fit_scope": "train_fold",
+      "metric": "sensitivity"
+    },
+    "calibration": {
+      "method": "학습 부분 교차검증 예측으로 Platt 보정",
+      "fit_scope": "train_fold",
+      "metric": "calibration slope"
+    }
+  },
+  "analysis": {
+    "missing_data": {
+      "method": "impute",
+      "drop_rows_when": "never",
+      "outcome_missing": "not_applicable"
+    }
+  },
+  "evaluation": {
+    "data": "test",
+    "metrics": [
+      "AUROC",
+      "AUPRC",
+      "Brier",
+      "calibration slope"
+    ],
+    "test_set_uses": 1,
+    "subgroups": [
+      "unit",
+      "site",
+      "discharge_status"
+    ],
+    "calibration_reported": true
+  },
+  "attempts": {
+    "n_designs_tried": 1,
+    "n_models_tried": 1,
+    "correction": "none"
+  }
+}
