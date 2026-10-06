@@ -60,12 +60,31 @@ def test_base_is_family_split(t):
     assert (b["split_unit"], b["split"]["key"], b["model"]["tuning"]["cv_key"]) == ("family", "family_id", "family_id")
 
 
-@pytest.mark.skip(reason="4단계 완료 시 반드시 통과 (v1 기본 설계서·v1 변형이 v2 규칙표·v2 데이터와 맞지 않음. v2 깨끗한 설계서 8개 기준으로 바꿈, 3단계 승인 ②)")
-@pytest.mark.parametrize("t", ["dynamic", "fixed"])
-def test_base_passes_design_and_data(t, small_tables):
-    b = inj.load_bases()[t]
-    assert run_checks(b).problems() == []
-    assert run_checks(b, small_tables).problems() == []
+# 깨끗한 설계서에 남는 점검기 판정 (승인 A, docs/known_issues_v2.md K1·K2). 새로 생겨도 사라져도 실패한다 (승인 D).
+K2 = ("경고", "O.death_source", "data_source.death_source")
+K1 = ("경고", "D.proxies", "features.n_clinic_365d")
+EXPECTED_CLEAN_PROBLEMS = {"aki_a": [K2], "aki_b": [K2], "aki_c": [K2], "aki_d": [K2],
+                           "readmit_a": [], "readmit_b": [K1], "readmit_c": [], "readmit_d": []}
+
+
+def _problems(r) -> list[tuple]:
+    return sorted((f.verdict, f.rule, f.target) for f in r.problems())
+
+
+@pytest.fixture(scope="module")
+def main_tables():
+    from leakcheck.data import load
+    return load(ROOT / "data" / "synth")
+
+
+@pytest.mark.parametrize("name", sorted(EXPECTED_CLEAN_PROBLEMS))
+def test_base_passes_design_and_data(name, small_tables, main_tables):
+    """v2 깨끗한 설계서 8개 (3단계 승인 ②에서 v1 기본 설계서 기준을 바꿈, 4a 승인 D): 남는 판정이 기대 집합과 정확히 같다."""
+    b = json.loads((ROOT / "designs" / "clean_v2" / f"{name}.json").read_text(encoding="utf-8"))
+    want = EXPECTED_CLEAN_PROBLEMS[name]
+    assert _problems(run_checks(b)) == want
+    assert _problems(run_checks(b, small_tables)) == want
+    assert _problems(run_checks(b, main_tables)) == want
 
 
 def test_fixed_base_records_ascertainment_by_discharge_status():

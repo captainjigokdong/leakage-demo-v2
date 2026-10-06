@@ -14,7 +14,7 @@ from designs import build_v2 as B
 ROOT = Path(__file__).resolve().parent.parent
 LOCK = ROOT / "docs" / "lock_4a_v2.json"
 PROVISIONAL = ["docs/justified_findings_v2.json"] + [f"designs/clean_v2/{n}.json" for n in B.CLEAN_NAMES]
-FIXED_FOR_4B = ["designs/build_v2.py"]
+FIXED_FOR_4B = ["designs/build_v2.py", "designs/answer_key_v2.py"]
 
 
 def sha(rel: str) -> str:
