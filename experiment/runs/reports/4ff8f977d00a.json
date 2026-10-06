@@ -1,0 +1,5 @@
+{
+ "report_id": "4ff8f977d00a",
+ "variant": "design_E1CC.json",
+ "findings": "[\n  {\n    \"target\": \"preprocessing.median_impute\",\n    \"kind\": \"문제\",\n    \"problem\": \"중앙값 대치를 fit_scope=all(학습+평가 전체)에서 적합해 평가 부분의 분포 정보가 학습에 들어간다(Q3 적합 범위 위반, 점검기 차단). 대치값은 학습 부분(교차검증 안에서는 train_fold)에서만 구해 평가 부분에 적용하도록 고쳐야 한다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"가정\",\n    \"problem\": \"family_id가 약 80% 비어 있어 비어 있는 행은 대체 키 person_id로 묶는다고 가정한다. 기록되지 않은 가족은 학습과 평가에 나뉠 수 있으며, 데이터로는 이를 피할 수 없다.\"\n  },\n  {\n    \"target\": \"model.tuning.cv_key\",\n    \"kind\": \"가정\",\n    \"problem\": \"교차검증 묶음도 family_id가 비어 있으면 person_id로 묶는다고 가정한다. 기록되지 않은 가족은 폴드 사이에 나뉠 수 있다.\"\n  },\n  {\n    \"target\": \"cohort.rows_per_unit\",\n    \"kind\": \"가정\",\n    \"problem\": \"에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어지는 입원이 없음을 알아야 하는데, 이것을 퇴원 시점(tp)에 안다고 가정한다. 설계 형식에 이보다 올바른 표현이 없다.\"\n  },\n  {\n    \"target\": \"outcome.ascertainment.scope.sites\",\n    \"kind\": \"가정\",\n    \"problem\": \"A·B 밖 병원의 재입원은 데이터에 없으므로 보이지 않는 결과는 음성으로 처리된다(lost_to_followup=count_as_negative)고 가정한다. 이 때문에 결과가 과소 확인될 수 있고, 특히 전원 퇴원 환자에서 그 가능성이 크다.\"\n  }\n]\n"
+}
