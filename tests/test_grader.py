@@ -140,6 +140,23 @@ def test_legit_change_is_false_alarm():
     assert g.false_alarms == ["features.k_last_6h"] and g.legit_flagged == ["features.k_last_6h"]
 
 
+@pytest.mark.parametrize("b,item", [("aki_c", "n_admissions_to_tp"), ("readmit_b", "prior_dx_group"), ("readmit_c", "prior_cr_last")])
+def test_legit_item_not_absorbed_by_broad_route(b, item):
+    """S3 뒤 결정: 좁게 맞음이 넓게 맞음보다 먼저. legit 항목을 항목 단위로 지적 → 오경보,
+    그 항목의 목록 칸(history_key, 목록 L6)을 지적 → 중립."""
+    d, e = variant(b)
+    g = grade(d, e, [P(f"features.{item}", "의심")])
+    assert g.false_alarms == [f"features.{item}"] and g.legit_flagged == [f"features.{item}"] and g.counts["n_justified"] == 0
+    g2 = grade(d, e, [P(f"features.{item}.history_key", "등록 번호로만 묶는다")])
+    assert g2.false_alarms == [] and g2.counts["n_justified"] == 1
+
+
+def test_non_legit_item_still_absorbed_by_broad_route():
+    d, e = variant("readmit_a")
+    g = grade(d, e, [P("features.prior_dx_ckd", "x")])
+    assert g.false_alarms == [] and g.counts["n_justified"] == 1 and g.counts["n_justified_strict"] == 0
+
+
 def test_justified_k2_is_neutral_k1_is_false_alarm():
     da, ea = variant("aki_c")
     ga = grade(da, ea, [P("data_source.death_source", "원내 사망만 쓴다")])

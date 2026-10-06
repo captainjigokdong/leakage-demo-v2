@@ -313,6 +313,7 @@
 **5단계 결과 (2026-10-06)**: 브랜치 `claude/v2-stage5-criteria`. 기준 `docs/success_criteria_v2.md`, 채점 규칙 `experiment/scoring_rules.md`(v2), 분석 계획 `docs/analysis_plan_v2.md`, 지시문 `experiment/agent_prompt.md`(v2, `findings.json`·kind 3종), 에이전트용 문서 사본 `docs/agent/`(형식 설명·데이터 설명서, 두 조건 같음, 해시 잠금). 계획 승인 ①~⑩ 권장안, S1 승인 A~D와 조건 1~10.
 - 채점기 v2 (`experiment/grader.py`): 형식 검사(구조·kind만), kind 칸 판정, 설계서 경로 해석(형식에 있는 칸은 설계서에 없어도 그대로), 칸 넓이 규칙(넓은 지적은 최상위 아래 칸까지, 묶음 전체 불인정), 우선순위 accept > support > 목록 > 넓음 > 채점 안 함 > legit·그 밖(오경보), K 칸은 넓은 경로로 목록에 흡수되지 않음, 참고값(엄격판·목록 우선·K 제외·넓음 포함·가정 칸 사례 제외·수치 차이 0 근접 제외·서술 수정 사례 제외·턴 상한 제외).
 - 검증 세트 (A): v1 지적 332개, 라벨(조건 가림, 채점기 실행 전, Q4→Q7 48개 수정). 시험 절반 항목 168/168, Q 일치 149/163 (0.914), 기준 0.95·0.85 통과. (B): `tests/test_grader.py` 전부 통과.
+- (S3 뒤, 2026-10-06 사용자 결정) 경로 해석 규칙(형식에 있는 칸은 설계서에 없어도 자르지 않음)은 **(A) 시험 절반을 본 뒤 바꿨다**. 바꾸기 전 167/168도 기준 통과. 우선순위를 "좁게 맞음이 넓게 맞음보다 먼저"로 일반화 (legit 항목·K 칸은 넓은 경로로 목록에 흡수되지 않음). 라벨 A087·A093은 고치지 않음.
 - K1·K5 칸 확정: K1 readmit_b `features.n_clinic_365d`, K5 고정 바탕 `cohort.rows_per_unit` (4a 검수 지적·깨끗한 설계서 점검기 출력).
 - 시험: 550 통과, 20 건너뜀, 실패 0. `test_grader.py::test_checker_on_clean_base_has_no_false_alarm` 건너뜀 → 통과 (깨끗한 설계서 8개 점검기 판정이 기대 집합과 같음, 가정 칸이 `grader.ASSUMPTION_CELLS`와 같음, 점검기는 변형에 돌리지 않음). `test_grader.py`의 v1 동작 시험은 v2 시험으로 바꿈(①). 동결 폴더 변경 0줄.
 

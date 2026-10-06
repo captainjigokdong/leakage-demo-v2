@@ -529,9 +529,14 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
             c["n_unknown_kind"] += 1
         if _any(f, assume, design):
             c["n_assumption_cell_problem"] += 1
-        # K1·K5 칸 지적은 넓은 지적 경로로 목록에 흡수되지 않는다 (승인 C: 점검기 문제는 오경보로 센다)
-        on_k = _any(f, kcells, design, True)
-        in_just = any((r := match_route(f, k, design)) is not None and not (r == "broader" and on_k) for k in just)
+        # accept·support 다음은 "같거나 더 좁게 맞음"을 "넓게 맞음"보다 먼저 판정한다 (S3 뒤 사용자 결정, 2026-10-06):
+        # 목록 칸에 좁게 맞으면 중립, 아니면 legit 칸·K 칸에 좁게 맞으면 오경보, 그다음에야 목록 칸에 넓게 맞으면 중립.
+        # 그래서 legit 항목·K 칸을 항목 단위로 적은 지적은 그 아래 목록 칸 때문에 중립이 되지 않는다.
+        routes = [match_route(f, k, design) for k in just]
+        narrow_j = any(r not in (None, "broader") for r in routes)
+        narrow_fa = (any(match_route(f, k, design) not in (None, "broader") for k in legit)
+                     or _any(f, kcells, design, True))
+        in_just = narrow_j or ("broader" in routes and not narrow_fa)
         in_just_s = _any(f, just, design, True)
         for i, d in enumerate(defects):
             sec_ok = bool(e.qs & set(d["accept_questions"]))
@@ -545,7 +550,7 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
             if _any(f, acc_s[i], design, True):
                 hit[i]["pri_s"].append(True)
                 hit[i]["sec_s"].append(sec_ok)
-        # 관대판 분류 (우선순위: 결함 > support > 목록 > 묶음 > 채점 안 함 > legit·그 밖 = 오경보)
+        # 관대판 분류 (우선순위: 결함 > support > 목록(좁게, 그다음 legit·K에 좁게 맞지 않을 때 넓게) > 묶음 > 채점 안 함 > legit·그 밖 = 오경보)
         if not on_defect and any(_sibling(f, k) for a in acc for k in a):
             c["n_sibling_of_defect"] += 1
         if on_defect:

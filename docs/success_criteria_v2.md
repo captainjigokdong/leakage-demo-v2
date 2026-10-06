@@ -47,8 +47,8 @@
 |---|---|
 | `experiment/agent_prompt.md` | `d5824ec50fef2b3afb5c6e40c8e16d1c0edff81be9fdbac7e4d4d30c8406b4bd` |
 | `experiment/prompt.py` | `a7bfbf401c134cc521d301815f26f4f3268641bfb599aae6b98f99eee7763a20` |
-| `experiment/grader.py` | `49ca3da9a6b86cf38179a7f68c48eaaa95c9e5c4221ef6ef6ea843e1b1ad7d2a` |
-| `experiment/scoring_rules.md` | `8b7dd0b06a75020817ac1196237db256f03435b9565a42258583cafa28d08ede` |
+| `experiment/grader.py` | `19f3111a744a43fe5bffd70ee56ff1309ae8f4b8052b28227fc38be15119829c` |
+| `experiment/scoring_rules.md` | `e63f23c1092944b760eadacbf1215eeb11451d30f0cae810664e1a3bcc8de45d` |
 | `docs/agent/design_format.md` | `c43fc1e1b90521d6d5267a5098872bbf179a6685e5f418d5a7c27f0da934ea41` |
 | `docs/agent/data_dictionary.md` | `1b4e78b49fe358975af8d2af6383c39d28423eb5304d1948f6000ba1afcc04f6` |
 | `docs/analysis_plan_v2.md` | `53bb5a516ab3a560ebfa2c4be00ce88bf190ca167f29319da039b87c0f7adb41` |
