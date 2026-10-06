@@ -1,0 +1,5 @@
+{
+ "report_id": "a1aa572b094c",
+ "variant": "design_974D.json",
+ "findings": "[\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"문제\",\n    \"problem\": \"split_unit은 family이고 model.tuning.cv_key도 family_id인데, 학습·평가 분할 키는 admission_id이다. 그러면 같은 가족·같은 사람(person_id)의 다른 퇴원이 학습과 평가 양쪽에 들어가 평가가 낙관적으로 나온다. 분할 키는 family_id로, 결측이면 fallback_key인 person_id로 바꿔야 한다.\"\n  },\n  {\n    \"target\": \"features.hgb_min.window\",\n    \"kind\": \"가정\",\n    \"problem\": \"episode=index_episode인 특징(hgb_min, k_last, cr_last, sbp_last, dialysis_ordered, icu_any)의 창 시작 'admit'은 두 입원 기록으로 이어진 에피소드에서 정의되어 있지 않다. 에피소드 첫 입원의 admit_time으로 보고 진행한다.\"\n  },\n  {\n    \"target\": \"outcome.censoring.lost_to_followup\",\n    \"kind\": \"가정\",\n    \"problem\": \"A·B가 아닌 다른 병원의 재입원은 데이터에 없어서, 그런 경우는 음성으로 셀 수밖에 없다(설계대로 count_as_negative). 결과율은 퇴원처·병원별로 따로 보고한다는 설계의 처리를 받아들이고 진행한다.\"\n  }\n]\n"
+}

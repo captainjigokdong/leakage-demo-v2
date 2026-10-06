@@ -1,0 +1,5 @@
+{
+ "report_id": "3fba2c4ea827",
+ "variant": "design_B649.json",
+ "findings": "[\n  {\"target\": \"cohort.exclusion.aki_known_by_tp\", \"kind\": \"가정\", \"problem\": \"다른 tp까지의 기준(dialysis_by_tp, 크레아티닌 특징)과 달리 episode 칸이 비어 있다. 결과 판정과 맞추어 인덱스 입원 기록 안의 값끼리만 비교하는 것(index_admission)으로 가정하고 진행한다. 같은 에피소드 앞 입원의 AKI는 제외 기준에 반영되지 않는다.\"},\n  {\"target\": \"outcome.reference\", \"kind\": \"가정\", \"problem\": \"두 입원 기록으로 이어진 에피소드에서 앞 입원의 크레아티닌을 기준값으로 쓸지 정해져 있지 않다. 설명대로 '같은 입원'의 먼저 채취한 값만 기준으로 쓰는 것으로 가정한다.\"},\n  {\"target\": \"features.n_admissions_to_tp.window\", \"kind\": \"가정\", \"problem\": \"window.start가 없다. 설명(tp 이전 같은 등록 번호의 모든 입원 수)에 따라 시작을 -inf로 가정한다.\"},\n  {\"target\": \"features.cr_rise.made_by\", \"kind\": \"가정\", \"problem\": \"made_by가 외부 출처(leakcheck.features)로 적혀 있어 그 코드를 확인할 수 없다. derive 정의대로 이 파이프라인에서 cr_last − cr_min_adm(둘 다 tp까지 보고된 값, jaffe 보정 뒤)로 직접 다시 계산한다고 가정한다.\"},\n  {\"target\": \"evaluation.subgroups\", \"kind\": \"가정\", \"problem\": \"admit_weekday는 특징이나 데이터 열로 정의되어 있지 않다. 인덱스 입원 admissions.admit_time의 요일로 만든다고 가정한다.\"}\n]\n"
+}

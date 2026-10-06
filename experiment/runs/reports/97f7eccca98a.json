@@ -1,0 +1,5 @@
+{
+ "report_id": "97f7eccca98a",
+ "variant": "design_A64C.json",
+ "findings": "[\n  {\n    \"target\": \"outcome.ascertainment.blind_to_predictors\",\n    \"kind\": \"문제\",\n    \"problem\": \"blind_to_predictors=false이고 ascertainment.method도 연구자가 퇴원 뒤 기록 전체를 검토해 결과를 판정한다고 적고 있다. 판정자가 예측변수(퇴원처, 진단, 검사 등)를 보고 결과를 정하면 결과 판정에 예측변수 정보가 섞일 수 있으므로(Q4, PROBAST 3.5), 진행 전에 판정을 예측변수와 독립적으로 할지(예: admission_type·death_time만으로 자동 판정) 사람이 확인해야 한다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"가정\",\n    \"problem\": \"family_id가 약 80% 비어 있어 대체 키 person_id로 묶는다고 가정한다. 기록되지 않은 가족은 학습과 평가로 나뉠 수 있다.\"\n  },\n  {\n    \"target\": \"model.tuning.cv_key\",\n    \"kind\": \"가정\",\n    \"problem\": \"교차검증 묶음도 family_id가 비면 person_id로 묶는다고 가정한다. 기록되지 않은 가족은 폴드 사이에 나뉠 수 있다.\"\n  },\n  {\n    \"target\": \"cohort.rows_per_unit\",\n    \"kind\": \"가정\",\n    \"problem\": \"에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없음을 알아야 하는데, 이것을 퇴원 시점에 안다고 가정한다.\"\n  },\n  {\n    \"target\": \"outcome.ascertainment.scope.sites\",\n    \"kind\": \"가정\",\n    \"problem\": \"A·B 밖 병원으로의 재입원은 데이터에 없어 결과로 잡히지 않는다고 가정하고 진행한다 (해당 결과는 음성으로 처리됨).\"\n  }\n]\n"
+}

@@ -1,0 +1,5 @@
+{
+ "report_id": "80ece592b73f",
+ "variant": "design_A64C.json",
+ "findings": "[\n  {\"target\": \"features.cr_last_over_hgb\", \"kind\": \"가정\", \"problem\": \"made_by(leakcheck.features)가 가리키는 생성 코드를 확인할 수 없어, 이 특징은 보정(cr_method_align)을 거친 cr_last를 hgb_min으로 나눠 직접 다시 계산한다고 가정한다. 둘 중 하나라도 없으면 결측으로 두고 median_impute에서 채운다.\"},\n  {\"target\": \"preprocessing.cr_method_align\", \"kind\": \"가정\", \"problem\": \"jaffe 값인지는 날짜(2155-01-01 전 채취) 대신 labs.method == 'jaffe'로 판정한다고 가정한다. 데이터에서 두 기준은 정확히 일치한다(jaffe 채취 마지막 2154-12-31, enzymatic 채취 처음 2155-01-01).\"},\n  {\"target\": \"features.prior_cr_last\", \"kind\": \"가정\", \"problem\": \"episode 칸이 없으므로, prior_admissions 범위에 같은 에피소드 앞 입원(전원 퇴원 기록)의 크레아티닌도 report_time ≤ tp이면 넣는다고 가정한다. 이는 tp에 알 수 있는 정보라 누출은 아니다.\"},\n  {\"target\": \"split.key\", \"kind\": \"점검 불가\", \"problem\": \"family_id는 80.4% 결측이고 데이터 설명서상 기록되지 않은 가족도 잠재 위험을 공유하므로, person_id로 대신 묶은 행 사이에 학습·평가에 걸친 가족 의존이 남는지 데이터로 확인할 수 없다. 시간 순 분할이라 영향은 작을 것으로 보인다.\"}\n]\n"
+}

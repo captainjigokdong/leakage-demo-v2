@@ -1,0 +1,5 @@
+{
+ "report_id": "cfea55b7a00a",
+ "variant": "design_FC79.json",
+ "findings": "[\n  {\n    \"target\": \"cohort.inclusion.sepsis_dx\",\n    \"kind\": \"문제\",\n    \"problem\": \"패혈증 진단 코드(A41·038)는 퇴원 뒤 coded_time에 생기는데(데이터에서 해당 694건 모두 퇴원 뒤 코딩), 이 기준에는 time_column·window가 없어 tp에는 알 수 없는 미래 정보로 코호트를 고른다. 배포 때 tp에는 이 기준을 적용할 수 없다. 또 질문과 intended_use.setting은 '성인 입원 환자' 전체인데 코호트를 패혈증으로 좁혀 대상 집단과도 맞지 않는다. tp까지 알려진 정보(예: tp 전 항생제 처방, 활성 문제 목록)로 바꾸거나 기준을 빼야 한다.\"\n  },\n  {\n    \"target\": \"cohort.exclusion.aki_known_by_tp\",\n    \"kind\": \"가정\",\n    \"problem\": \"dialysis_by_tp와 특징들은 episode=index_episode인데 이 기준에는 episode 칸이 없다. 결과 판정(outcome.scope=index_admission, 같은 입원 값끼리만 비교)과 맞춰, 이번 입원 기록에서 tp까지 보고된 값만으로 판정한다고 가정한다. 그러면 이어진 에피소드의 앞 입원에서 이미 알려진 AKI는 제외되지 않는다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"점검 불가\",\n    \"problem\": \"family_id는 80%가 결측이다. 기록되지 않은 가족도 잠재 위험을 공유하지만, 이런 가족은 person_id 대체 키로 묶을 수 없다. 그래서 학습·평가에 가족이 나뉘어 들어가는지는 확인할 방법이 없다.\"\n  }\n]\n"
+}

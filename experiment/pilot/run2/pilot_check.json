@@ -1,0 +1,92 @@
+{
+ "pass": {
+  "1": true,
+  "2": true,
+  "3": true,
+  "4": true,
+  "5": true,
+  "6": true,
+  "7": true,
+  "8": true
+ },
+ "all_pass": true,
+ "detail": {
+  "3": {
+   "skill_listed": true,
+   "checker_ran_not_denied_exit_printed": true,
+   "checker_json_matching_hash": 2,
+   "data_or_python_before_checker": 0,
+   "checker_errors": 0,
+   "collected_record_has_checker": true
+  },
+  "4": {
+   "na_forbidden_files": 0,
+   "skill_diff": [
+    "leakage-check"
+   ]
+  },
+  "5": {
+   "import_problems": [],
+   "import_errors_in_transcripts": 0
+  },
+  "6": {
+   "hook_table": "13/13",
+   "checker_denied": 0,
+   "allowed_form_denied": 0
+  },
+  "7": {
+   "format_errors": {
+    "가": 0,
+    "나": 0
+   },
+   "format_retries": {
+    "가": 0,
+    "나": 0
+   }
+  },
+  "8": {
+   "discards": {
+    "가": 0,
+    "나": 0
+   },
+   "own_path_hits": {
+    "가": 0,
+    "나": 0
+   }
+  }
+ },
+ "record": {
+  "가": {
+   "turns": 11,
+   "seconds": 83.4,
+   "tokens": {
+    "input": 20,
+    "cache_creation": 53606,
+    "cache_read": 318233,
+    "output": 6227
+   },
+   "cost_usd": 0.6171146,
+   "denials": 1,
+   "denied_commands": [
+    "cd /srv/leakruns/4bdc8bb1cc42-t1/tmp/claude-0/-srv-leakruns-4bdc8bb1cc42-t1-ws/5"
+   ],
+   "format_retries": 0,
+   "turn_capped": false
+  },
+  "나": {
+   "turns": 9,
+   "seconds": 86.3,
+   "tokens": {
+    "input": 14,
+    "cache_creation": 52917,
+    "cache_read": 229280,
+    "output": 6953
+   },
+   "cost_usd": 0.6083080000000001,
+   "denials": 0,
+   "denied_commands": [],
+   "format_retries": 0,
+   "turn_capped": false
+  }
+ }
+}

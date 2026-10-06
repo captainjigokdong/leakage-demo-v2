@@ -1,0 +1,5 @@
+{
+ "report_id": "908534727976",
+ "variant": "design_0F90.json",
+ "findings": "[\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"가정\",\n    \"problem\": \"family_id는 약 80%가 비어 있어(데이터 설명서 patients.family_id) 비어 있는 행은 대체 키 person_id로 묶는다. 기록되지 않은 가족은 위험을 공유하지만 학습·평가에 나뉠 수 있으며, 이 부분은 데이터로 피할 수 없다고 가정하고 진행한다.\"\n  },\n  {\n    \"target\": \"model.tuning.cv_key\",\n    \"kind\": \"가정\",\n    \"problem\": \"내부 교차검증도 family_id가 비어 있으면 person_id로 묶는다. 기록되지 않은 가족은 폴드 사이에 나뉠 수 있다고 가정하고 진행한다.\"\n  },\n  {\n    \"target\": \"cohort.rows_per_unit\",\n    \"kind\": \"가정\",\n    \"problem\": \"에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없다는 것을 알아야 한다. 이것을 퇴원 시점(tp)에 안다고 가정한다. 형식에는 이를 다르게 표현할 방법이 없다.\"\n  },\n  {\n    \"target\": \"outcome.ascertainment.scope.sites\",\n    \"kind\": \"가정\",\n    \"problem\": \"결과는 A·B 병원 입원 기록과 사망 연계에서만 찾는다. 다른 병원에 재입원한 경우는 보이지 않아 음성으로 세어지며(lost_to_followup = count_as_negative), 이런 누락이 있다고 가정하고 진행한다. 퇴원처별·병원별 결과율은 따로 보고한다.\"\n  }\n]\n"
+}

@@ -1,0 +1,18 @@
+{
+ "4bdc8bb1cc42": {
+  "condition": "가",
+  "rep": 1,
+  "batch": 1,
+  "variant": "design_5C88.json",
+  "order": 0,
+  "turn_capped": false,
+  "format_retries": 0
+ },
+ "278c665bce74": {
+  "condition": "나",
+  "rep": 1,
+  "batch": 1,
+  "variant": "design_5C88.json",
+  "order": 1
+ }
+}

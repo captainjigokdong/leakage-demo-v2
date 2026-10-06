@@ -322,28 +322,78 @@
 
 ## 6단계. 실행
 
+**시작 확인 (2026-10-06)**: main `9efb563`(PR #8), 태그 `criteria-locked-v2` = `9efb563`, 시험 554 통과·20 건너뜀·실패 0, 잠긴 해시 7개 그대로, 동결 폴더 변경 0줄.
+
+### 실행 규칙 (v2, 잠금 2026-10-06)
+
+이 절과 아래 통과 기준은 시험 실행 전에 적었다. **기준 문구는 바꾸지 않는다.**
+
+1. 채택: 첫 시도를 채택한다.
+2. 재실행: 기계적 실패에만, 행당 최대 5회, 사유를 기록한다. 기계적 실패 = 시간 초과(20분), 결과 없음, 종료 코드 오류(턴 상한 제외), 조작 확인 실패(init 기록만으로 판정: 모델이 다름, (가)에 `leakage-check` 없음, (나)에 있음, 보이는 도구 ≠ 6개, MCP 연결). 점검기를 돌리지 않은 것은 재실행 사유가 아니다. 기계적 실패와 폐기 사유가 한 시도에 같이 있으면 재실행하고 둘 다 기록한다.
+3. 폐기는 둘뿐이고, 판정은 `experiment/run.py`가 실행 기록으로 한다.
+   - ① 저장소(`sealed/` 포함)·다른 실행 폴더·다른 세션 기록(`/tmp/claude-0`의 다른 폴더, `/root/.claude`)의 **파일 내용을 읽음** (v2 계획 6절보다 넓힘: 저장소에 다른 변형과 채점 규칙이 있음)
+   - ② (나)가 스킬·점검 코드의 내용을 읽음
+   - 권한 거부된 호출과 이름 조회는 권한이 허용돼도 기록만 한다. 이름 조회 = Glob 도구, 셸 명령 `run.NAME_ONLY_CMDS`(ls, find, cd, pwd, echo, mkdir, stat, du, tree, test, export), python 호출 `run.PY_NAME_BEFORE`(listdir, scandir, walk, glob, iglob, exists, isdir, isfile, islink, getsize, lstat, stat의 인자)와 `run.PY_NAME_AFTER`(`Path(경로)` 뒤의 iterdir, glob, rglob, exists, is_dir, is_file, stat, name, parent).
+   - python 코드 속 금지 구역 경로는 위 이름 조회 호출 안에 있지 않으면 "읽음"으로 본다. 폐기마다 판정 종류를 기록한다: 내용을 여는 호출(Read·Grep 도구, 셸의 내용 명령 인자, `run.PY_READ_BEFORE`·`run.PY_READ_AFTER`)이면 "확실한 읽음", 그 밖은 "보수적 판정".
+   - 폐기된 행은 다시 돌리지 않고 빈칸이 된다. 그 시도는 첫 시도 분석에만 쓴다.
+   - cut·sort·uniq·tr의 파일 인자와 여러 줄 입력(heredoc) 본문 속 경로에도 같은 검사를 한다.
+4. 기록만 하는 것: 최상위 폴더 조회, `..`, 그 밖의 금지 경로 시도, 꺼 둔 도구, 입력 파일 변경.
+5. 턴 상한 60, 형식 재제출 1회, 재제출 턴 상한 5는 `experiment/grader.py` 상수(`MAX_TURNS`, `FORMAT_RETRIES`, `MAX_TURNS_RETRY`)를 쓴다. 턴 상한에 걸린 실행은 재실행하지 않는다. `findings.json`이 없거나 형식이 틀리면 재제출 1회, 그래도 없으면 지적 0개(`scoring_rules.md`). 재제출만 기계적으로 실패하면 재실행하지 않고 그때의 파일을 채점한다. 재제출 중 한도에 걸리면 행 전체를 한도로 처리한다(아래 6).
+6. 한도·인증 오류: 시도로 세지 않고 멈춘다. 부분 출력은 채택하지 않고 `discarded/<id>/limit*`와 `<id>-t<k>-limit*` 작업 폴더에 따로 둔다. 이어 갈 때 일정 순서는 그대로다.
+7. 실행마다 작업 폴더의 파일 목록(이름·크기·해시)을 실행 기록과 함께 커밋한다. 내용과 작업 폴더는 커밋하지 않는다.
+8. 1회차 60회 뒤 멈추고 숫자만 보고한다. 첫 10회 뒤 사용량 재추정은 기록만 하고 계속 간다. **2회차를 할지는 사용량만으로 정한다.**
+9. **변형끼리, 변형과 깨끗한 설계서를 비교하지 않는다. 봉인 파일과 정답표를 열지 않는다. 제출물을 채점하거나 요약하지 않는다.**
+10. 시험 실행 통과 뒤 `run.py`·`bash_allow_hook.py`의 버그를 발견하면 멈추고 보고한다. 고치면 사유와 새 해시를 적고, 끝난 실행은 다시 돌리지 않는다.
+
+### 시험 실행 통과 기준 (잠금 2026-10-06)
+
+시드 20261005로 고른 변형 `design_5C88.json` × 조건 2 = 2회. 다시 할 때도 같은 시드·같은 변형. 시험 실행 횟수를 기록한다. 8개 모두 충족해야 본 실행을 시작한다. **시험 실행은 최대 3번(6회)까지 한다. 고칠 수 있는 것은 `run.py`·훅·환경뿐이다. 3번 안에 통과하지 못하거나, 불통과 원인이 장치가 아니면 본 실행을 시작하지 않고 멈춘다.** 통과한 시점에 `run.py`·`bash_allow_hook.py`의 해시를 적는다.
+
+1. 두 행 모두 첫 시도에 채택, 인증 오류·한도 도달 0건.
+2. 두 실행의 init 기록에서 보이는 도구 = {Read, Glob, Grep, Skill, Write, Bash}, MCP 서버 0개, 모델 `claude-opus-5-5`.
+3. (가): init 스킬 목록에 `leakage-check`가 있음, 점검기 실행이 권한 거부 없이 끝나 도구 결과에 종료 코드가 찍힘, `checker*.json`이 수거되고 그중 설계서 해시가 입력 설계서와 같은 것이 1개 이상, 첫 점검기 호출보다 앞선 도구 호출 중 `data/` 파일의 내용을 읽거나 python을 실행한 것(점검기 자신 제외)이 0건 (이름 조회 ls, Glob은 세지 않음), 실행 기록에 "규칙표 파일이 없다"·"leakcheck 패키지를 찾지 못했다" 0건.
+4. (나): 실행 폴더에 `SKILL.md`·`rules.md`·`run_check.py`·`leakcheck`·`lchome` 0개, `LEAKCHECK_HOME` 없음, init 스킬 목록에 `leakage-check` 없음. 두 조건 init 스킬 목록의 차이 = 정확히 {`leakage-check`}.
+5. 에이전트와 같은 환경 변수로 `python3 -c "import pandas, numpy, sklearn, jsonschema, dateutil"` 종료 코드 0. 두 실행 기록에 "No module named"·"pandas를 불러오지 못했다" 0건.
+6. 훅 표 13개가 기대대로: 허용 9 = `echo $?`, `python3 x.py; echo $?`, `for f in data/*; do head -2 "$f"; done`, `ls data && for f in data/*; do echo "$f"; done | cut -c1-40`, `python3 - <<'EOF'…EOF`, `cut -d, -f1 a.csv | sort | uniq -c`, `LEAKCHECK_HOME=x python3 …`, `export X=1; python3 …`, `cd d; python3 … | tail -1`. 허용 안 됨 4 = `echo $(ls)`, `` echo `ls` ``, `find . -exec cat {} \;`, `cat <<'EOF'…EOF`. 그리고 시험 실행 2회에서 점검기 호출 권한 거부 0건, 훅이 허용하는 형태인데 거부된 Bash 명령 0건.
+7. 두 행 모두 `reports/<id>.json`이 생기고 `grader.validate_findings` 오류 0개 (재제출 뒤 기준, 재제출 횟수는 기록).
+8. 두 실행 모두 폐기 0건, 기록용 검사에서 자기 실행 폴더·자기 임시 폴더 경로가 걸린 것 0건.
+
+그 밖의 기록(통과 기준 아님): 실행당 턴 수, 권한 거부 수와 명령, 시간·토큰.
+
+**시험 실행 기록**
+- 1번째 (`experiment/pilot/run1`): 불통과 — 529 서버 과부하, (나) 행 (`known_issues_v2.md` K9). (가) 제출물은 쓰지 않고 열지 않음.
+- 2번째 (`experiment/pilot/run2`): **통과** (8/8, `experiment/pilot/run2/pilot_check.json`). 고친 것 없음.
+- 통과 시점 해시: `experiment/run.py` `68f373066f287718b18dc6f1431abc0dec1cc091ce0748d67c45128e47a7fb19`, `experiment/bash_allow_hook.py` `5f4020d4759cdef19c7c6e7ff439d3e6c2fc0fa9f9cec3b1734ff61d4b29251c`
+
+**본 실행 기록**
+- 1회차 60회 완료 (2026-10-06, `experiment/runs`, 묶음 1). 한도 멈춤 1회(12/60에서 세션 한도, 리셋 뒤 같은 순서로 이어 감), 529 0회. 첫 10회 뒤 재추정: `experiment/runs/estimate_after10.json`. 2회차는 승인 뒤 (사용량 기준으로 승인).
+- 2회차 60회 완료 (2026-10-06, 묶음 2). 한도 멈춤 1회(10/60에서, 리셋 뒤 같은 순서로 이어 감), 529 0회.
+- 120회: 완료 120, 빈칸 0, 폐기 0, 재실행 0, 조작 확인 실패 0, 턴 상한 0, 형식 재제출 0, findings 없음 0, (가) 점검기 출력 미수거 0, 점검기 호출 거부 0. 모델 120회 모두 `claude-opus-5-5`, 두 조건 스킬 차이 모든 실행에서 {`leakage-check`}. 권한 거부는 `known_issues_v2.md` K10.
+- 첫 시도 묶음 `experiment/runs/first_attempt_reports/` (`python -m experiment.run first-attempts`, 120행 모두 채택 시도).
+- `test_analyze.py::test_real_run_files_without_key`: 실행 기록이 생겨 건너뜀이 아니라 실행됨. 시험 안의 v1 숫자(빈칸 1행)를 meta 상태(폐기·재실행 소진)로 센 값과 비교하도록 고쳐 **통과** (사용자 승인 2026-10-06). 시험 616 통과·8 건너뜀(암호 필요)·실패 0.
+
 **할 일** (`v2_plan.md` 6, 7절, 시행착오 2, 3, 8, 14)
 - [ ] (4a에서 정함, 2026-10-05 사용자 결정) **변형끼리, 또는 변형과 깨끗한 설계서를 비교하지 않는다. 정답표와 봉인 파일을 열지 않는다.** (비교하면 심은 결함, 특히 보류 사례가 드러난다)
-- [ ] 실행 규칙 잠금: 첫 시도 채택. 재실행은 기계적 실패(인증, 시간 초과, 프로세스 오류)에만, 사유 기록. 폐기는 ① 봉인 파일·정답표·다른 실행의 출력물을 읽음 ② (나)가 스킬·점검 코드를 읽음 — 둘만. 단순한 폴더 탐색은 기록만.
+- [x] 실행 규칙 잠금 (위 절, 2026-10-06): 첫 시도 채택. 재실행은 기계적 실패(인증, 시간 초과, 프로세스 오류)에만, 사유 기록. 폐기는 ① 봉인 파일·정답표·다른 실행의 출력물을 읽음 ② (나)가 스킬·점검 코드를 읽음 — 둘만. 단순한 폴더 탐색은 기록만.
 - [ ] 허용 도구 6개(Read, Glob, Grep, Skill, Write, Bash). 자동 권한 검사가 막은 동작은 우회하지 않음
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] (3단계에서 넘김) (가) 조건에서는 점검기 출력 파일 `checker.json`도 실행 스크립트가 따로 수거한다 (제출 형식과 별개, 두 조건의 제출 형식은 같다). 데이터 폴더 이름은 `data/`
 - [ ] (3단계에서 넘김) **점검기 출력 수거 규칙**: 점검기는 실행마다 새 파일에 쓴다 (`checker.json`, 다시 돌리면 `checker_2.json`, `checker_3.json` …. 기존 파일을 덮어쓰지 않는다). 실행 스크립트는 작업 폴더의 `checker*.json`을 모두 수거하고, 각 파일의 `checked.design_file`·`checked.design_sha256`으로 "원래 설계서(입력으로 준 파일, 같은 해시)를 점검한 결과"를 고른다. 같은 설계서를 여러 번 점검했으면 번호가 가장 작은(처음) 것을 쓴다. 점검기는 결과를 **실행한 폴더**에 쓰므로, 에이전트가 다른 폴더(자기 임시 폴더 등)에서 고친 설계서를 점검한 결과는 작업 폴더에 없다 (3b 3회차에서 확인). 실행 폴더 전체에서 `checker*.json`을 찾을지 6단계 계획에서 정한다. 고친 설계서를 점검한 결과는 기록으로만 보관한다 (`tools/skill_review.py`가 같은 규칙으로 고른다)
-- [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
+- [x] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성 (`experiment/preflight_v2.py`)
 - [ ] (승인 C, 2026-10-06 사용자 지시) 사전 점검에 넣는다: 반복문 등이 권한 규칙에 거부되어 명령이 잘게 나뉘는 문제 (4a 검수에서도 나옴), 시험 실행의 실행당 턴 수 기록
 - [ ] (2b에서 넘김) 사전 점검에 넣는다: heredoc(`<<`), `find -exec` 같은 명령이 권한 규칙에 막히면 에이전트가 데이터를 열지 않고 끝낼 수 있다 (2b 예비 검수 4회 중 2회). 에이전트가 데이터를 읽으려면 시스템 python(`/usr/local/bin/python3`)에 numpy·pandas와 그 의존 패키지가 **에이전트의 HOME과 무관한 위치**에 있어야 한다. 2b 세션 컨테이너에는 numpy·pandas가 없어서 `requirements-lock.txt`로 설치했는데, python-dateutil은 `/root/.local`에만 있어 HOME을 따로 정한 에이전트에서는 `import pandas`가 실패했다 (예비 검수 에이전트는 csv 모듈로 우회해 데이터를 읽었다). 사전 점검 5번(패키지 import)을 에이전트와 같은 환경 변수로 확인한다
 - [ ] (3단계에서 확인한 원인) 세션 컨테이너 이미지의 `/root/.local/lib/python3.11/site-packages`에 python-dateutil이 처음부터 들어 있다 (다른 도구가 설치해 둔 것). 그래서 사용자 폴더를 무시하지 않고 `pip install`하면 pip가 "이미 있음"으로 보고 시스템 위치에 설치하지 않는다. `PYTHONNOUSERSITE=1 python3 -m pip install -r requirements-lock.txt`로 설치하면 시스템 위치(`/usr/local/lib/python3.11/dist-packages`)에 설치되고, `PYTHONNOUSERSITE=1`에서도 `import pandas`가 된다 (3단계 세션에서 확인). 사전 점검에 이 설치 방법과 확인을 넣는다
 - [ ] (3단계 3b 스킬 검수에서 넘김) 권한 규칙이 셸 `for` 반복문이 든 명령(`ls data && for f in data/*; do …; done | cut …`)을 거부했다 (동적 1회차, 점검기 실행 뒤 데이터를 훑어보는 명령). 에이전트는 Python 스크립트 파일로 다시 확인했고 점검기 호출 거부는 0이었다. 환경(권한 규칙) 문제라 스킬은 고치지 않았다. 사전 점검 6번에 반복문 형태를 넣을지 6단계 계획에서 정한다 (`docs/skill_review_v2.md`)
 - [ ] (3단계 3b 스킬 검수에서 넘김) 실행 시간·토큰 참고값: (가) 1회 약 100초, 출력 토큰 약 7,600, 캐시 읽기 20만~32만 토큰 (`docs/skill_review_v2.md`). 6단계 실행 계획(시간 초과·Pro 한도)에 쓴다
-- [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
+- [x] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
 - [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
-- [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
-- [ ] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
-- [ ] (5단계에서 넘김) `experiment/run.py`를 v2 제출 형식에 맞춘다: `findings.json` 수거(기록 `{"report_id", "variant", "findings": 내용 또는 None}`), 형식 검사(`grader.validate_findings`, 파일 없음 포함) 실패 때 재제출 요청 1회(`grader.FORMAT_RETRIES`, 턴 상한 `grader.MAX_TURNS_RETRY` = 5), 실행당 턴 상한 `grader.MAX_TURNS` = 60(두 조건 같음), 조건 파일에 `turn_capped`·`format_retries` 기록, 지시문 `prompt.render(설계서, "data")`와 `prompt.agent_docs()`의 문서 2개를 두 조건 작업 폴더에 같은 이름으로 둠, init 기록의 스킬 목록 저장. 지금 `run.py`는 v1 보고서 블록 형식이다 (`docs/success_criteria_v2.md` 3절)
-- [ ] (5단계에서 넘김) 실행은 반복 단위로: 1회차 60 → 2회차 60. 1회차만 하면 60회로 분석한다 (`docs/analysis_plan_v2.md` 2절)
-- [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
-- [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
-- [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
+- [x] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
+- [x] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
+- [x] (5단계에서 넘김) `experiment/run.py`를 v2 제출 형식에 맞춘다: `findings.json` 수거(기록 `{"report_id", "variant", "findings": 내용 또는 None}`), 형식 검사(`grader.validate_findings`, 파일 없음 포함) 실패 때 재제출 요청 1회(`grader.FORMAT_RETRIES`, 턴 상한 `grader.MAX_TURNS_RETRY` = 5), 실행당 턴 상한 `grader.MAX_TURNS` = 60(두 조건 같음), 조건 파일에 `turn_capped`·`format_retries` 기록, 지시문 `prompt.render(설계서, "data")`와 `prompt.agent_docs()`의 문서 2개를 두 조건 작업 폴더에 같은 이름으로 둠, init 기록의 스킬 목록 저장. 지금 `run.py`는 v1 보고서 블록 형식이다 (`docs/success_criteria_v2.md` 3절)
+- [x] (5단계에서 넘김) 실행은 반복 단위로: 1회차 60 → 2회차 60. 1회차만 하면 60회로 분석한다 (`docs/analysis_plan_v2.md` 2절)
+- [x] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. (2번째에 통과) **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
+- [x] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
+- [x] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 
 **완료 기준**: 사전 정한 통과 기준 충족, 120행 기록
 

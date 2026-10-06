@@ -1,0 +1,5 @@
+{
+ "report_id": "83440d227ec9",
+ "variant": "design_D238.json",
+ "findings": "[\n  {\"target\": \"features.ward_type\", \"kind\": \"문제\", \"problem\": \"scope가 next_admission이라 퇴원(tp) 뒤 다음 입원의 병동을 특징으로 쓴다. tp에는 알 수 없는 미래 정보이고, 다음 입원이 있는지 자체가 결과(재입원)와 직결되어 결과 누출이 생기므로 빼야 한다.\"},\n  {\"target\": \"preprocessing.dx_encode\", \"kind\": \"문제\", \"problem\": \"prior_dx_main의 target encoding을 분할 전에 전체 데이터(fit_scope=all)의 결과값으로 맞춘다. 평가 부분의 결과가 학습 특징에 들어가 성능이 부풀려지므로 학습 폴드 안에서만(교차검증 안에서는 폴드별로) 맞추도록 고쳐야 한다.\"},\n  {\"target\": \"split.key\", \"kind\": \"점검 불가\", \"problem\": \"family_id는 약 80%가 결측이고 기록되지 않은 가족도 위험을 공유한다(데이터 설명서). 결측 행은 person_id로 묶이므로 기록되지 않은 가족 사이의 학습·평가 겹침은 데이터로 확인할 방법이 없다.\"},\n  {\"target\": \"features.hgb_min.window\", \"kind\": \"가정\", \"problem\": \"episode=index_episode일 때 창 시작 'admit'은 에피소드 첫 입원 기록의 admit_time으로 본다고 가정한다 (cr_last, dialysis_ordered, icu_any도 같다).\"},\n  {\"target\": \"features.prior_dx_main\", \"kind\": \"가정\", \"problem\": \"진단 코드가 2155-10-01에 ICD-9에서 ICD-10으로 바뀌므로 같은 질환이 두 범주로 나뉜다. 코드를 서로 대응하지 않고 원래 코드 그대로 범주로 쓴다고 가정한다(학습 기간에 두 체계가 모두 있다).\"}\n]\n"
+}
