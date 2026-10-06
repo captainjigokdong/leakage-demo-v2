@@ -1,0 +1,5 @@
+{
+ "report_id": "9f3a7d836acd",
+ "variant": "design_E7FA.json",
+ "findings": "[\n  {\n    \"target\": \"preprocessing.oversample\",\n    \"kind\": \"문제\",\n    \"problem\": \"SMOTE가 결과값을 써서(uses_outcome=true) 분할 전에(before_split=true) 전체 데이터(fit_scope=all, applies_to=all)에 적용된다. 평가 부분에 합성 행이 섞이고, 학습 행과 평가 행의 정보로 이웃 보간한 합성 행이 생겨 평가가 오염되고 결과 분포도 왜곡된다. 쓰려면 분할 뒤 학습 폴드 안에서만 학습 데이터에 적용해야 한다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"가정\",\n    \"problem\": \"family_id가 약 80% 결측이고, 데이터 설명서상 기록되지 않은 가족도 위험을 공유한다. 기록되지 않은 가족 연결은 알아낼 수 없으므로 결측이면 person_id로 묶고, 남는 가족 간 상관은 받아들인다고 가정한다.\"\n  },\n  {\n    \"target\": \"features.prior_cr_last\",\n    \"kind\": \"가정\",\n    \"problem\": \"episode 칸이 없어 같은 에피소드 앞 입원 기록의 크레아티닌을 넣을지 정해져 있지 않다. prior_dx_* 서술과 같게, 같은 등록 번호의 인덱스 입원 전 입원(같은 에피소드 앞 입원 포함)에서 tp까지 보고된 값을 jaffe 보정 뒤 쓴다고 가정한다.\"\n  }\n]\n"
+}
