@@ -26,6 +26,8 @@
 | `sealed/candidates.enc` | 1 | 새 후보 30개 목록 | `docs/seal_log_v2.md` | 2a, 2c, 4b, 7 |
 | `sealed/stage2a_record.enc` | 2a | 2a 작업 기록 (새 후보 대조표, 형식 확정 과정) | `docs/injection_log_v2.md` | 2c, 4b, 7 |
 | `sealed/stage2c_record.enc` | 2c | 새 후보 30개 패치, 대응표, 봉인된 시험용 기본 설계서, 실질 확인 결과·코드, 추첨 전 규칙 적용 결과, 핵심어 일치 목록 | `docs/injection_log_v2.md` | 4b, 7 (시험: 암호를 받을 때) |
+| `sealed/stage4b_record.enc` | 4b | 봉인 확인 분류와 이유, 배치 제외 목록, 추첨·배치 기록, 배치된 조합의 수치 차이 다시 셈, 핵심어 일치 목록 | `docs/stage4b_v2.md` (제외 목록 해시는 `docs/lock_4a_v2.json`) | 7 (시험: 암호를 받을 때) |
+| `sealed/answer_key.enc` | 4b | 맹검 정답표 (변형 30개, 맹검 값) | `docs/stage4b_v2.md`, 변형 목록 `docs/variants_v2.md` | 7 (시험: 암호를 받을 때) |
 
 - **3단계는 어느 봉인 파일도 열지 않는다.** 2b, 4a, 5, 6, 8단계도 열지 않는다.
 - 2c·4b에서 새로 만드는 봉인 파일은 만들 때 이 표에 더한다.
@@ -51,7 +53,7 @@
 
 | 시험 | 없어서 건너뛰는 파일 | 반드시 통과해야 하는 때 |
 |---|---|---|
-| `test_inject.py::test_committed_variants` | `sealed/answer_key.enc` (변형 검사는 실행됨, 정답표 확인만 건너뜀) | 4b 완료 시 (v2 변형 30개·v2 정답표 기준) |
+| `test_inject.py::test_committed_variants` | `sealed/answer_key.enc` (변형 검사는 실행됨, 정답표 확인만 건너뜀) | 4b 완료 시 (v2 변형 30개·v2 정답표 기준) → **4b에서 통과** (목록 해시는 암호 없이, 정답표 대조는 암호가 있을 때) |
 | `test_run.py::test_pilot3_false_positives_cleared` ×4 | `experiment/pilot/_run3_20261003/discarded/` (v1 시험 실행 3차 기록) | 6단계 사전 점검 전 (v1 기록을 가져오거나 v2용 시험으로 대체) |
 | `test_run.py::test_pilot3_real_exploration_still_flagged` ×2 | 위와 같음 | 6단계 사전 점검 전 (같음) |
 | `test_run.py::test_pilot4_false_positives_cleared` ×4 | `experiment/pilot/_run4_20261003/discarded/` (v1 시험 실행 4차 기록) | 6단계 사전 점검 전 (같음) |
@@ -70,15 +72,21 @@
 | 시험 | 건너뛰는 이유 | 반드시 통과해야 하는 때 |
 |---|---|---|
 | `test_inject.py::test_base_passes_design_and_data` [dynamic, fixed] ×2 | (a) v1 기본 설계서(`designs/base/`)가 v2 규칙표·v2 데이터와 맞지 않음 (환자 단위 분할, 결과 이력 없음 등) | **4a 완료 시** → **4a에서 통과** (깨끗한 설계서 8개 ×1, 남는 판정이 기대 집합과 정확히 같은지: 동적 K2 하나, readmit_b K1 하나, 나머지 고정 없음. 설계서만·작은 데이터·본 데이터. 승인 D 2026-10-06). 건너뜀 21 → 19 |
-| `test_inject.py::test_clean_variants_pass_checker` | (a) v1 변형 20개 | **4b 완료 시** (깨끗한 변형 8개 기준. `test_base_passes_design_and_data`와 같은 방식: 바탕별 기대 집합과 정확히 같은지) |
+| `test_inject.py::test_clean_variants_pass_checker` | (a) v1 변형 20개 | **4b 완료 시** (깨끗한 변형 8개 기준. `test_base_passes_design_and_data`와 같은 방식: 바탕별 기대 집합과 정확히 같은지) → **4b에서 통과** (×3: 설계서만·작은 데이터·본 데이터. 어느 변형이 깨끗한지 정답표로 알므로 암호가 있을 때 돈다) |
 | `test_grader.py::test_checker_on_clean_base_has_no_false_alarm` | (a) v1 기본 설계서·v1 채점기 기준 | **5단계 완료 시** (v2 깨끗한 설계서·v2 채점기) |
+
+**4b에서 더한 건너뜀 1개** (2026-10-06 사용자 결정)
+
+| 시험 | 건너뛰는 이유 | 반드시 통과해야 하는 때 |
+|---|---|---|
+| `test_run.py::test_schedule_balanced_and_deterministic` | (a) v1 숫자(변형 20 × 조건 2 × 반복 3). 4b에서 변형이 v2 30개가 됨 | **6단계 완료 시** (v2 30 × 2 × 2 = 120, `experiment/run.py`의 `REPS`와 함께) |
 
 **파일 변경을 잠그는 시험 (해시 검사)** — 지금 잠금 기준은 모두 **v1 문서·v1 파일**이다. 해당 단계에서 v2 것으로 바꾼다 (바꾸기 전에 사용자 승인).
 
 | 시험 | 잠그는 파일 → 대조 기준 | 다시 잠글 단계 |
 |---|---|---|
 | `test_data_v2.py::test_table_hash_matches_manifest` (테이블마다 하나, 34개) + `test_folder_files_equal_manifest` | `data/synth/`, `data/synth_aux/`의 v2 17개 테이블씩 → 각 `MANIFEST.json` | **2단계 2b에서 다시 잠금 완료** (v1 시험 `test_synth.py::test_committed_data_matches_manifest_and_criteria`를 대체, 사용자 승인 2026-10-04) |
-| `test_grader.py::test_verify_variants` | `designs/variants/` 20개 → `docs/injection_log.md` | 4b |
+| `test_grader.py::test_verify_variants` | `designs/variants/` 20개 → `docs/injection_log.md` | 4b → **4b에서 다시 잠금**: v2 변형 30개 → `docs/variants_v2.md` (사용자 결정 ㉢, `grader.py`는 바꾸지 않음) |
 | `test_grader.py::test_locked_files_match_success_criteria` | `experiment/agent_prompt.md`, `grader.py`, `scoring_rules.md` → `docs/success_criteria.md` | 5단계 |
 | `test_grader.py::test_prompt_fixed_and_neutral` | `experiment/agent_prompt.md` → `experiment/prompt.py`의 해시와 `docs/success_criteria.md` | 5단계 |
 
@@ -247,32 +255,34 @@
 ### 4b. 봉인 확인·추첨·변형·정답표 (사용자가 암호를 줄 때)
 
 **시작 확인**
-- [ ] 4a PR이 main에 병합됐는지. 안 됐으면 멈추고 알린다
-- [ ] (3단계 사용자 지시, 2026-10-04, 4a에서 옮김) 암호를 넣고 주입·실질 확인 시험 5개(`tests/test_injectability_v2.py`의 암호 필요 시험)가 3단계 점검 코드에서도 통과하는지 확인한다. 실패하면 멈추고 번호와 문제의 종류만 보고한다
-- [ ] 추첨·배치 시드와 스크립트가 4a 커밋 그대로인지 (시험)
+- [x] 4a PR이 main에 병합됐는지. 안 됐으면 멈추고 알린다
+- [x] (3단계 사용자 지시, 2026-10-04, 4a에서 옮김) 암호를 넣고 주입·실질 확인 시험 5개(`tests/test_injectability_v2.py`의 암호 필요 시험)가 3단계 점검 코드에서도 통과하는지 확인한다. 실패하면 멈추고 번호와 문제의 종류만 보고한다
+- [x] 추첨·배치 시드와 스크립트가 4a 커밋 그대로인지 (시험)
 
 **첫 순서: 봉인 확인** (2026-10-05 사용자 조건 A. 추첨 전에 한다)
-- [ ] 1) 후보 30개 **전체**(제외된 것 포함)의 패치를 깨끗한 설계서 8개에 적용해 본다. 뽑힌 사례만이 아니라 30개 전체로 한다
-- [ ] 2) "패치를 적용해도 바뀌는 것이 없다"(설계서가 이미 그 사례의 상태)인 조합이 있으면 멈추고, 조합의 수만 [검토자용]으로 보고한다
-- [ ] 3) 그 상태가 설계서의 실제 약점이면 설계서를 고친다. 고칠 수 없으면 정당한 지적 목록에 넣는다. 그 뒤 점검기를 다시 돌리고 다시 잠근다. 다시 잠근 사실과 이유("봉인 확인에서 드러난 약점 n건")를 문서에 적는다
-- [ ] 4) 그 뒤에 추첨한다
-- [ ] 5) (2026-10-05 사용자 지시, 승인 B에서 좁힘) 추첨 전에 후보 30개의 정답 칸이 **깨끗한 설계서에서 점검기가 경고를 내는 칸**과 겹치는 수를 센다. 1개 이상이면 멈춰 [검토자용]으로 수만 보고한다. **정당한 지적 목록의 칸**과 겹치는 수는 세어 기록만 한다 (멈추지 않음)
-- [ ] 6) (2026-10-05 사용자 지시) 같은 방법으로 후보 30개의 정답 칸이 **깨끗한 설계서에서 점검기가 가정을 내는 칸**과 겹치는 수를 센다. 이 수는 멈추지 않고 기록만 한다
-- [ ] 7) (2026-10-05 사용자 지시) 같은 대조에서 서술과 패치의 모순을 확인한다 (`tools/clean_v2_textcheck.py`의 `hits` + 사람이 읽기): 패치를 적용한 뒤 바뀐 칸의 값과 어긋나거나 바뀌기 전 값을 알려 주는 문장이 다른 칸(서술, 근거, 명시 문장)에 남는 조합의 수를 [검토자용]으로 보고한다. 있으면 멈춘다
+- [x] 1) 후보 30개 **전체**(제외된 것 포함)의 패치를 깨끗한 설계서 8개에 적용해 본다. 뽑힌 사례만이 아니라 30개 전체로 한다
+- [x] 2) "패치를 적용해도 바뀌는 것이 없다"(설계서가 이미 그 사례의 상태)인 조합이 있으면 멈추고, 조합의 수만 [검토자용]으로 보고한다
+- [x] 3) 그 상태가 설계서의 실제 약점이면 설계서를 고친다. 고칠 수 없으면 정당한 지적 목록에 넣는다. 그 뒤 점검기를 다시 돌리고 다시 잠근다. 다시 잠근 사실과 이유("봉인 확인에서 드러난 약점 n건")를 문서에 적는다
+- [x] 4) 그 뒤에 추첨한다
+- [x] 5) (2026-10-05 사용자 지시, 승인 B에서 좁힘) 추첨 전에 후보 30개의 정답 칸이 **깨끗한 설계서에서 점검기가 경고를 내는 칸**과 겹치는 수를 센다. 1개 이상이면 멈춰 [검토자용]으로 수만 보고한다. **정당한 지적 목록의 칸**과 겹치는 수는 세어 기록만 한다 (멈추지 않음)
+- [x] 6) (2026-10-05 사용자 지시) 같은 방법으로 후보 30개의 정답 칸이 **깨끗한 설계서에서 점검기가 가정을 내는 칸**과 겹치는 수를 센다. 이 수는 멈추지 않고 기록만 한다
+- [x] 7) (2026-10-05 사용자 지시) 같은 대조에서 서술과 패치의 모순을 확인한다 (`tools/clean_v2_textcheck.py`의 `hits` + 사람이 읽기): 패치를 적용한 뒤 바뀐 칸의 값과 어긋나거나 바뀌기 전 값을 알려 주는 문장이 다른 칸(서술, 근거, 명시 문장)에 남는 조합의 수를 [검토자용]으로 보고한다. 있으면 멈춘다
 
 **할 일**
-- [ ] 보류 추첨 (4a 스크립트·시드 그대로). 시드·날짜·넘어간 횟수 기록. 뽑히지 않은 18개는 내용을 출력하지 않는다
-- [ ] (2026-10-05 사용자 지시) 배치에서 넘어간 횟수를 이유별로 기록한다: 추첨된 사례가 어느 바탕에도 배치되지 않아 다음 후보로 넘어간 횟수, 그중 "분할 칸(`split.*`)을 바꾸는 패치는 가족 무작위 분할 바탕에만" 규칙 때문인 횟수
-- [ ] (2026-10-05 사용자 지시) 배치가 끝난 뒤, **배치된 조합만** 새 깨끗한 설계서 기준으로 수치 차이를 다시 세어 봉인 기록에 남긴다. 수치 차이가 0이거나 0에 가까운 조합(기준: **수치 차이 ≤ 10, 또는 전제의 1% 이하**)의 수만 [검토자용]으로 보고한다. 배치는 바꾸지 않는다. 배치 규칙(수치 차이 0인 유형을 피함)에는 2c 봉인 기록의 숫자를 쓴다 (`docs/known_issues_v2.md` K3)
+- [x] 보류 추첨 (4a 스크립트·시드 그대로). 시드·날짜·넘어간 횟수 기록. 뽑히지 않은 18개는 내용을 출력하지 않는다
+- [x] (2026-10-05 사용자 지시) 배치에서 넘어간 횟수를 이유별로 기록한다: 추첨된 사례가 어느 바탕에도 배치되지 않아 다음 후보로 넘어간 횟수, 그중 "분할 칸(`split.*`)을 바꾸는 패치는 가족 무작위 분할 바탕에만" 규칙 때문인 횟수
+- [x] (2026-10-05 사용자 지시) 배치가 끝난 뒤, **배치된 조합만** 새 깨끗한 설계서 기준으로 수치 차이를 다시 세어 봉인 기록에 남긴다. 수치 차이가 0이거나 0에 가까운 조합(기준: **수치 차이 ≤ 10, 또는 전제의 1% 이하**)의 수만 [검토자용]으로 보고한다. 배치는 바꾸지 않는다. 배치 규칙(수치 차이 0인 유형을 피함)에는 2c 봉인 기록의 숫자를 쓴다 (`docs/known_issues_v2.md` K3)
   - (승인 C, 2026-10-06 사용자 지시) 이때 고정 유형은 점검기 코호트(6,706행)가 아니라 **설계서대로 고른 코호트**(`cohort.rows_per_unit` 에피소드 마지막 입원, 6,514행)로 센다 (`docs/known_issues_v2.md` K5, `tools/justified_v2_evidence.design_rows`)
-- [ ] 배치 (4a 스크립트·시드), 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인 (`sealed/answer_key.enc`, 봉인 파일 표에 더함). 결함 변형에는 점검기를 돌리지 않는다
-- [ ] (2c에서 넘김) 48개 주입 시험(`tests/test_injectability_v2.py`)을 깨끗한 설계서 8개로 다시 통과시킨다. 암호가 필요한 시험이 통과해야 한다
+- [x] 배치 (4a 스크립트·시드), 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인 (`sealed/answer_key.enc`, 봉인 파일 표에 더함). 결함 변형에는 점검기를 돌리지 않는다
+- [x] (2c에서 넘김) 48개 주입 시험(`tests/test_injectability_v2.py`)을 깨끗한 설계서 8개로 다시 통과시킨다. 암호가 필요한 시험이 통과해야 한다
   - (승인 D, 2026-10-06 사용자 지시) 바탕을 깨끗한 설계서로 바꿨을 때 실패하는 조합이 있으면 **패치를 고치지 않고 멈춰** 조합의 수만 [검토자용]으로 보고한다
-- [ ] 정답표의 보류 사례 `support_targets`·`accept_questions`를 기본값과 다르게 정하는 경우 근거와 함께 사용자 승인
-- [ ] `test_inject.py::test_clean_variants_pass_checker`, `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계·3단계 표). `test_clean_variants_pass_checker`는 깨끗한 변형마다 남는 점검기 판정이 그 바탕의 기대 집합(`tests/test_inject.py`의 `EXPECTED_CLEAN_PROBLEMS`)과 정확히 같은지로 확인한다 (새로 생겨도 사라져도 실패, 승인 D). v1 변형 생성 시험(`test_inject.py`의 v1 경로)을 어떻게 할지 정한다 (고치기 전 승인)
-- [ ] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_verify_variants`)
+- [x] 정답표의 보류 사례 `support_targets`·`accept_questions`를 기본값과 다르게 정하는 경우 근거와 함께 사용자 승인 → **기본값과 다르게 정한 사례 없음** (㉣, 2026-10-06 사용자 결정. 정답표 그대로)
+- [x] `test_inject.py::test_clean_variants_pass_checker`, `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계·3단계 표). `test_clean_variants_pass_checker`는 깨끗한 변형마다 남는 점검기 판정이 그 바탕의 기대 집합(`tests/test_inject.py`의 `EXPECTED_CLEAN_PROBLEMS`)과 정확히 같은지로 확인한다 (새로 생겨도 사라져도 실패, 승인 D). v1 변형 생성 시험(`test_inject.py`의 v1 경로)을 어떻게 할지 정한다 (고치기 전 승인)
+- [x] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_verify_variants`)
 
 **4b 완료 기준**: 변형·목록 해시 커밋, 정답표는 `*.enc`만
+
+**4b 결과 (2026-10-06)**: 기록 `docs/stage4b_v2.md` (번호·개수·해시만, 내용은 `sealed/stage4b_record.enc`). 봉인 확인에서 멈춤 조건에 걸려 동적 깨끗한 설계서 4개를 2회 고치고(칸 24) 다시 잠갔다(`docs/lock_4a_v2.json` 확정). 서술 수정 3사례, 배치 제외 목록 23조합(해시 잠금). 추첨 12개(질문마다 2, 넘어감 4: 제외 목록 4), 배치 동적 11/고정 11, 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 결함 변형에는 점검기를 돌리지 않았다. v1 생성 경로 시험은 기록용으로 두고 v2 생성 시험(`tests/test_make_variants_v2.py`)을 더했다(㉡). 변형 해시 잠금은 `docs/variants_v2.md`로(㉢). 보류 사례 정답 칸은 모두 기본값(㉣, 사용자 결정). 동결 폴더 변경 없음.
 
 ---
 
@@ -318,6 +328,7 @@
 - [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
 - [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
+- [ ] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
 - [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
 - [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)

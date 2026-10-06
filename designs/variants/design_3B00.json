@@ -1,5 +1,5 @@
 {
-  "design_id": "aki_b",
+  "design_id": "design_3B00",
   "design_type": "dynamic",
   "question": "성인 입원 중 매일(입원 기록마다 입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 급성 신손상(AKI)이 생기거나 원내에서 사망할지 예측한다.",
   "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단은 신뢰구간과 함께 보고한다. split.test_fraction은 묶음 수의 비율이다. outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다.",
@@ -271,15 +271,6 @@
   },
   "features": [
     {
-      "name": "age",
-      "source": "patients",
-      "column": "age",
-      "scope": "patient",
-      "agg": "value",
-      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수. 데이터의 나이는 95에서 잘려 있다 (데이터 설명서 patients.age)",
-      "age_reference": "index_admission"
-    },
-    {
       "name": "sex",
       "source": "patients",
       "column": "sex",
@@ -287,25 +278,58 @@
       "agg": "value"
     },
     {
-      "name": "unit_at_tp",
-      "description": "tp에 머문 병동",
-      "source": "transfers",
-      "column": "unit",
+      "name": "nephrotoxic_by_tp",
+      "description": "tp까지 NSAID·vancomycin 처방",
+      "source": "medications",
+      "filter": {
+        "drug": [
+          "nsaid",
+          "vancomycin"
+        ],
+        "med_type": [
+          "inpatient"
+        ]
+      },
       "scope": "index_admission",
-      "time_column": "in_time",
+      "time_column": "order_time",
       "window": {
         "start": "admit",
         "end": "tp"
       },
-      "agg": "last",
+      "agg": "any",
       "episode": "index_episode"
     },
     {
-      "name": "service",
-      "source": "admission_info",
-      "column": "service",
+      "name": "n_cr",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
       "scope": "index_admission",
-      "agg": "value"
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "count",
+      "assessment": {
+        "by_stratum": [
+          "unit_at_tp"
+        ],
+        "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"
+      },
+      "episode": "index_episode"
+    },
+    {
+      "name": "age",
+      "source": "patients",
+      "column": "age",
+      "scope": "patient",
+      "agg": "value",
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수. 데이터의 나이는 95에서 잘려 있다 (데이터 설명서 patients.age)",
+      "age_reference": "index_admission"
     },
     {
       "name": "admission_type",
@@ -340,6 +364,17 @@
       "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다"
     },
     {
+      "name": "cr_rise",
+      "derive": {
+        "op": "difference",
+        "of": [
+          "cr_last",
+          "cr_min_adm"
+        ]
+      },
+      "made_by": "leakcheck.features"
+    },
+    {
       "name": "cr_min_adm",
       "source": "labs",
       "column": "value",
@@ -357,189 +392,6 @@
       "agg": "min",
       "episode": "index_episode",
       "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다"
-    },
-    {
-      "name": "cr_max_48h",
-      "source": "labs",
-      "column": "value",
-      "filter": {
-        "test": [
-          "creatinine"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "report_time",
-      "window": {
-        "start": "tp-48h",
-        "end": "tp"
-      },
-      "agg": "max",
-      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다",
-      "episode": "index_episode"
-    },
-    {
-      "name": "n_cr",
-      "source": "labs",
-      "filter": {
-        "test": [
-          "creatinine"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "report_time",
-      "window": {
-        "start": "admit",
-        "end": "tp"
-      },
-      "agg": "count",
-      "assessment": {
-        "by_stratum": [
-          "unit_at_tp"
-        ],
-        "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"
-      },
-      "episode": "index_episode"
-    },
-    {
-      "name": "cr_rise",
-      "derive": {
-        "op": "difference",
-        "of": [
-          "cr_last",
-          "cr_min_adm"
-        ]
-      },
-      "made_by": "leakcheck.features"
-    },
-    {
-      "name": "bun_last",
-      "source": "labs",
-      "column": "value",
-      "filter": {
-        "test": [
-          "bun"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "report_time",
-      "window": {
-        "start": "admit",
-        "end": "tp"
-      },
-      "agg": "last",
-      "episode": "index_episode"
-    },
-    {
-      "name": "k_last",
-      "source": "labs",
-      "column": "value",
-      "filter": {
-        "test": [
-          "potassium"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "report_time",
-      "window": {
-        "start": "admit",
-        "end": "tp"
-      },
-      "agg": "last",
-      "episode": "index_episode"
-    },
-    {
-      "name": "hgb_min",
-      "source": "labs",
-      "column": "value",
-      "filter": {
-        "test": [
-          "hemoglobin"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "report_time",
-      "window": {
-        "start": "admit",
-        "end": "tp"
-      },
-      "agg": "min",
-      "episode": "index_episode"
-    },
-    {
-      "name": "sbp_min_24h",
-      "source": "vitals",
-      "column": "value",
-      "filter": {
-        "item": [
-          "sbp"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "entered_time",
-      "window": {
-        "start": "tp-24h",
-        "end": "tp"
-      },
-      "agg": "min",
-      "episode": "index_episode"
-    },
-    {
-      "name": "hr_max_24h",
-      "source": "vitals",
-      "column": "value",
-      "filter": {
-        "item": [
-          "heart_rate"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "entered_time",
-      "window": {
-        "start": "tp-24h",
-        "end": "tp"
-      },
-      "agg": "max",
-      "episode": "index_episode"
-    },
-    {
-      "name": "temp_max_24h",
-      "source": "vitals",
-      "column": "value",
-      "filter": {
-        "item": [
-          "temperature"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "entered_time",
-      "window": {
-        "start": "tp-24h",
-        "end": "tp"
-      },
-      "agg": "max",
-      "episode": "index_episode"
-    },
-    {
-      "name": "nephrotoxic_by_tp",
-      "description": "tp까지 NSAID·vancomycin 처방",
-      "source": "medications",
-      "filter": {
-        "drug": [
-          "nsaid",
-          "vancomycin"
-        ],
-        "med_type": [
-          "inpatient"
-        ]
-      },
-      "scope": "index_admission",
-      "time_column": "order_time",
-      "window": {
-        "start": "admit",
-        "end": "tp"
-      },
-      "agg": "any",
-      "episode": "index_episode"
     },
     {
       "name": "prior_dx_ckd",
@@ -561,27 +413,47 @@
       "history_key": "patient_id"
     },
     {
-      "name": "problem_ckd_active",
-      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다",
-      "source": "problem_list",
+      "name": "hgb_min",
+      "source": "labs",
+      "column": "value",
       "filter": {
-        "icd_code": [
-          "N18"
-        ],
-        "status": [
-          "active"
+        "test": [
+          "hemoglobin"
         ]
       },
-      "scope": "patient_history",
-      "time_column": "recorded_time",
+      "scope": "index_admission",
+      "time_column": "report_time",
       "window": {
-        "start": "-inf",
+        "start": "admit",
         "end": "tp"
       },
-      "as_of": "tp",
-      "agg": "any",
-      "history_key": "patient_id",
-      "version_order": "version_then_filter"
+      "agg": "min",
+      "episode": "index_episode"
+    },
+    {
+      "name": "temp_max_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "temperature"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "max",
+      "episode": "index_episode"
+    },
+    {
+      "name": "service",
+      "source": "admission_info",
+      "column": "service",
+      "scope": "index_admission",
+      "agg": "value"
     },
     {
       "name": "sbp_slope_24h",
@@ -619,11 +491,139 @@
       },
       "agg": "last",
       "episode": "index_episode"
+    },
+    {
+      "name": "bun_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "bun"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "episode": "index_episode"
+    },
+    {
+      "name": "hr_max_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "heart_rate"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "max",
+      "episode": "index_episode"
+    },
+    {
+      "name": "k_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "potassium"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "episode": "index_episode"
+    },
+    {
+      "name": "sbp_min_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "sbp"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "min",
+      "episode": "index_episode"
+    },
+    {
+      "name": "unit_at_tp",
+      "description": "tp에 머문 병동",
+      "source": "transfers",
+      "column": "unit",
+      "scope": "index_admission",
+      "time_column": "in_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "episode": "index_episode"
+    },
+    {
+      "name": "problem_ckd_active",
+      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다",
+      "source": "problem_list",
+      "filter": {
+        "icd_code": [
+          "N18"
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "scope": "patient_history",
+      "time_column": "recorded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "as_of": "tp",
+      "agg": "any",
+      "history_key": "patient_id",
+      "version_order": "version_then_filter"
+    },
+    {
+      "name": "cr_max_48h",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "tp-48h",
+        "end": "tp"
+      },
+      "agg": "max",
+      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다",
+      "episode": "index_episode"
     }
   ],
   "split_unit": "family",
   "split": {
-    "key": "family_id",
+    "key": "patient_id",
     "fallback_key": "person_id",
     "method": "group_holdout",
     "test_fraction": 0.3,

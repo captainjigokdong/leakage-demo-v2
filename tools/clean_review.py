@@ -11,6 +11,8 @@
 - r3: 스킬 있음(동결된 skill_src), 데이터 설명서 없음, aki_b·aki_c·readmit_b·readmit_c × 1회.
   격리는 3b 스킬 검수(tools/skill_review.py)와 같다: (가) 조건 폴더(.claude/skills/leakage-check, LEAKCHECK_HOME 사본).
 - r4: 3회차 뒤 확인 실행 (스킬 없음, 설명서 없음, 고친 설계서만).
+- r5: 4b 봉인 확인 뒤 확인 실행 (스킬 없음, 설명서 없음, 바뀐 설계서 중 2개, 2026-10-06 사용자 결정).
+- r6: r5와 같은 조건, 평가 하위 집단 수정 뒤 r5에서 쓰지 않은 바뀐 설계서 1개 (2026-10-06 사용자 결정).
 r3부터는 사용량을 줄이려고 보고서 본문을 쓰지 않고 findings.json만 내게 한다 (2026-10-06 사용자 결정).
 
 지시문: 3b 스킬 검수 지시문(findings.json 초안 형식 포함)에서 스킬과 무관한 부분을 그대로 쓰고, 2b 예비 검수의
@@ -43,7 +45,9 @@ BASE = Path("/srv/leakcleanreview")
 R3_NAMES = ["aki_b", "aki_c", "readmit_b", "readmit_c"]     # 3회차 설계서 (2026-10-06 사용자 결정)
 NAMES = ["aki_a", "aki_b", "aki_c", "aki_d", "readmit_a", "readmit_b", "readmit_c", "readmit_d"]
 ROUNDS = {"r1": {"dict": True, "skill": False, "short": False}, "r2": {"dict": False, "skill": False, "short": False},
-          "r3": {"dict": False, "skill": True, "short": True}, "r4": {"dict": False, "skill": False, "short": True}}
+          "r3": {"dict": False, "skill": True, "short": True}, "r4": {"dict": False, "skill": False, "short": True},
+          "r5": {"dict": False, "skill": False, "short": True},
+          "r6": {"dict": False, "skill": False, "short": True}}
 
 PROMPT = """이 작업 폴더에 예측 모델 설계서 `design.json`과 합성 EHR 데이터 폴더 `data`가 있다. 데이터의 환자는 모두 가상이다.{extra}
 

@@ -24,7 +24,7 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
 
 ## 현재 단계
 
-**4단계 4a 완료** (2026-10-06) — 깨끗한 설계서 8개(`designs/clean_v2/`), 검수, 정당한 지적 목록(`docs/justified_findings_v2.json`), **잠정** 잠금 `docs/lock_4a_v2.json`, 추첨·배치 스크립트와 시드(`designs/build_v2.py`), 정답표 형식(`docs/answer_key_format_v2.md`). 다음은 **4b(봉인 확인·추첨·변형·정답표)** 이고 새 세션에서 사용자가 암호를 줄 때 한다. 시작 전에 **4a PR이 main에 병합됐는지** 확인한다. 순서는 `docs/phases.md` 4b의 "시작 확인" → "첫 순서: 봉인 확인" 1)~7) → "할 일". `designs/build_v2.py`와 시드는 바꾸지 않는다 (시험 `tests/test_build_v2.py`). `leakcheck/`, `skill_src/`, `designs/schema.json`은 계속 동결 (버그는 `docs/known_issues_v2.md`). 결함 변형에는 점검기를 돌리지 않는다.
+**4단계 4b 완료** (2026-10-06) — 봉인 확인 뒤 동적 깨끗한 설계서 수정·다시 잠금(`docs/lock_4a_v2.json` 확정), 배치 제외 목록(봉인, 해시 잠금), 추첨·배치, v2 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 기록 `docs/stage4b_v2.md`. 보류 사례 정답 칸은 기본값(㉣). 다음은 **5단계(기준)** 이고 새 세션에서 한다. 시작 전에 **4b PR이 main에 병합됐는지** 확인한다. 5·6단계는 **변형끼리 또는 변형과 깨끗한 설계서를 비교하지 않고, 정답표와 봉인 파일을 열지 않는다.** `leakcheck/`, `skill_src/`, `designs/schema.json`은 계속 동결 (버그는 `docs/known_issues_v2.md`).
 
 ## 절대 규칙
 
@@ -66,5 +66,5 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
   sealed/       암호화된 봉인 파일만 (*.enc)
   docs/         계획 문서
   ```
-- `designs/variants/`의 20개는 v1 변형이다 (정답표는 v1 저장소에만). 4단계에서 v2 변형 30개로 바꾼다.
+- `designs/variants/`의 30개는 v2 변형이다 (4b, 정답표는 `sealed/answer_key.enc`). v1 변형 20개와 정답표는 v1 저장소에 있다.
 - 예시 환자, 수치는 모두 가상 값이다. 실제 환자 데이터는 이 저장소에 넣지 않는다.

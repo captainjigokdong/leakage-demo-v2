@@ -1,0 +1,52 @@
+[
+  {
+    "target": "cohort.exclusion.aki_known_by_tp",
+    "kind": "문제",
+    "problem": "이 제외 기준에만 episode 칸이 없어서 같은 에피소드의 앞 입원은 보지 않고 인덱스 입원만 본다. 같은 에피소드의 다른 기준(dialysis_by_tp)과 크레아티닌 특징(cr_last·cr_min_adm·cr_max_48h·n_cr)은 모두 episode=index_episode이다. 데이터에는 전원으로 이어진 2입원 에피소드가 220개 있다(앞 입원 퇴원 상태는 모두 transfer, 간격은 1시간 이하, 96개는 병원이 바뀜). 이 가운데 앞 입원에서 이미 KDIGO 크레아티닌 AKI가 확인된 뒤 입원이 22개, 랜드마크 행으로 89행이다. 이 행들은 제외되지 않고, 이미 생긴 AKI를 새 사건처럼 예측하는 표본으로 들어간다. 여기에 episode=index_episode를 넣을지 정해야 한다."
+  },
+  {
+    "target": "outcome.scope / outcome.reference.sources[inpatient_cr].scope / outcome.censoring.lost_to_followup",
+    "kind": "문제",
+    "problem": "결과의 범위와 KDIGO 기준값의 범위가 모두 index_admission이다. 에피소드의 앞 입원에서는 전원(=퇴원)이 결과 창 안에 있으면 결과 창이 거기서 끝나서 음성으로 센다. 하지만 이어지는 입원에서 생긴 AKI나 사망은 같은 데이터에 실제로 기록되어 있다(앞 입원의 창 안 전원이 384행). 뒤 입원에서는 몇 시간 전 앞 입원에서 잰 크레아티닌을 기준값으로 쓰지 않는다. 그래서 입원하고 48시간 안에 생긴 상승은 놓치고, 앞 입원에서 이어진 AKI의 회복 과정이 기준값을 바꾼다. 특징은 에피소드 단위인데 결과와 제외 기준은 입원 단위라서 서로 맞지 않는다. 에피소드 안 전원을 결과 추적의 끝(퇴원)으로 볼지, 에피소드 단위로 이어서 볼지 정해야 한다."
+  },
+  {
+    "target": "evaluation.subgroups",
+    "kind": "문제",
+    "problem": "evaluation.subgroups에는 unit_at_tp만 있다. 그런데 cohort.subgroups와 outcome.ascertainment.by_stratum에는 admit_weekday도 있고, notes는 하위 집단을 신뢰구간과 함께 보고한다고 적었다. 주말·야간에는 채혈이 적어 결과가 덜 잡힌다고 설계서 스스로 적었는데, 입원 요일별 성능은 평가 계획에 빠져 있다. 서로 어긋나는 부분이라 정리해야 한다."
+  },
+  {
+    "target": "outcome.history / outcome.description (측정법 보정 없는 결과 판정)",
+    "kind": "가정",
+    "problem": "결과는 보정하지 않은 값으로, 측정법이 같은 값끼리만 비교해 판정한다(설계서대로 따름). 데이터에서 두 병원 모두 2154년까지는 jaffe만, 2155년부터는 enzymatic만 있다(B 병원은 마지막 jaffe가 2154-12-05, 첫 enzymatic이 2155-01-29). 같은 입원 안에 두 측정법이 섞인 입원은 7개다. jaffe 값에는 고정된 +0.10이 있어서 1.5배 기준이 덜 민감해진다. 그래서 jaffe 기간(학습에만 있음)과 enzymatic 기간(평가 전부)의 결과 정의가 조금 다르다. 설계서는 보정하면 14행이 양성으로 바뀐다고 적었다. 결과율이 기간 사이에 이동하는 것을 받아들인다는 가정으로 진행한다."
+  },
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "가정",
+    "problem": "count_as_outcome이므로 tp 전에 채취했지만 tp까지 보고되지 않은 크레아티닌(보고 지연은 0.5~6시간)이 AKI 기준을 만족하면 양성으로 센다. 이때 사건 시각(채취 시각)은 tp보다 앞이다. 'tp에 알 수 없는 사건을 발견하는 것'도 예측 대상에 넣는다는 가정이다. 결과 창은 채취 시각 기준 (tp, tp+48h]로 두고, pending 값은 이 칸 규칙으로만 더한다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup",
+    "kind": "가정",
+    "problem": "창 안에 퇴원하면 퇴원 뒤는 보지 않고 음성으로 센다. 원내 랜드마크 28,761행 가운데 창 안 퇴원은 home 11,361행, transfer 1,830행, died 263행이다(died는 결과 양성). 외부 전원과 집으로 퇴원한 뒤의 AKI는 관측되지 않아 결과율이 실제보다 낮게 잡힌다. 설계서대로 원내에서 확인되는 사건으로 정의하고, 병동별 창 안 퇴원 비율을 한계로 보고한다."
+  },
+  {
+    "target": "features[episode=index_episode].window.start",
+    "kind": "가정",
+    "problem": "episode=index_episode인 특징의 창 시작 'admit'이 인덱스 입원 시각인지 에피소드 첫 입원 시각인지 적혀 있지 않다. tp는 인덱스 입원 시각 + 24~168시간이다. episode 칸의 뜻에 맞춰 에피소드 첫 입원 시각부터 tp까지로 해석한다. 예를 들어 cr_min_adm은 앞 입원 값을 포함한 최솟값이다."
+  },
+  {
+    "target": "features[service, admission_type]",
+    "kind": "점검 불가",
+    "problem": "admission_info에는 시각 칸이 없어서 service·admission_type이 tp에 이미 정해져 있던 값인지, 퇴원 때 확정된 값인지 데이터로 확인할 수 없다. 입원 시 값이라고 가정한다. admission_bookings가 있는 걸 보면 elective는 사전 예약으로 알 수 있는 정보로 보인다."
+  },
+  {
+    "target": "preprocessing[cr_method_align] / features[cr_last].assessment / outcome.ascertainment.method / features[age]",
+    "kind": "점검 불가",
+    "problem": "설계서가 근거로 드는 '데이터 설명서'가 작업 폴더에 없다(data에는 MANIFEST.json과 표 파일만 있음). jaffe 값이 0.10 mg/dL 높다는 고정 차이는 데이터만으로 확인할 수 없다. 원값 평균은 jaffe 1.32, enzymatic 1.18이지만 기간과 환자가 달라서 측정법 차이로 볼 수 없다. 그 밖의 서술은 데이터와 어긋나지 않는다. 병동 채혈 빈도는 0.57회/일(2150)에서 0.65회/일(2159)로 늘었고 ICU는 약 1.9회/일로 일정하다. 나이 95 상한에는 103명이 있다. 0.10은 설계서 값을 그대로 쓴다."
+  },
+  {
+    "target": "intended_use.setting / split.by_site",
+    "kind": "가정",
+    "problem": "B 병원 입원은 276건으로 전체 7,724건의 3.6%이다. by_site=false이고 병원별 하위 집단 평가도 없어서, B 병원 성능은 따로 확인되지 않은 채 A·B 전체 배포를 전제한다. 이를 한계로 적는다."
+  }
+]

@@ -2,10 +2,14 @@
 
 보류 사례 내용은 쓰지 않는다. 배치 시험은 가짜 보류 사례 6개로 한다.
 결함 변형에는 점검기를 돌리지 않는다 (성공 기준 고정 전, 2026-10-03 사용자 결정).
+
+"배치"·"맹검"의 시험은 v1 생성 경로(`designs.inject.build`, v1 기본 설계서·변형 20개)를 시험한다 (기록용, 4b 사용자 결정 ㉡).
+v2 변형 30개는 `tools/make_variants_v2.py`가 만들고 시험은 `tests/test_make_variants_v2.py`와 아래 "커밋된 변형"이다.
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections import Counter
 from pathlib import Path
@@ -162,7 +166,7 @@ def test_injected_names_follow_base_naming():
                 assert not bad.search(op["value"]["name"])
 
 
-# --- 배치 ---
+# --- 배치 (v1 생성 경로) ---
 
 def test_layout_constraints(cases, built):
     _, key = built
@@ -214,7 +218,7 @@ def test_build_is_deterministic(cases):
     assert a == b
 
 
-# --- 맹검 ---
+# --- 맹검 (v1 생성 경로) ---
 
 def test_variants_are_blind_and_valid(built):
     variants, key = built
@@ -227,15 +231,6 @@ def test_variants_are_blind_and_valid(built):
         assert validate(v) == []
 
 
-@pytest.mark.skip(reason="4단계 완료 시 반드시 통과 (v1 기본 설계서·v1 변형이 v2 규칙표·v2 데이터와 맞지 않음. v2 깨끗한 설계서 8개 기준으로 바꿈, 3단계 승인 ②)")
-def test_clean_variants_pass_checker(built, small_tables):
-    """깨끗한 변형(정당한 변경 포함)만 점검기로 확인한다."""
-    variants, key = built
-    for fname, v in variants.items():
-        if not key[fname]["defects"]:
-            assert run_checks(v, small_tables).problems() == [], fname
-
-
 def test_seal_key_roundtrip(built):
     _, key = built
     blob = inj.seal_key({"variants": key}, "pw")
@@ -245,23 +240,56 @@ def test_seal_key_roundtrip(built):
         decrypt_bytes(blob, "wrong")
 
 
-# --- 커밋된 변형 ---
+# --- 커밋된 변형 (v2, 4b) ---
 
 VARIANTS = sorted((ROOT / "designs" / "variants").glob("*.json"))
+ANSWER_KEY = ROOT / "sealed" / "answer_key.enc"
+VARIANT_LIST = ROOT / "docs" / "variants_v2.md"
+needs_password = pytest.mark.skipif(not (os.environ.get("SEAL_PASSWORD") and ANSWER_KEY.exists()),
+                                    reason="암호 필요 (sealed/answer_key.enc)")
 
 
-@pytest.mark.skipif(not VARIANTS, reason="변형이 아직 생성되지 않음")
+def committed_key() -> dict:
+    return json.loads(decrypt_bytes(ANSWER_KEY.read_bytes(), os.environ["SEAL_PASSWORD"]))
+
+
 def test_committed_variants():
-    assert len(VARIANTS) == 20
+    """v2 변형 30개 (결함 22 + 깨끗한 8, 동적·고정 15개씩). 파일 해시는 docs/variants_v2.md 목록과 같다."""
+    assert len(VARIANTS) == 30
+    from experiment.grader import injection_log_hashes
+    listed = injection_log_hashes(VARIANT_LIST)
+    assert set(listed) == {p.name for p in VARIANTS}
     types = Counter()
     for p in VARIANTS:
         assert re.fullmatch(r"design_[0-9A-F]{4}\.json", p.name)
         text = p.read_text(encoding="utf-8")
-        assert not CASE_ID.search(text)
+        assert inj.file_sha256(text) == listed[p.name]
+        assert not re.search(r"\b[EC]\d{2}\b", text)
         d = json.loads(text)
         assert d["design_id"] == p.stem
         assert validate(d) == []
         types[d["design_type"]] += 1
-    assert types == {"dynamic": 10, "fixed": 10}
-    if not (ROOT / "sealed" / "answer_key.enc").exists():
-        pytest.skip("정답표 봉인본 없음 (v1 변형의 정답표는 v1 저장소에만 보존)")
+    assert types == {"dynamic": 15, "fixed": 15}
+    assert ANSWER_KEY.exists()
+    if not os.environ.get("SEAL_PASSWORD"):
+        return
+    from designs.answer_key_v2 import validate_key
+    key = committed_key()
+    assert validate_key(key) == []
+    V = key["variants"]
+    assert set(V) == set(listed) and all(V[f]["sha256"] == listed[f] for f in V)
+    assert sorted(v["base"] for v in V.values() if not v["defects"]) == sorted(EXPECTED_CLEAN_PROBLEMS)
+    assert Counter(len(v["defects"]) for v in V.values()) == {0: 8, 1: 14, 2: 8}
+    assert sum(d["holdout"] for v in V.values() for d in v["defects"]) == 12
+
+
+@needs_password
+@pytest.mark.parametrize("data", ["design", "small", "main"])
+def test_clean_variants_pass_checker(data, small_tables, main_tables):
+    """깨끗한 변형 8개만 점검기로 확인한다 (결함 변형에는 돌리지 않는다). 남는 판정이 바탕의 기대 집합과 정확히 같다 (승인 D)."""
+    tables = {"design": None, "small": small_tables, "main": main_tables}[data]
+    clean_vs = {f: v for f, v in committed_key()["variants"].items() if not v["defects"]}
+    assert len(clean_vs) == 8
+    for fname, v in sorted(clean_vs.items()):
+        d = json.loads((ROOT / "designs" / "variants" / fname).read_text(encoding="utf-8"))
+        assert _problems(run_checks(d, tables)) == EXPECTED_CLEAN_PROBLEMS[v["base"]], fname

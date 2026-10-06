@@ -1,6 +1,8 @@
 """48개 사례가 넓어진 설계서 형식에 조정 없이 주입되는가 (v2 2단계 2c).
 
-- 대상 설계서: 시험용 기본 설계서 `designs/prereview/` (유형별 1개, 읽기 전용).
+- 대상 설계서: 깨끗한 설계서 `designs/clean_v2/` (유형별 4개, 4b 사용자 승인 2026-10-06). 새 후보는 4b 봉인 확인의
+  배치 제외 목록(`sealed/stage4b_record.enc`, 해시는 docs/lock_4a_v2.json)에 없는 모든 조합에서 적용되어야 한다.
+  2c 기록과 대조하는 시험(봉인 바탕·전제·중복)은 2c 시험용 기본 설계서 `designs/prereview/`를 그대로 쓴다.
 - v1 사례 18개: `designs/patches_v1_cases.py`. 암호 없이 돈다.
 - 새 후보 30개: 패치는 `sealed/stage2c_record.enc`에만 있다. SEAL_PASSWORD가 있을 때만 돈다
   (건너뜀 표: 4단계 시작 시 반드시 통과). 화면에는 번호와 통과·실패만 나온다.
@@ -23,6 +25,7 @@ import pandas as pd
 import pytest
 
 from designs import substance
+from designs.build_v2 import load_clean
 from designs.inject import TYPE_KO, apply_ops, targets_of
 from designs.patches_v1_cases import V1_CASE_PATCHES, load_test_bases
 from synth.tables_v2 import DERIVED_V2, TABLES_V2
@@ -32,6 +35,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = json.loads((ROOT / "designs" / "schema.json").read_text(encoding="utf-8"))
 CATALOG = ROOT / "designs" / "error_catalog_public.csv"
 RECORD = ROOT / "sealed" / "stage2c_record.enc"
+RECORD_4B = ROOT / "sealed" / "stage4b_record.enc"
+LOCK = ROOT / "docs" / "lock_4a_v2.json"
 CANDIDATES = ROOT / "sealed" / "candidates.enc"
 V1_CATALOG_HASH = "0cd3b12bbe164899bb13c9f18ae478e115fb44c3d7c94dd18ed60706cd11f357"   # v1 docs/holdout_log.md
 NEW_ALLOCATION = {"Q1": 8, "Q2": 4, "Q3": 5, "Q4": 4, "Q5": 5, "Q7": 4}               # docs/seal_log_v2.md
@@ -46,6 +51,11 @@ def catalog_rows() -> list[dict]:
 
 V1_ROWS = {r["id"]: r for r in catalog_rows()}
 BASES = load_test_bases()
+CLEAN = load_clean()
+
+
+def clean_bases(t: str) -> dict[str, dict]:
+    return {n: d for n, d in CLEAN.items() if d["design_type"] == t}
 
 
 # --- 공통 점검 -------------------------------------------------------------
@@ -177,7 +187,10 @@ V1_PARAMS = [pytest.param(cid, id=cid) for cid in sorted(V1_CASE_PATCHES)]
 
 @pytest.mark.parametrize("cid", V1_PARAMS)
 def test_v1_case_injects_without_adjustment(cid):
-    assert check_case(V1_CASE_PATCHES[cid], TYPE_KO[V1_ROWS[cid]["design_types"]]) == []
+    """해당 유형의 깨끗한 설계서 4개 모두에 적용된다 (공개 18개, 88조합)."""
+    for t in TYPE_KO[V1_ROWS[cid]["design_types"]]:
+        for name, b in clean_bases(t).items():
+            assert check_case(V1_CASE_PATCHES[cid], [t], {t: b}) == [], (cid, name)
 
 
 @pytest.mark.parametrize("cid", V1_PARAMS)
@@ -276,12 +289,30 @@ def test_sealed_bases_valid_and_differ_only_in_case_state(sealed):
         assert changed and changed <= set(record["base_changes"][key]), key
 
 
+def exclusions_sha256(excl: list[dict]) -> str:
+    return hashlib.sha256(json.dumps(excl, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
 @needs_password
 def test_new_cases_inject_without_adjustment(sealed):
+    """깨끗한 설계서 바탕 (4b 사용자 승인): 배치 제외 목록에 없는 모든 조합에서 적용된다. 목록은 해시로 잠겨 있다."""
+    from tools.seal import decrypt_bytes
     record, cands = sealed
-    failed = [c["id"] for c in record["cases"] for t in c["placeable_types"]    # R1: 전제 없는 유형은 배치하지 않음
-              if check_case(c["ops"][t], [t], _bases_for(record, c))]
+    rec4b = json.loads(decrypt_bytes(RECORD_4B.read_bytes(), os.environ["SEAL_PASSWORD"]))
+    excl = rec4b["exclusions"]
+    assert exclusions_sha256(excl) == json.loads(LOCK.read_text(encoding="utf-8"))["exclusions_4b_sha256"]
+    skip = {(e["case"], e["base"]) for e in excl}
+    failed, n = [], 0
+    for c in record["cases"]:
+        for t in c["placeable_types"]:                                   # R1: 전제 없는 유형은 배치하지 않음
+            for name, b in clean_bases(t).items():
+                if (c["id"], name) in skip:
+                    continue
+                n += 1
+                if check_case(c["ops"][t], [t], {t: b}):
+                    failed.append(c["id"])
     assert not failed, f"주입 점검 실패: {sorted(set(failed))}"
+    assert n == 160 - len(excl)
 
 
 @needs_password
