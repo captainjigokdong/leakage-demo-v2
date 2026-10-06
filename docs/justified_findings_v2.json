@@ -1,0 +1,248 @@
+{
+ "status": "안 (승인 C 전, 잠금 아님)",
+ "date": "2026-10-06",
+ "note": "칸 경로는 designs/inject 경로 표기. cells_by_design이 있으면 설계서마다 칸이 다르다.",
+ "items": [
+  {
+   "id": "L1",
+   "from": "K2",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "data_source.death_source"
+   ],
+   "evidence": "원내 사망만 쓰는 것이 질문(원내 사건)과 맞다. 연계 자료로 바꾸면 결과가 바뀌는 행 1 / 28,074, 사망 연계 반영일(2159-07-01) 뒤 행 1,462"
+  },
+  {
+   "id": "L2",
+   "from": "D1b",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.scope",
+    "outcome.reference.sources[name=inpatient_cr].scope",
+    "cohort.exclusion[name=aki_known_by_tp]"
+   ],
+   "evidence": "결과·기준값·제외 기준은 입원 기록 단위 (형식의 결과에 episode 칸 없음). 이어진 에피소드 220, 앞 기록 랜드마크 712 중 창 안 기록 전환 348, 뒤 기록 랜드마크 727. 제외 기준에서 episode 칸을 빼도 바뀐 행 0"
+  },
+  {
+   "id": "L3",
+   "from": "D2 일부",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.pending_at_tp"
+   ],
+   "evidence": "tp 전 채취·tp 뒤 보고로 양성인 행 32 (count_as_outcome, 승인 A)"
+  },
+  {
+   "id": "L4",
+   "from": "D4",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.history"
+   ],
+   "evidence": "결과 판정은 측정법 보정 없는 원값. jaffe 값을 0.10 내리면 음성→양성 14행, 양성→음성 0행. 형식에 결과 보정 칸이 없고 점검기는 method를 쓰지 않는다"
+  },
+  {
+   "id": "L5",
+   "from": "D5",
+   "designs": [
+    "aki_a",
+    "aki_c",
+    "readmit_a",
+    "readmit_c"
+   ],
+   "cells": [
+    "split.method"
+   ],
+   "evidence": "시간 순 분할의 묶음 제외 (3단계 D5 해석). 학습·평가 어디에도 안 쓰는 행 (간격 포함): aki_a 2,143, aki_c 2,249, readmit_a 543, readmit_c 566"
+  },
+  {
+   "id": "L6",
+   "from": "D6",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells_by_design": {
+    "aki_a": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "aki_b": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "aki_c": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key",
+     "features[name=n_admissions_to_tp].history_key"
+    ],
+    "aki_d": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "readmit_a": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "readmit_b": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key",
+     "features[name=n_clinic_365d].history_key",
+     "features[name=prior_dx_group].history_key"
+    ],
+    "readmit_c": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key",
+     "features[name=prior_cr_last].history_key"
+    ],
+    "readmit_d": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ]
+   },
+   "evidence": "지금 설계가 옳다: person_id는 자료 추출 때 연결되어 tp에는 알 수 없다. 등록 번호 둘인 사람 111명"
+  },
+  {
+   "id": "L7",
+   "from": "D8",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.ascertainment.blind_to_predictors"
+   ],
+   "evidence": "지금 설계가 옳다: KDIGO 기준값은 정의상 이전 크레아티닌이고 판정은 규칙 코드가 한다"
+  },
+  {
+   "id": "L8",
+   "from": "C2",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells": [
+    "split.key",
+    "model.tuning.cv_key"
+   ],
+   "evidence": "family_id 결측 80.4% (4,108 / 5,111명). 기록되지 않은 가족은 데이터로 알 수 없다 (점검기 가정 A.family_missing)"
+  },
+  {
+   "id": "L9",
+   "from": "C4",
+   "designs": [
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells": [
+    "outcome.ascertainment.scope.sites"
+   ],
+   "evidence": "A·B 밖 병원 재입원은 데이터에 없다 (설명서, 점검기 가정 A.outside_sites)"
+  },
+  {
+   "id": "L10",
+   "from": "왼쪽 절단",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells_by_design": {
+    "aki_a": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "aki_b": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "aki_c": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window",
+     "features[name=n_admissions_to_tp].window"
+    ],
+    "aki_d": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "readmit_a": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "readmit_b": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window",
+     "features[name=n_clinic_365d].window",
+     "features[name=prior_dx_group].window"
+    ],
+    "readmit_c": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window",
+     "features[name=prior_cr_last].window"
+    ],
+    "readmit_d": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window"
+    ]
+   },
+   "evidence": "학습 행 중 관찰 기간 365일 미만: aki 8.4~12.2%, readmit 9.0~12.9% (고정은 에피소드 마지막 입원 코호트)"
+  }
+ ]
+}

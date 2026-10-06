@@ -1,0 +1,27 @@
+[
+  {
+    "target": "data_source.death_source",
+    "kind": "문제",
+    "problem": "[점검기 경고 · Q7 결과 확인 균질성] 근거: 규칙 O.death_source · 값: death_source=in_hospital_only, censoring.death=composite_outcome. 사망을 결과에 넣는데 원내 사망 기록만 쓰므로, 결과 창 안에 퇴원한 행은 원외 사망을 놓친다. 데이터 확인: 대략 만든 랜드마크 28,701행 중 13,417행이 결과 창 안에 퇴원한다(자택 11,331, 전원 1,823, 사망 263). 다만 퇴원 뒤 48시간 안 사망은 데이터 전체에서 2건뿐이라 실제 영향은 작다. 수정안: 점검기 제안대로 death_source=linked_registry로 바꾸면, extract_info.death_linkage_through=2159-07-01이라 tp+48h가 이 날짜 뒤인 행은 원외 사망을 확인할 수 없다. 이 행들은 빼거나 사망 연계 범위에 맞춰 extraction_end 기준을 앞당겨야 한다. 질문을 '원내 사망'으로 유지한다면 이 한계를 보고서에 적고, 창 안 퇴원 비율을 병동별로 보고한다(outcome.ascertainment.method에 이미 적혀 있음)."
+  },
+  {
+    "target": "outcome.scope",
+    "kind": "문제",
+    "problem": "[추가 의심 · Q7/Q4] 결과(outcome.scope, reference.sources.scope)와 제외 기준 cohort.exclusion.aki_known_by_tp는 index_admission 범위인데, 특징은 episode=index_episode로 에피소드 전체를 쓴다. 데이터에서 220개 에피소드가 두 입원 기록으로 이어지고(앞 기록의 discharge_status는 모두 transfer, 96개는 A→B 병원). 근거: (1) 결과 창 안에 같은 에피소드의 다음 입원 기록으로 넘어가는 랜드마크 행이 약 382행이고, 그중 374행은 다음 기록 안·창 안에 크레아티닌이 있다. 에피소드 기준값으로 보면 그중 4행은 창 안 AKI가 있는데, 현재 정의로는 퇴원 뒤로 보아 음성(lost_to_followup=count_as_negative)이 된다. 환자는 계속 입원 중이므로 원내 사건을 놓치는 것이다. (2) 둘째 입원 기록의 랜드마크 행(약 791행)은 앞 기록의 크레아티닌을 KDIGO 기준값으로도, 이미 생긴 AKI 제외에도 쓰지 않는다. 그래서 앞 기록에서 이미 AKI였던 행이 남거나, 기준값이 빠져 AKI를 덜 잡을 수 있다. 수정안: 결과·기준값·aki_known_by_tp·dialysis_by_tp·in_hospital_at_tp의 범위를 index_episode로 맞춘다(에피소드의 다음 기록은 tp 뒤의 원내 기록이고, 특징은 이미 tp까지만 쓰므로 Q1 규칙과 충돌하지 않는다). 또는 tp 기준을 에피소드 입원 시각으로 정의한다."
+  },
+  {
+    "target": "outcome.history",
+    "kind": "문제",
+    "problem": "[추가 의심 · Q7 결과 확인 균질성] 크레아티닌 측정법이 2155-01-01에 jaffe→enzymatic으로 바뀌었다(데이터: 두 병원 모두 2155 전 채취는 jaffe, 뒤는 enzymatic. 한 입원 안에서 측정법이 섞인 입원은 7개). handled는 '같은 측정법끼리만 비교'인데, 이렇게 해도 KDIGO 7일 1.5배 기준은 비율 기준이라 고정 차이(jaffe가 0.10 mg/dL 높음)가 상쇄되지 않는다. jaffe 기간에는 기준값이 부풀어 1.5배 기준을 덜 만족한다. outcome.description에도 'jaffe 값을 0.10 내려 보정하면 14행이 음성에서 양성으로 바뀐다'고 적혀 있다. 시간 순 분할(cutoff 2157-01-01)이라 학습 부분에는 두 측정법이 섞이고 평가 부분은 enzymatic뿐이어서, 결과 확인 강도가 학습과 평가에서 다르다. 특징은 cr_method_align으로 enzymatic 눈금에 맞추면서 결과는 맞추지 않아 서술도 서로 어긋난다. 수정안: 결과 판정에도 jaffe 값에서 0.10을 뺀 값을 쓰거나(고정 상수라 적합이 아니므로 Q3에 걸리지 않음), 원값을 유지할 경우 측정법 기간별 결과율을 보고하고 측정법 기간을 층으로 다룬다."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정 · Q2 독립 단위] 근거: 3층 가정 A.family_missing. family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(fallback_key) person_id로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다. 데이터: patients 5,111행 중 4,108행(약 80%)에서 family_id가 비어 있다."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정 · Q2 독립 단위] 근거: 3층 가정 A.family_missing. family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(fallback_key) person_id로 묶는다. 기록되지 않은 가족은 교차검증 폴드 사이에 나뉠 수 있다."
+  }
+]

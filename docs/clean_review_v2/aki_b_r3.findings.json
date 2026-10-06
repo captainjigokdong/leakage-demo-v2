@@ -1,0 +1,32 @@
+[
+  {
+    "target": "data_source.death_source",
+    "kind": "문제",
+    "problem": "[점검기 경고, Q7 결과 확인 균질성] 근거: 규칙 O.death_source · 값: death_source=in_hospital_only, censoring.death=composite_outcome. 사망을 결과에 넣는데 원내 사망 기록만 쓰므로, 결과 창(tp, tp+48h] 안에 퇴원한 행은 원외 사망을 놓친다. 데이터 확인: deaths 496건 중 336건이 원외 사망(registry_link)이다. 점검기 수정안: death_source=linked_registry로 바꾼다. 추가 확인(②): extract_info.death_linkage_through는 2159-07-01이다. 따라서 연계 자료로 바꾸면 tp+48h가 2159-07-01 뒤인 행은 사망 확인이 완전하지 않다. 이런 행은 outcome.censoring.end_of_data=exclude_incomplete와 같은 방식으로 빼야 한다. 결과를 계속 '원내 사건'으로 정의하려면, 창 안 퇴원 행의 결과율을 퇴원처(home/transfer)별로 보고하고 이를 한계로 적어야 한다."
+  },
+  {
+    "target": "cohort.exclusion.aki_known_by_tp",
+    "kind": "문제",
+    "problem": "[추가 의심, Q5 선택 시점·정의 일관성] 이 기준에는 episode 칸이 없어 scope=index_admission만 본다. 같은 에피소드의 앞 입원 기록에서 이미 생긴 AKI는 제외하지 않는다. 반면 cohort.exclusion.dialysis_by_tp와 크레아티닌 특징(cr_last, cr_min_adm, cr_max_48h, n_cr)은 episode=index_episode를 쓴다. 데이터 확인: 입원 기록 두 개로 이어진 에피소드가 220개다(앞 기록의 discharge_status는 모두 transfer, 간격 1~60분). 그중 22개는 앞 기록에서 KDIGO AKI가 이미 확인되었고, 뒤 기록의 재원 기간이 24시간을 넘어 랜드마크 행이 생긴다. 이렇게 이미 AKI가 있는 환자가 '새 AKI' 예측 코호트에 들어간다. 수정안: aki_known_by_tp에 episode=index_episode를 더해 dialysis_by_tp·특징과 범위를 맞춘다. 값은 report_time ≤ tp 기준이라 규칙 T.labs에서 tp 전에 알려진 값이다."
+  },
+  {
+    "target": "outcome.scope",
+    "kind": "문제",
+    "problem": "[추가 의심, Q7 결과 확인 균질성] 결과와 KDIGO 기준값(outcome.reference.sources[].scope)은 index_admission에 한정된다. 그래서 에피소드 안에서 입원 기록이 바뀌면(전동·전원) 결과 확인이 끊기고 기준값이 새로 잡힌다. 특징은 episode=index_episode로 앞 기록 값을 쓰므로 특징과 결과의 범위가 맞지 않는다. 데이터 확인: 앞 기록의 랜드마크 중 결과 창이 기록 전환을 넘는 행이 384개다. 그중 4개는 뒤 기록에서 에피소드 기준값으로 보면 AKI인데, 현재 정의로는 음성이 된다. 전환 96건은 A→B 병원 이동이다. 수정안: outcome.scope와 reference.sources[].scope를 에피소드 단위로 넓힌다(사건 시각은 그대로 collect_time). 넓히지 않을 경우 전동 퇴원(discharge_status=transfer) 층의 결과율을 따로 보고한다."
+  },
+  {
+    "target": "outcome.history",
+    "kind": "문제",
+    "problem": "[추가 의심, Q7 결과 확인 균질성] history.handled는 같은 측정법끼리만 비교하는 방식으로 측정법 변경을 처리한다. 그러나 jaffe 값은 enzymatic보다 0.10 mg/dL 높으므로, 같은 측정법끼리 비교해도 7일 1.5배 기준(비율)은 jaffe 기간(2150~2154년 채취)에 덜 민감하다. outcome.description에도 'jaffe 값을 0.10 내려 보정하면 14행이 음성에서 양성으로 바뀐다'고 적혀 있다. 즉 결과를 확인하는 강도가 연구 기간 앞뒤로 다르다. 데이터 확인: 크레아티닌은 2150~2154년에 모두 jaffe, 2155~2159년에 모두 enzymatic이며, 측정법이 섞인 입원은 7건이다. 분할은 group_holdout(시간 무관)이라 두 기간이 학습·평가에 섞인다. 수정안: 측정법 기간(채취 연도 <2155, ≥2155)별로 결과율과 성능을 보고한다. 또는 사전에 정한 민감도 분석으로 보정값 판정 결과를 함께 낸다. 결과 정의 자체를 바꾸면 prespecified=true와 어긋나므로, 바꾸려면 모델링 전에 설계서에서 바꾼다."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정, Q2 독립 단위] 근거: 3층 가정 A.family_missing. family_id가 비어 있는 행은 가족 관계를 알 수 없어 대체 키(person_id)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다. 데이터 확인: patients의 family_id 결측 비율은 80.4%다."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정, Q2 독립 단위] 근거: 3층 가정 A.family_missing. family_id가 비어 있는 행은 대체 키(person_id)로 묶는다. 기록되지 않은 가족은 교차검증 폴드 사이에 나뉠 수 있다."
+  }
+]

@@ -1,0 +1,27 @@
+[
+  {
+    "target": "cohort.rows_per_unit",
+    "kind": "문제",
+    "problem": "[② 추가 의심, Q4·Q5] 결론: 점검기 차단 0·경고 0·점검 불가 0·가정 4. 다만 점검기의 데이터 확인과 결정 카드(--card)는 설계서의 rows_per_unit(episode, last)을 적용하지 않은 코호트로 계산되었다. 근거: 카드의 예측 행 6,706·결과 1,122건(16.7%)은 '모든 입원 중 성인·생존 퇴원·2158-12-01 이전 퇴원' 행을 그대로 센 값과 정확히 같다(스크립트로 재현). 데이터에서 admission_info.episode_id가 같은 입원 두 개짜리 에피소드가 220개이고(앞 입원은 모두 discharge_status=transfer, 다음 입원까지 0~60분), 그중 제외 기준을 통과한 앞 입원 192행이 카드에 들어가 있다. 이 192행의 결과율은 93.8%이며 154행은 같은 에피소드의 이어진 입원만으로 양성이 된다. 설계서 outcome.description이 '같은 에피소드 안에서 바로 이어진 입원은 재입원으로 보지 않는다'고 한 것과 어긋나며, 결과를 정하는 사건(이어진 입원)이 행 선택과 결과를 동시에 정한다. 그 결과 카드의 discharge_status=transfer 결과율이 29.1%(943행)로 부풀려져 있어 Q7 층별 보고(outcome.ascertainment.by_stratum)도 잘못 읽힌다. 설계대로(에피소드 마지막 입원을 고른 뒤 제외 기준 적용) 다시 계산한 값: 예측 행 6,514, 결과 942건(14.5%), transfer 751행 12.5%, home 5,763행 14.7%, ICU 1,587행 22.3%, ward 4,927행 11.9%, A 6,289행 14.5%, B 225행 13.8%. Q1·Q5 데이터 확인(0/6,706 위반)은 설계 코호트를 포함하는 더 큰 집합에서 한 것이라 통과 판정은 유지된다. 수정안: 설계서는 고치지 않고, 모델링 파이프라인에서 admission_info.episode_id(이어진 입원 간격 ≤ 1h, rules EPISODE_GAP_MAX_H)로 에피소드의 마지막 입원만 고른 뒤 제외 기준을 적용한다. 사람의 승인을 받을 때는 카드의 6,706/16.7%가 아니라 위의 6,514/14.5% 값으로 확인받는다."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[③ 가정, Q2, 3층 가정 A.family_missing] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(fallback_key)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다 (대체 키 person_id). 데이터: patients.family_id 결측 80.4%."
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[③ 가정, Q2, 3층 가정 A.family_missing] family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(fallback_key)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다 (대체 키 person_id)"
+  },
+  {
+    "target": "cohort.rows_per_unit",
+    "kind": "가정",
+    "problem": "[③ 가정, Q5, 3층 가정 A.episode_last, 조정: rules.EPISODE_GAP_MAX_H] 에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없음을 알아야 한다. 퇴원 때 안다고 본다 (형식에 다른 올바른 표현이 없음)"
+  },
+  {
+    "target": "outcome.ascertainment.scope.sites",
+    "kind": "가정",
+    "problem": "[③ 가정, Q7, 3층 가정 A.outside_sites] A·B 밖 병원의 사건은 데이터에 없다. 결과 확인 범위 밖에서 생긴 결과는 보이지 않는다"
+  }
+]
