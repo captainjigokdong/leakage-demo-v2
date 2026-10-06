@@ -904,70 +904,90 @@
   "rep": 2,
   "batch": 2,
   "variant": "design_25B7.json",
-  "order": 100
+  "order": 100,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "96186aafef80": {
   "condition": "가",
   "rep": 2,
   "batch": 2,
   "variant": "design_DEDE.json",
-  "order": 101
+  "order": 101,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "e3cb8f54fd0b": {
   "condition": "나",
   "rep": 2,
   "batch": 2,
   "variant": "design_3B00.json",
-  "order": 102
+  "order": 102,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "14824aa86d76": {
   "condition": "가",
   "rep": 2,
   "batch": 2,
   "variant": "design_A64C.json",
-  "order": 103
+  "order": 103,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "59dea5132e5e": {
   "condition": "가",
   "rep": 2,
   "batch": 2,
   "variant": "design_E7FA.json",
-  "order": 104
+  "order": 104,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "3fba2c4ea827": {
   "condition": "나",
   "rep": 2,
   "batch": 2,
   "variant": "design_B649.json",
-  "order": 105
+  "order": 105,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "ddb513d1d126": {
   "condition": "가",
   "rep": 2,
   "batch": 2,
   "variant": "design_D238.json",
-  "order": 106
+  "order": 106,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "e5cd9c9b15b8": {
   "condition": "나",
   "rep": 2,
   "batch": 2,
   "variant": "design_15FB.json",
-  "order": 107
+  "order": 107,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "daf87b6a2f20": {
   "condition": "나",
   "rep": 2,
   "batch": 2,
   "variant": "design_DEDE.json",
-  "order": 108
+  "order": 108,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "b9db24901a6b": {
   "condition": "나",
   "rep": 2,
   "batch": 2,
   "variant": "design_E819.json",
-  "order": 109
+  "order": 109,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "a1be205167bf": {
   "condition": "나",
