@@ -1,0 +1,5 @@
+{
+ "report_id": "3c616d816bd0",
+ "variant": "design_D238.json",
+ "findings": "[\n  {\n    \"target\": \"features.ward_type\",\n    \"kind\": \"문제\",\n    \"problem\": \"scope가 next_admission이라 퇴원(tp) 뒤 다음 입원의 병동을 특징으로 쓴다. 다음 입원이 있는지 자체가 결과(30일 재입원)와 겹치고 tp에는 알 수 없는 미래 정보이므로 결과 누설이다. 빼야 한다.\"\n  },\n  {\n    \"target\": \"preprocessing.dx_encode\",\n    \"kind\": \"문제\",\n    \"problem\": \"prior_dx_main을 결과값으로 target 인코딩하면서 fit_scope가 all이고 before_split이 true라서, 평가 부분의 결과가 인코딩 값에 들어가 평가 성능이 부풀려진다. 분할 뒤 학습 부분 안에서(교차검증 폴드별로) 적합하도록 고쳐야 한다.\"\n  },\n  {\n    \"target\": \"features.hgb_min.window\",\n    \"kind\": \"가정\",\n    \"problem\": \"episode가 index_episode인 특징(hgb_min, cr_last, dialysis_ordered, icu_any)의 창 시작 admit은 두 입원으로 나뉜 에피소드에서 첫 입원 기록의 admit_time으로 본다고 가정한다. 설계서에 어느 입원의 admit인지 적혀 있지 않다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"점검 불가\",\n    \"problem\": \"family_id가 약 80% 결측이고, 기록되지 않은 가족도 위험을 공유한다(데이터 설명서). 결측 행은 person_id로 묶이므로 학습·평가에 걸친 미기록 가족이 있는지는 데이터로 확인할 수 없다.\"\n  }\n]\n"
+}
