@@ -73,7 +73,7 @@
 |---|---|---|
 | `test_inject.py::test_base_passes_design_and_data` [dynamic, fixed] ×2 | (a) v1 기본 설계서(`designs/base/`)가 v2 규칙표·v2 데이터와 맞지 않음 (환자 단위 분할, 결과 이력 없음 등) | **4a 완료 시** → **4a에서 통과** (깨끗한 설계서 8개 ×1, 남는 판정이 기대 집합과 정확히 같은지: 동적 K2 하나, readmit_b K1 하나, 나머지 고정 없음. 설계서만·작은 데이터·본 데이터. 승인 D 2026-10-06). 건너뜀 21 → 19 |
 | `test_inject.py::test_clean_variants_pass_checker` | (a) v1 변형 20개 | **4b 완료 시** (깨끗한 변형 8개 기준. `test_base_passes_design_and_data`와 같은 방식: 바탕별 기대 집합과 정확히 같은지) → **4b에서 통과** (×3: 설계서만·작은 데이터·본 데이터. 어느 변형이 깨끗한지 정답표로 알므로 암호가 있을 때 돈다) |
-| `test_grader.py::test_checker_on_clean_base_has_no_false_alarm` | (a) v1 기본 설계서·v1 채점기 기준 | **5단계 완료 시** (v2 깨끗한 설계서·v2 채점기) |
+| `test_grader.py::test_checker_on_clean_base_has_no_false_alarm` | (a) v1 기본 설계서·v1 채점기 기준 | **5단계 완료 시** (v2 깨끗한 설계서·v2 채점기) → **5단계에서 통과**. 건너뜀 21 → 20 |
 
 **4b에서 더한 건너뜀 1개** (2026-10-06 사용자 결정)
 
@@ -87,8 +87,8 @@
 |---|---|---|
 | `test_data_v2.py::test_table_hash_matches_manifest` (테이블마다 하나, 34개) + `test_folder_files_equal_manifest` | `data/synth/`, `data/synth_aux/`의 v2 17개 테이블씩 → 각 `MANIFEST.json` | **2단계 2b에서 다시 잠금 완료** (v1 시험 `test_synth.py::test_committed_data_matches_manifest_and_criteria`를 대체, 사용자 승인 2026-10-04) |
 | `test_grader.py::test_verify_variants` | `designs/variants/` 20개 → `docs/injection_log.md` | 4b → **4b에서 다시 잠금**: v2 변형 30개 → `docs/variants_v2.md` (사용자 결정 ㉢, `grader.py`는 바꾸지 않음) |
-| `test_grader.py::test_locked_files_match_success_criteria` | `experiment/agent_prompt.md`, `grader.py`, `scoring_rules.md` → `docs/success_criteria.md` | 5단계 |
-| `test_grader.py::test_prompt_fixed_and_neutral` | `experiment/agent_prompt.md` → `experiment/prompt.py`의 해시와 `docs/success_criteria.md` | 5단계 |
+| `test_grader.py::test_locked_files_match_success_criteria` | `experiment/agent_prompt.md`, `grader.py`, `scoring_rules.md` → `docs/success_criteria.md` | 5단계 → **5단계에서 다시 잠금**: 지시문·`prompt.py`·채점기·채점 규칙·에이전트용 문서 2개·분석 계획 7개 → `docs/success_criteria_v2.md` (`run.py`는 6단계에서 고치므로 뺌) |
+| `test_grader.py::test_prompt_fixed_and_neutral` | `experiment/agent_prompt.md` → `experiment/prompt.py`의 해시와 `docs/success_criteria.md` | 5단계 → **5단계에서 다시 잠금** (`docs/success_criteria_v2.md`). 에이전트용 문서는 `test_agent_docs_neutral_and_locked` |
 
 잠금이 없는 것 (0단계에서 발견): `data/synth/outpatient_visits.csv.gz`(`OUTPATIENT_MANIFEST.json`에 해시는 있으나 대조 시험 없음), `leakcheck/`·`skill_src/`(태그와 규칙으로만 동결). 각각 2단계, 3단계에서 시험을 추가한다. → 외래 방문은 2b에서 해결 (`OUTPATIENT_MANIFEST.json`을 없애고 `MANIFEST.json` 하나로 합쳐 테이블마다 해시 시험).
 
@@ -288,25 +288,35 @@
 
 ## 5단계. 기준
 
+**시작 확인 (2026-10-06)**: main `d386ec3`(PR #7), 시험 579 통과·21 건너뜀·실패 0, 동결 폴더 변경 0줄. 건너뜀 21 중 **암호 필요 8개**(2c `test_injectability_v2` 5 + 4b `test_clean_variants_pass_checker` 3), 나머지 13개는 표의 해당 단계 몫.
+
 **할 일** (`v2_plan.md` 3.4, 3.5, 시행착오 3~6)
-- [ ] (4a에서 정함, 2026-10-05 사용자 결정) **변형끼리, 또는 변형과 깨끗한 설계서를 비교하지 않는다. 정답표와 봉인 파일을 열지 않는다.** (비교하면 심은 결함, 특히 보류 사례가 드러난다)
-- [ ] 에이전트 지시문 확정
-- [ ] (2b에서 넘김) 대조 조건 (나)에도 계정의 기본 제공 스킬 목록이 보인다 (2b 예비 검수에서 34개, `docs/prereview_v2/*.meta.json`의 `init.skills`). 누수 점검 스킬은 없었고 호출도 없었다. 두 조건에 어떻게 다룰지 정한다
-- [ ] `findings.json` 형식: `[{"target": 항목, "kind": "문제"|"가정"|"점검 불가", "problem": 설명}]`. 형식 검사 실패 시 "파일 형식만 고쳐 다시 제출" 1회 (두 조건 같게, 횟수 기록)
-- [ ] 채점기: "점검 불가"는 문장이 아니라 `kind` 칸으로 판정. 주 분석 항목 일치, 보조 분석 항목 + 종류. "가정"은 채점하지 않음
-- [ ] (3단계에서 넘김) 채점기의 항목 일치가 점검기·스킬의 target 표기(설계서 경로: `features.이름`, `cohort.inclusion.이름`, `cohort.exclusion.이름`, `preprocessing.이름`, `split.key`, `split_unit`, `model.tuning.cv_key`, `outcome.…` 등)를 받아야 한다
-- [ ] (3단계에서 정함, 2026-10-04 사용자 결정) `findings.json`의 kind는 `문제`·`가정`·`점검 불가` 세 개. 점검기의 경고도 `문제`로 낸다. 통과와 Q6 기록은 제출하지 않는다. ①(점검기)과 ②(에이전트 추가 의심)를 구분하는 칸은 두지 않는다 (두 조건의 제출 형식이 같아야 한다). 제출 파일의 이름·위치는 지시문이 정한다 (SKILL.md에 적지 않음)
-- [ ] 채점기 검증 세트: v1 보고서 119개의 지적 문장에서 뽑아 만들고, 그 세트로 채점기를 검증
-- [ ] 가설 기준 확정 (H1a·H1b·H1c는 따로 판정, H2a, H2b는 기술)
-- [ ] (2c에서 넘김) 채점 규칙에 여러 칸을 바꾸는 패치의 항목 일치 기준을 정한다
-- [ ] (2c에서 넘김) 예비 검수에서 에이전트가 형식 설명을 받지 않아 칸의 뜻을 오해한 지적이 있었다 (B6, B9). 두 조건의 에이전트에게 형식 설명을 줄지, 준다면 근거 표기를 뺀 판으로 줄지를 5단계에서 정한다.
-- [ ] (4a에서 넘김, 2026-10-05 사용자 지시) 공개 사례 4개(E05, E06, E07, E18)의 정답 칸이 깨끗한 설계서에서 점검기가 **가정**을 내는 칸과 같다 (E05~E07 `split.key` ↔ `A.family_missing`, E18 `outcome.ascertainment.scope.sites` ↔ `A.outside_sites`). kind가 "가정"인 지적은 탐지로도 오경보로도 세지 않는다는 점, 가정을 "문제"로 옮겨 적은 경우의 처리, 정당한 지적 목록의 칸이 결함 칸과 같은 경우의 처리를 채점기에서 정한다
-- [ ] 분석 계획 확정
-- [ ] (승인 C, 2026-10-06 사용자 지시) 점검기 문제 K1·K5(`docs/known_issues_v2.md`)에서 온 오경보는 정당한 지적 목록에 넣지 않고 오경보로 센다. 그 오경보를 뺀 수치를 **참고값**으로 함께 보고하는 방법을 분석 계획에 적는다 (판정에는 쓰지 않음)
-- [ ] (승인 C, 2026-10-06 사용자 지시) 실행당 턴 수 상한을 두 조건에 같게 둘지, 상한에 걸린 실행을 어떻게 처리할지 정한다. 근거: 4a 검수 실행의 토큰 중 캐시 읽기가 84~87% (`docs/clean_review_v2.md` 사용량 절)
-- [ ] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_locked_files_match_success_criteria`, `test_prompt_fixed_and_neutral`)
+- [x] (4a에서 정함, 2026-10-05 사용자 결정) **변형끼리, 또는 변형과 깨끗한 설계서를 비교하지 않는다. 정답표와 봉인 파일을 열지 않는다.** (비교하면 심은 결함, 특히 보류 사례가 드러난다)
+- [x] 에이전트 지시문 확정
+- [x] (2b에서 넘김) 대조 조건 (나)에도 계정의 기본 제공 스킬 목록이 보인다 (2b 예비 검수에서 34개, `docs/prereview_v2/*.meta.json`의 `init.skills`). 누수 점검 스킬은 없었고 호출도 없었다. 두 조건에 어떻게 다룰지 정한다
+- [x] `findings.json` 형식: `[{"target": 항목, "kind": "문제"|"가정"|"점검 불가", "problem": 설명}]`. 형식 검사 실패 시 "파일 형식만 고쳐 다시 제출" 1회 (두 조건 같게, 횟수 기록)
+- [x] 채점기: "점검 불가"는 문장이 아니라 `kind` 칸으로 판정. 주 분석 항목 일치, 보조 분석 항목 + 종류. "가정"은 채점하지 않음
+- [x] (3단계에서 넘김) 채점기의 항목 일치가 점검기·스킬의 target 표기(설계서 경로: `features.이름`, `cohort.inclusion.이름`, `cohort.exclusion.이름`, `preprocessing.이름`, `split.key`, `split_unit`, `model.tuning.cv_key`, `outcome.…` 등)를 받아야 한다
+- [x] (3단계에서 정함, 2026-10-04 사용자 결정) `findings.json`의 kind는 `문제`·`가정`·`점검 불가` 세 개. 점검기의 경고도 `문제`로 낸다. 통과와 Q6 기록은 제출하지 않는다. ①(점검기)과 ②(에이전트 추가 의심)를 구분하는 칸은 두지 않는다 (두 조건의 제출 형식이 같아야 한다). 제출 파일의 이름·위치는 지시문이 정한다 (SKILL.md에 적지 않음)
+- [x] 채점기 검증 세트: v1 보고서 119개의 지적 문장에서 뽑아 만들고, 그 세트로 채점기를 검증
+- [x] 가설 기준 확정 (H1a·H1b·H1c는 따로 판정, H2a, H2b는 기술)
+- [x] (2c에서 넘김) 채점 규칙에 여러 칸을 바꾸는 패치의 항목 일치 기준을 정한다
+- [x] (2c에서 넘김) 예비 검수에서 에이전트가 형식 설명을 받지 않아 칸의 뜻을 오해한 지적이 있었다 (B6, B9). 두 조건의 에이전트에게 형식 설명을 줄지, 준다면 근거 표기를 뺀 판으로 줄지를 5단계에서 정한다.
+- [x] (4a에서 넘김, 2026-10-05 사용자 지시) 공개 사례 4개(E05, E06, E07, E18)의 정답 칸이 깨끗한 설계서에서 점검기가 **가정**을 내는 칸과 같다 (E05~E07 `split.key` ↔ `A.family_missing`, E18 `outcome.ascertainment.scope.sites` ↔ `A.outside_sites`). kind가 "가정"인 지적은 탐지로도 오경보로도 세지 않는다는 점, 가정을 "문제"로 옮겨 적은 경우의 처리, 정당한 지적 목록의 칸이 결함 칸과 같은 경우의 처리를 채점기에서 정한다
+- [x] 분석 계획 확정
+- [x] (승인 C, 2026-10-06 사용자 지시) 점검기 문제 K1·K5(`docs/known_issues_v2.md`)에서 온 오경보는 정당한 지적 목록에 넣지 않고 오경보로 센다. 그 오경보를 뺀 수치를 **참고값**으로 함께 보고하는 방법을 분석 계획에 적는다 (판정에는 쓰지 않음)
+- [x] (승인 C, 2026-10-06 사용자 지시) 실행당 턴 수 상한을 두 조건에 같게 둘지, 상한에 걸린 실행을 어떻게 처리할지 정한다. 근거: 4a 검수 실행의 토큰 중 캐시 읽기가 84~87% (`docs/clean_review_v2.md` 사용량 절)
+- [x] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_locked_files_match_success_criteria`, `test_prompt_fixed_and_neutral`)
 
 **완료 기준**: 검증 세트 통과 → 사용자가 `criteria-locked-v2` 태그 생성
+
+**5단계 결과 (2026-10-06)**: 브랜치 `claude/v2-stage5-criteria`. 기준 `docs/success_criteria_v2.md`, 채점 규칙 `experiment/scoring_rules.md`(v2), 분석 계획 `docs/analysis_plan_v2.md`, 지시문 `experiment/agent_prompt.md`(v2, `findings.json`·kind 3종), 에이전트용 문서 사본 `docs/agent/`(형식 설명·데이터 설명서, 두 조건 같음, 해시 잠금). 계획 승인 ①~⑩ 권장안, S1 승인 A~D와 조건 1~10.
+- 채점기 v2 (`experiment/grader.py`): 형식 검사(구조·kind만), kind 칸 판정, 설계서 경로 해석(형식에 있는 칸은 설계서에 없어도 그대로), 칸 넓이 규칙(넓은 지적은 최상위 아래 칸까지, 묶음 전체 불인정), 우선순위 accept > support > 목록 > 넓음 > 채점 안 함 > legit·그 밖(오경보), K 칸은 넓은 경로로 목록에 흡수되지 않음, 참고값(엄격판·목록 우선·K 제외·넓음 포함·가정 칸 사례 제외·수치 차이 0 근접 제외·서술 수정 사례 제외·턴 상한 제외).
+- 검증 세트 (A): v1 지적 332개, 라벨(조건 가림, 채점기 실행 전, Q4→Q7 48개 수정). 시험 절반 항목 168/168, Q 일치 149/163 (0.914), 기준 0.95·0.85 통과. (B): `tests/test_grader.py` 전부 통과.
+- (S3 뒤, 2026-10-06 사용자 결정) 경로 해석 규칙(형식에 있는 칸은 설계서에 없어도 자르지 않음)은 **(A) 시험 절반을 본 뒤 바꿨다**. 바꾸기 전 167/168도 기준 통과. 우선순위를 "좁게 맞음이 넓게 맞음보다 먼저"로 일반화 (legit 항목·K 칸은 넓은 경로로 목록에 흡수되지 않음). 라벨 A087·A093은 고치지 않음.
+- K1·K5 칸 확정: K1 readmit_b `features.n_clinic_365d`, K5 고정 바탕 `cohort.rows_per_unit` (4a 검수 지적·깨끗한 설계서 점검기 출력).
+- 시험: 550 통과, 20 건너뜀, 실패 0. `test_grader.py::test_checker_on_clean_base_has_no_false_alarm` 건너뜀 → 통과 (깨끗한 설계서 8개 점검기 판정이 기대 집합과 같음, 가정 칸이 `grader.ASSUMPTION_CELLS`와 같음, 점검기는 변형에 돌리지 않음). `test_grader.py`의 v1 동작 시험은 v2 시험으로 바꿈(①). 동결 폴더 변경 0줄.
+
 
 ---
 
@@ -329,6 +339,8 @@
 - [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
 - [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 - [ ] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
+- [ ] (5단계에서 넘김) `experiment/run.py`를 v2 제출 형식에 맞춘다: `findings.json` 수거(기록 `{"report_id", "variant", "findings": 내용 또는 None}`), 형식 검사(`grader.validate_findings`, 파일 없음 포함) 실패 때 재제출 요청 1회(`grader.FORMAT_RETRIES`, 턴 상한 `grader.MAX_TURNS_RETRY` = 5), 실행당 턴 상한 `grader.MAX_TURNS` = 60(두 조건 같음), 조건 파일에 `turn_capped`·`format_retries` 기록, 지시문 `prompt.render(설계서, "data")`와 `prompt.agent_docs()`의 문서 2개를 두 조건 작업 폴더에 같은 이름으로 둠, init 기록의 스킬 목록 저장. 지금 `run.py`는 v1 보고서 블록 형식이다 (`docs/success_criteria_v2.md` 3절)
+- [ ] (5단계에서 넘김) 실행은 반복 단위로: 1회차 60 → 2회차 60. 1회차만 하면 60회로 분석한다 (`docs/analysis_plan_v2.md` 2절)
 - [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
 - [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)

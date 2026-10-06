@@ -1,10 +1,11 @@
-"""7단계 채점과 분석 (docs/step7_analysis_plan.md 2·3절).
+"""7단계 채점과 분석 (v2: docs/analysis_plan_v2.md. v1 계획은 docs/step7_analysis_plan.md).
 
 잠긴 채점기(experiment/grader.py)의 함수를 그대로 불러 쓴다. 채점 규칙은 여기서 바꾸지 않는다.
 세 분석 묶음을 같은 방식으로 채점·요약한다.
   main   주 분석: 채택된 보고서 (빈칸 행은 분모에서 빠짐)
   first  첫 시도 분석: 행마다 첫 시도 보고서 (폐기된 시도 포함)
-  blank  빈칸 = 미탐지 분석: 채택된 보고서 + 빈칸 행을 "지적 0개" 보고서로
+  blank  빈칸 = 미탐지 분석: 채택된 보고서 + 빈칸 행을 "지적 0개" 제출(`[]`)로
+기록 형식: {"report_id", "variant", "findings": findings.json 내용 또는 None(파일 없음)}.
 
   python -m experiment.analyze        (암호: 환경 변수 또는 터미널 입력, 정답표는 메모리에서만 복호화)
 """
@@ -18,7 +19,7 @@ from experiment import grader
 ROOT = Path(__file__).resolve().parents[1]
 RUNS = ROOT / "experiment" / "runs"
 RESULTS = ROOT / "results"
-EMPTY_REPORT = "```findings\n[]\n```"
+EMPTY_FINDINGS = "[]"
 SETS = ("main", "first", "blank")
 
 
@@ -33,7 +34,7 @@ def blank_rows(conditions: dict[str, dict], reports: list[dict]) -> list[str]:
 
 def fill_blanks(conditions: dict[str, dict], reports: list[dict]) -> list[dict]:
     """빈칸 행을 지적 0개 보고서로 채운다 (모든 배치 미탐지, 오경보 0)."""
-    return reports + [{"report_id": rid, "variant": conditions[rid]["variant"], "text": EMPTY_REPORT}
+    return reports + [{"report_id": rid, "variant": conditions[rid]["variant"], "findings": EMPTY_FINDINGS}
                       for rid in blank_rows(conditions, reports)]
 
 
@@ -69,20 +70,14 @@ def invoked_split(grades: list[dict], conditions: dict[str, dict], flags: dict[s
 
 
 def overview_row(summary: dict) -> dict:
-    """보고서 맨 앞 표의 한 줄: H1·H2의 주·보조 분석 기준 충족 여부와 수치."""
-    h1, h2 = summary["H1"], summary["H2"]
+    """보고서 맨 앞 표의 한 줄: H1a·H1b·H1c·H2a 판정(주 분석)과 H2b 기술, 보조 분석(판정에 쓰지 않음)."""
     row = {}
-    for meas in ("primary", "secondary"):
-        row[meas] = {
-            "H1_diff": h1[meas]["diff"], "H1_ci95": h1[meas]["ci95"], "H1_fa_clean_ga": h1[meas]["fa_clean_mean_ga"],
-            "H1_met": h1[meas]["met"],
-            "detection": {c: summary["conditions"][c]["detection"]["all"][meas] for c in ("가", "나")},
-        }
-        for scope in ("all_holdout", "unadjusted_holdout"):
-            row[meas][f"H2_{scope}"] = {c: {k: h2[scope][c].get(meas, {}).get(k)
-                                            for k in ("observed", "expected_random", "met", "p_one_sided")}
-                                        for c in ("가", "나")}
-        row[meas]["checker_only_holdout"] = summary["checker_only"]["holdout"][meas]
+    for label, h in (("primary", summary["hypotheses"]), ("secondary", summary["secondary"])):
+        row[label] = {k: {x: h[k].get(x) for x in ("diff", "ci95", "met", "n_units")} for k in ("H1a", "H1c", "H2a")}
+        row[label]["H1b"] = dict(h["H1b"])
+        row[label]["H2b"] = {c: {x: h["H2b"][c].get(x) for x in ("diff", "ci95")} for c in ("가", "나")}
+        row[label]["detection"] = {c: summary["conditions"][c]["detection"]["all"][label] for c in ("가", "나")}
+    row["checker_only_holdout"] = summary["checker_only"]["holdout"]["primary"]
     row["unknown_kind"] = {c: summary["conditions"][c]["counts"]["n_unknown_kind"] for c in ("가", "나")}
     row["reports"] = {c: summary["conditions"][c]["reports"] for c in ("가", "나")}
     return row

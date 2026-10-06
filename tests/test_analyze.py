@@ -26,15 +26,16 @@ def test_blank_row_counts_as_miss_without_false_alarms():
     filled = an.fill_blanks(conds, kept)
     assert len(filled) == len(reports)
     g = next(x for x in gr.grade_all(filled, key, designs=dict(designs)) if x["report_id"] == dropped["report_id"])
-    assert g["format_error"] is None and g["false_alarms"] == []
+    assert g["format_error"] is None and g["n_entries"] == 0 and g["false_alarms"] == []
     assert g["defects"] and not any(d["primary"] or d["secondary"] for d in g["defects"])
 
 
 def test_blank_analysis_detection_not_higher_than_main():
     reports, conds, key, designs = _fake_run()
     kept = [r for r in reports if not (conds[r["report_id"]]["condition"] == "가" and r["variant"] == "vA.json")]
-    s_main = gr.summarize(gr.grade_all(kept, key, designs=dict(designs)), conds, key, dict(designs))
-    s_blank = gr.summarize(gr.grade_all(an.fill_blanks(conds, kept), key, designs=dict(designs)), conds, key, dict(designs))
+    assert kept != reports
+    s_main = gr.summarize(gr.grade_all(kept, key, designs=dict(designs)), conds, key)
+    s_blank = gr.summarize(gr.grade_all(an.fill_blanks(conds, kept), key, designs=dict(designs)), conds, key)
     a, b = s_main["conditions"]["가"]["detection"]["all"], s_blank["conditions"]["가"]["detection"]["all"]
     assert b["n"] > a["n"] and b["primary"] <= a["primary"]
 
@@ -42,12 +43,12 @@ def test_blank_analysis_detection_not_higher_than_main():
 def test_overview_row_and_invoked_split():
     reports, conds, key, designs = _fake_run()
     grades = gr.grade_all(reports, key, designs=dict(designs))
-    s = gr.summarize(grades, conds, key, dict(designs))
+    s = gr.summarize(grades, conds, key)
     row = an.overview_row(s)
     for meas in ("primary", "secondary"):
-        assert set(row[meas]["H2_all_holdout"]) == {"가", "나"}
-        assert isinstance(row[meas]["H1_met"], bool)
-    assert row["unknown_kind"] == {"가": 3, "나": 9}
+        assert set(row[meas]["H2b"]) == {"가", "나"}
+        assert all(isinstance(row[meas][k]["met"], bool) for k in ("H1a", "H1b", "H1c", "H2a"))
+    assert row["unknown_kind"] == {"가": 4, "나": 8}   # 핵심어 없는 설명: (가) 2개·(나) 4개 × 반복 2
     ga = [rid for rid, c in conds.items() if c["condition"] == "가"]
     flags = {rid: {"adopted": rid != ga[0], "first": True, "no_checker_after_denial": rid == ga[0]} for rid in conds}
     sp = an.invoked_split(grades, conds, flags, "adopted")
@@ -58,7 +59,8 @@ def test_overview_row_and_invoked_split():
 @pytest.mark.skipif(not (an.RUNS / "conditions.json").exists(),
                     reason="실행 기록 없음 (v1 기록은 v1 저장소에만 보존)")
 def test_real_run_files_without_key():
-    """실제 실행 기록의 구조만 확인 (정답표 불필요): 첫 시도 120개, 빈칸 1행, 모든 행에 checker_invoked."""
+    """실제 실행 기록의 구조만 확인 (정답표 불필요): 첫 시도 = 조건표 행 수, 모든 행에 checker_invoked.
+    v2 본 실행 기록 기준으로 6단계에서 다시 본다 (빈칸 행 수는 v1 숫자)."""
     conds = json.loads((an.RUNS / "conditions.json").read_text(encoding="utf-8"))
     sets = an.report_sets(conds)
     assert len(sets["first"]) == len(conds) == len(sets["blank"])

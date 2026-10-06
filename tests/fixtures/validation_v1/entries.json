@@ -1,0 +1,2664 @@
+{
+ "source": "captainjigokdong/leakage-demo experiment/runs/reports (v1, 119개)",
+ "seed": 20261006,
+ "n_reports": 119,
+ "n_test_reports": 59,
+ "entries": [
+  {
+   "id": "A001",
+   "half": "test",
+   "report_id": "3fba2c4ea827",
+   "variant": "design_C963.json",
+   "target": "split.key",
+   "problem": "선언된 독립 단위는 family인데 분할 키는 patient_id라서 같은 가족이 학습·평가에 함께 들어간다(데이터에서 가족 8/173개가 나뉨). family_id로 분할해야 한다."
+  },
+  {
+   "id": "A002",
+   "half": "test",
+   "report_id": "4c69c8fc95f2",
+   "variant": "design_EC59.json",
+   "target": "features.dx_chf",
+   "problem": "현재 입원의 진단 코드를 퇴원 시각에 쓸 수 있다고 가정한다(코딩 지연 0). 실제로는 진단 코드를 퇴원 뒤에 입력하므로 배포 시점에는 이 값이 없을 수 있어, 쓸 수 있는 시각을 사람이 확인해야 한다."
+  },
+  {
+   "id": "A003",
+   "half": "test",
+   "report_id": "42edb86f432e",
+   "variant": "design_A1C2.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 CV 그룹 키도 대부분 결측인 family_id라서 fold 간 같은 환자 누수나 결측 처리 오류가 생긴다."
+  },
+  {
+   "id": "A004",
+   "half": "test",
+   "report_id": "b2a09c4c20ad",
+   "variant": "design_D568.json",
+   "target": "features.n_dx",
+   "problem": "진단 수를 window나 scope 없이 셉니다. 환자 단위로 집계하면 미래 입원(재입원 자체 포함)의 진단 수가 섞여 결과 정보가 새어 들어갑니다. 인덱스 입원으로 한정하고, 퇴원 시점에 코딩이 확정되어 있는지 확인해야 합니다."
+  },
+  {
+   "id": "A005",
+   "half": "dev",
+   "report_id": "0596e4fef32c",
+   "variant": "design_0B14.json",
+   "target": "model.tuning.cv_key",
+   "problem": "family_id가 환자의 80%에서 비어 있어 그대로 group k-fold 키로 쓰면 결측이 한 그룹으로 묶이거나 오류가 난다. 분할과 같은 그룹 키(family_id가 없으면 patient_id)를 써야 한다."
+  },
+  {
+   "id": "A006",
+   "half": "test",
+   "report_id": "bff74badef4c",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "procedures 테이블에는 날짜(chart_date)만 있어서 창 끝을 tp로 잡아도 tp 당일 tp보다 늦게 한 처치가 들어갈 수 있습니다(확인 가능 시각 상한 tp+24h). 실제 데이터에서 예측 행 23,223개 중 752개가 이에 해당합니다."
+  },
+  {
+   "id": "A007",
+   "half": "test",
+   "report_id": "f2c8b661eefe",
+   "variant": "design_1D2D.json",
+   "target": "preprocessing.median_impute",
+   "problem": "중앙값 대치를 fit_scope 'all'로 적합해 평가 세트 정보가 학습에 들어간다. train(CV 안에서는 train_fold)으로 바꿔야 한다."
+  },
+  {
+   "id": "A008",
+   "half": "dev",
+   "report_id": "cec85feafb61",
+   "variant": "design_A1C2.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 그대로 그룹 분할하면 결측 행이 한 그룹으로 몰리거나 버려진다. 결측 행을 행 단위로 나누면 같은 환자(재입원 1,169명)·같은 입원의 여러 tp 행이 train/test에 함께 들어간다."
+  },
+  {
+   "id": "A009",
+   "half": "dev",
+   "report_id": "49aa680fa20f",
+   "variant": "design_4BE0.json",
+   "target": "features.age",
+   "problem": "patients.age는 환자당 한 값이지만 입원이 수년에 걸쳐 있어 나이의 기준 시점이 불명확하다. 마지막 입원이나 추출 시점 기준이면 앞선 입원에는 미래 정보가 되므로 정의를 확인해야 한다."
+  },
+  {
+   "id": "A010",
+   "half": "dev",
+   "report_id": "72d114346041",
+   "variant": "design_1D2D.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 80%(3,998/5,000)에서 결측인데 처리 규칙이 없다. 버리거나 한 그룹으로 묶거나 행 단위로 나누면 데이터 손실, 극단적 불균형, 재입원 환자의 train/test 누출이 생기므로 patient_id 대체 같은 규칙을 정해야 한다(tuning.cv_key도 같다)."
+  },
+  {
+   "id": "A011",
+   "half": "test",
+   "report_id": "20b55da4f493",
+   "variant": "design_F872.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝용 group k-fold 키도 대부분 결측인 family_id라서, 같은 환자의 입원이 학습 fold와 검증 fold에 함께 들어가 튜닝이 낙관적으로 치우칠 수 있다. 분할 키와 같은 대체 규칙이 필요하다."
+  },
+  {
+   "id": "A012",
+   "half": "test",
+   "report_id": "b2a09c4c20ad",
+   "variant": "design_D568.json",
+   "target": "split.key",
+   "problem": "split_unit은 family이고 튜닝 cv_key도 family_id인데, holdout 분할 키는 patient_id입니다. 같은 가족(423가족, 환자 1,002명)이 train과 test에 나뉘어 들어갈 수 있고, 튜닝 CV 단위와도 맞지 않습니다. family_id를 키로 쓰고 값이 없으면 patient_id로 대체해야 합니다."
+  },
+  {
+   "id": "A013",
+   "half": "test",
+   "report_id": "067956ad442a",
+   "variant": "design_1D2D.json",
+   "target": "outcome.window",
+   "problem": "결과 창 tp~tp+48h이 퇴원·사망·전원 뒤까지 이어지는 행이 많은데(tp=24h에서 32%), 검열 규칙이 없다. 그래서 창 안에 검사가 없는 조기 퇴원·사망 환자가 자동으로 음성이 된다. 이런 행을 어떻게 처리할지 사람이 정해야 한다."
+  },
+  {
+   "id": "A014",
+   "half": "test",
+   "report_id": "7cc761a63ec3",
+   "variant": "design_AF15.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝용 group_kfold도 결측이 많은 family_id를 키로 쓴다. 그래서 같은 환자의 입원이 fold 사이에 섞여 튜닝 성능이 부풀려질 수 있다."
+  },
+  {
+   "id": "A015",
+   "half": "test",
+   "report_id": "7cc761a63ec3",
+   "variant": "design_AF15.json",
+   "target": "features.dx_chf",
+   "problem": "scope와 시간 기준이 없어서 미래 입원의 I50 진단이 들어갈 수 있다. 또 코드가 I50.9 형식이라 정확 일치 필터로는 0건이 되므로 접두 일치로 구현해야 한다."
+  },
+  {
+   "id": "A016",
+   "half": "dev",
+   "report_id": "d49b593b7474",
+   "variant": "design_A1C2.json",
+   "target": "outcome.aki_48h",
+   "problem": "결과를 정하는 크레아티닌 측정 빈도가 ICU 1.91회/일, 병동 0.68회/일로 2.8배 달라 결과 확인 강도가 층마다 다른데, 설계에 층별 처리(by_stratum)가 없다(Q7 경고)."
+  },
+  {
+   "id": "A017",
+   "half": "test",
+   "report_id": "82c99a3e0192",
+   "variant": "design_AF15.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000)에서 비어 있다. 그대로 그룹 키로 쓰면 결측이 한 그룹으로 묶이거나 버려지고, 같은 환자의 여러 입원이 train과 test로 나뉠 수 있다. 결측이면 patient_id로 대체하는 규칙이 필요하다(model.tuning.cv_key도 같다)."
+  },
+  {
+   "id": "A018",
+   "half": "test",
+   "report_id": "f5f55b3d4b0d",
+   "variant": "design_AF15.json",
+   "target": "features.ward_type",
+   "problem": "다음 입원(scope next_admission)의 병동을 특징으로 쓴다. 이 값은 퇴원 시각(tp) 뒤에야 알려지고, 결과 readmit_30d를 정한 admissions 행과 같은 행이라 결과가 누출된다(Q1·Q4 차단)."
+  },
+  {
+   "id": "A019",
+   "half": "dev",
+   "report_id": "4d41c4036f4e",
+   "variant": "design_E0E0.json",
+   "target": "preprocessing.select_k",
+   "problem": "특징 선택(k=5)을 fit_scope 'all'로 전체 데이터에서 적합해서 평가 부분의 결과 정보가 특징 선택에 들어간다. fit_scope를 train(또는 train_fold)으로 바꿔야 한다."
+  },
+  {
+   "id": "A020",
+   "half": "dev",
+   "report_id": "0e407e31eb9a",
+   "variant": "design_9672.json",
+   "target": "features.dx_chf",
+   "problem": "diagnoses 테이블에 시각 정보가 없고 퇴원 후 확정되는 코드일 수 있어 퇴원 시점 가용성이 보장되지 않으며, 지표입원으로 한정하는 scope/window도 없어 이후 입원의 진단이 섞일 수 있다."
+  },
+  {
+   "id": "A021",
+   "half": "test",
+   "report_id": "0366b2d8308c",
+   "variant": "design_9AF0.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000)에서 결측이라 그룹 분할 키로 쓸 수 없다. 결측을 어떻게 처리하든 거대 단일 그룹이 생기거나, 표본이 사라지거나, 같은 환자의 입원·TP 행이 train/test에 나뉜다. patient_id 대체가 필요하다."
+  },
+  {
+   "id": "A022",
+   "half": "test",
+   "report_id": "9889e5bb73c4",
+   "variant": "design_4BE0.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이다. 그래서 group holdout이 실제로 그룹을 나누지 못하거나 대부분의 데이터가 빠진다. 같은 환자의 여러 입원과 여러 tp가 train과 test에 나뉘어 들어갈 수 있으므로, 결측 시 patient_id로 대체하는 규칙이 필요하다."
+  },
+  {
+   "id": "A023",
+   "half": "dev",
+   "report_id": "1e316e2fedc9",
+   "variant": "design_0B14.json",
+   "target": "split.key",
+   "problem": "분할 키가 예측 행 단위(index_id)라서 선언된 독립 단위(family)보다 작습니다. 같은 입원·환자·가족의 행이 학습과 평가에 함께 들어가며, 실제 데이터에서 가족 423개 중 389개가 쪼개졌습니다."
+  },
+  {
+   "id": "A024",
+   "half": "test",
+   "report_id": "fbe3d713f2fb",
+   "variant": "design_F872.json",
+   "target": "features.n_dx",
+   "problem": "이번 입원의 진단 코드 개수는 퇴원 뒤 코딩이 끝나야 확정됨. 코딩 지연이 0이라는 가정이 틀리면, 예측 시점(퇴원 시각)에는 알 수 없거나 불완전한 값을 학습에 쓰게 됨."
+  },
+  {
+   "id": "A025",
+   "half": "test",
+   "report_id": "b7f656328750",
+   "variant": "design_800E.json",
+   "target": "features.n_dx",
+   "problem": "진단 코드는 보통 퇴원 뒤 코딩·확정되는데 tₚ가 퇴원+0h라서, 이 진단 수는 예측 시점에 알 수 없는 미래 정보일 수 있습니다. 규칙표가 코딩 지연을 0으로 가정해서 통과했을 뿐이므로 실제 가용 시점을 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A026",
+   "half": "test",
+   "report_id": "219037c808cb",
+   "variant": "design_A1C2.json",
+   "target": "outcome.window",
+   "problem": "48시간 결과 창 안에 퇴원, 사망, 전원이 일어나는 행을 어떻게 다룰지 정의되어 있지 않습니다(tₚ=24h에서 약 32%). 이런 행은 크레아티닌 측정이 없다는 이유로 음성으로 분류됩니다."
+  },
+  {
+   "id": "A027",
+   "half": "test",
+   "report_id": "a302ee8eaee8",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h(collect_time)로 결과 창과 같다. 결과를 정의하는 미래 크레아티닌을 피처로 쓰는 정답 누출이다."
+  },
+  {
+   "id": "A028",
+   "half": "test",
+   "report_id": "82c99a3e0192",
+   "variant": "design_AF15.json",
+   "target": "features.dx_ckd",
+   "problem": "diagnoses에는 시각 열이 없는데 scope나 window가 없어서, 환자 단위로 집계하면 인덱스 이후 입원(재입원 포함)의 진단이 섞여 미래 정보가 누설된다. 인덱스 입원 이전 또는 인덱스 입원으로 한정해야 한다."
+  },
+  {
+   "id": "A029",
+   "half": "test",
+   "report_id": "067956ad442a",
+   "variant": "design_1D2D.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "크레아티닌 3회 이상 조건을 admit~discharge 창에서 세어 tp 뒤의 검사가 코호트 포함을 정한다(모든 예측 행에서 tp 이후 정보 사용). 창 끝을 tp로 바꿔야 한다."
+  },
+  {
+   "id": "A030",
+   "half": "test",
+   "report_id": "d8ceb5eff919",
+   "variant": "design_9672.json",
+   "target": "split.key",
+   "problem": "split.key인 family_id가 환자 5,000명 중 3,998명(80%)에서 결측이라, 그대로 group holdout을 하면 표본 대부분이 빠지거나 결측이 한 그룹으로 묶이고, 입원이 여러 번인 환자가 train/test에 나뉠 수 있다. 결측 시 patient_id로 대체하는 등 그룹 규칙을 정해야 한다(model.tuning.cv_key도 같다)."
+  },
+  {
+   "id": "A031",
+   "half": "dev",
+   "report_id": "f0081e0a0d44",
+   "variant": "design_EC59.json",
+   "target": "features.dx_chf",
+   "problem": "시각 정보가 없는 diagnoses에서 현재 입원의 진단 코드를 tp=퇴원+0h에 씁니다. 실제로는 진단 코드가 퇴원 후에 코딩되므로 예측 시점에 알 수 없을 수 있습니다. 규칙표의 코딩 지연 0h 가정이 맞는지 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A032",
+   "half": "dev",
+   "report_id": "5dd0db6637c8",
+   "variant": "design_94F5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자 5,000명 중 3,998명(80%)에서 비어 있어, 결측 환자가 분할에서 빠지거나 하나의 큰 그룹으로 묶인다. 입원이 여러 번인 환자 1,169명은 train과 test에 나뉠 수 있어, tp가 반복되는 이 설계에서 환자 단위 누수가 생긴다."
+  },
+  {
+   "id": "A033",
+   "half": "dev",
+   "report_id": "bd71245257e4",
+   "variant": "design_C963.json",
+   "target": "cohort.inclusion.los_7d",
+   "problem": "재원기간 ≥168h는 예측 시점(tp=24h~)에는 알 수 없는 미래 정보이고, AKI가 재원을 늘리므로 결과와 얽힌 선택이다(데이터에서 결과율 13.6% 대 3.8%). 이 조건 때문에 학습·평가 모집단이 실제 적용 모집단과 달라진다. 'tp 시점 재원 중'으로 바꿔야 한다."
+  },
+  {
+   "id": "A034",
+   "half": "dev",
+   "report_id": "b6ea1a5bcb91",
+   "variant": "design_800E.json",
+   "target": "features.n_dx",
+   "problem": "시각이 없는 진단 테이블을 범위나 창 없이 집계하도록 되어 있어, 환자 단위로 모으면 미래 입원의 진단이 들어간다. 또 퇴원 진단이 tp에 실제로 확정돼 있는지도 확인이 필요하다."
+  },
+  {
+   "id": "A035",
+   "half": "test",
+   "report_id": "335043fb4748",
+   "variant": "design_800E.json",
+   "target": "features.dx_chf",
+   "problem": "범위나 시간 창이 없어 미래 입원의 I50 진단이 포함될 수 있습니다. 환자 단위로 CHF가 있으면 재입원율이 24.3%, 현재 입원 기준이면 18.2%입니다. 퇴원 시각에 진단 코드가 확정되어 있는지도 확인이 필요합니다."
+  },
+  {
+   "id": "A036",
+   "half": "test",
+   "report_id": "9fb8aaf1f0dd",
+   "variant": "design_94F5.json",
+   "target": "outcome.window",
+   "problem": "결과창 내 퇴원·사망이나 크레아티닌 미측정을 음성으로 처리하는데, 미측정 비율이 ward 26.6% vs ICU 3.5%로 달라 라벨이 측정 빈도에 좌우된다; 중도절단·미측정 처리 방침이 필요하다."
+  },
+  {
+   "id": "A037",
+   "half": "dev",
+   "report_id": "780781a639ef",
+   "variant": "design_D97B.json",
+   "target": "split.key",
+   "problem": "family_id가 환자 80%(3,998/5,000)에서 비어 있는데 결측 처리 규칙이 없다. 결측 환자가 한 그룹으로 묶이거나 같은 환자의 행이 학습과 평가에 나뉠 수 있다(cv_key도 같음). 결측이면 patient_id로 대신하는 식의 규칙이 필요하다."
+  },
+  {
+   "id": "A038",
+   "half": "dev",
+   "report_id": "e5cd9c9b15b8",
+   "variant": "design_A1C2.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses 테이블에 시간 정보가 없어 퇴원 시 코딩된 입원 전체 진단 수가 들어가고, AKI 코드(N17.9)도 포함된다(N17 유무에 따른 결과 발생률 53.9% vs 0.4%). tp 시점에는 알 수 없는 미래 정보가 누출된다."
+  },
+  {
+   "id": "A039",
+   "half": "dev",
+   "report_id": "754c8892a30b",
+   "variant": "design_5350.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(코호트 행 5,501/6,855)에서 결측이라 그룹 홀드아웃 키로 쓸 수 없고, 같은 환자의 여러 입원이 train/test로 갈라질 수 있다. 결측 시 patient_id로 대체하는 등 키를 다시 정해야 한다(model.tuning.cv_key도 동일)."
+  },
+  {
+   "id": "A040",
+   "half": "dev",
+   "report_id": "b3d44b3b7f5d",
+   "variant": "design_48A5.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "창이 admit~discharge라서 tp 이후의 측정 횟수와 재원 기간이라는 미래 정보로 코호트를 고른다. 이 기준으로 탈락한 6,410 tp가 모두 ward로, 대상이 고르지 않게 걸러진다. tp까지의 정보만 쓰는 기준으로 바꿔야 한다."
+  },
+  {
+   "id": "A041",
+   "half": "test",
+   "report_id": "d2f051431c15",
+   "variant": "design_48A5.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 결과 창이 퇴원·사망·전원으로 잘리는 경우(최종 tp의 36%, 결과 창 측정 0회 10.4%) 처리가 정의되지 않아 관찰되지 않은 tp가 음성으로 라벨링된다."
+  },
+  {
+   "id": "A042",
+   "half": "test",
+   "report_id": "e3cb8f54fd0b",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "procedures.chart_date는 날짜 단위라 TP 당일 TP보다 늦게 시행된 시술이 포함되고, 창의 시작점이 없어 이전 입원 기록까지 섞인다. 특히 투석(5A1D70Z)은 거의 모두 AKI 발생 뒤에 시행되므로, 결과에 대한 치료가 특성으로 새어 들어간다."
+  },
+  {
+   "id": "A043",
+   "half": "test",
+   "report_id": "42edb86f432e",
+   "variant": "design_A1C2.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 전에 퇴원·사망·전원해 관측이 끊긴 창(코호트의 47%, 양성률 0.35%)을 음성으로 처리하는 규칙밖에 없어, 라벨이 퇴원 임박 정보와 섞이고 사망한 환자는 음성으로 잘못 분류될 수 있다."
+  },
+  {
+   "id": "A044",
+   "half": "test",
+   "report_id": "a302ee8eaee8",
+   "variant": "design_48A5.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 전에 퇴원한 경우(코호트 tp의 45%)를 처리하는 규칙이 없다. 퇴원 후 검사가 없으니 결과율이 0%가 되어 모두 음성으로 잘못 분류된다. 퇴원 뒤 tp를 빼라는 규칙도 없다."
+  },
+  {
+   "id": "A045",
+   "half": "test",
+   "report_id": "b9db24901a6b",
+   "variant": "design_0B14.json",
+   "target": "features.renal_ordered",
+   "problem": "투석 오더와 신장내과 협진은 의료진이 AKI를 의심하거나 확인한 뒤 내는 오더로, 결과를 대신 나타내는 변수입니다. 결과와 같은 입원 범위를 쓰므로 모델이 의료진의 의심을 그대로 배울 수 있어, 모델 용도에 맞는지 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A046",
+   "half": "dev",
+   "report_id": "d49b593b7474",
+   "variant": "design_A1C2.json",
+   "target": "features.n_dx",
+   "problem": "진단 코드는 퇴원 시 코딩되어 모든 예측 행에서 tₚ 이후에야 알려지는데, 창 없이 현재 입원의 진단을 세므로 미래 정보가 들어간다(Q1 차단). 삭제하거나 이전 입원 진단으로 한정해야 한다."
+  },
+  {
+   "id": "A047",
+   "half": "test",
+   "report_id": "9af44628624a",
+   "variant": "design_7F4F.json",
+   "target": "cohort.inclusion.followup_visit",
+   "problem": "포함 기준이 퇴원(tₚ) 후 30일 사이의 외래 방문이어서, 기준 시점에 알 수 없는 미래 정보로 코호트를 고른다. 이 창은 결과 창과 같고, 데이터에서 이 기준으로 빠지는 입원의 재입원율(20.2%)이 남는 입원(10.8%)의 약 2배이므로 선택 편향과 누수가 생긴다."
+  },
+  {
+   "id": "A048",
+   "half": "dev",
+   "report_id": "ed10e016c660",
+   "variant": "design_94F5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000)에서 결측이다. 그대로 그룹 분할하면 결측 행 전체가 그룹 하나가 되어 30% holdout이 성립하지 않는다. 결측 행을 행 단위로 나누면 같은 환자의 여러 입원과 tp가 train/test에 섞인다. 결측 시 patient_id로 대체하는 등의 규칙이 필요하다(model.tuning.cv_key도 같음)."
+  },
+  {
+   "id": "A049",
+   "half": "dev",
+   "report_id": "5584dfc2305d",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "결과 창 (tp, tp+48h]과 같은 구간, 같은 크레아티닌 행의 최댓값이라 결과를 그대로 특징으로 쓰는 누수다. 모든 예측 행에서 tp 이후에야 알 수 있는 값이다."
+  },
+  {
+   "id": "A050",
+   "half": "test",
+   "report_id": "3355518ade34",
+   "variant": "design_5350.json",
+   "target": "preprocessing.target_encode",
+   "problem": "dx_ckd·dx_chf의 target encoding을 fit_scope 'all'(전체 데이터)로 적합해 평가 부분의 결과(readmit_30d)가 학습 특징에 새어 들어간다. train/train_fold 범위로 적합하거나, 이진 변수이므로 이 단계를 빼야 한다."
+  },
+  {
+   "id": "A051",
+   "half": "test",
+   "report_id": "ff2a0e6e1c75",
+   "variant": "design_9AF0.json",
+   "target": "tp.offsets_h",
+   "problem": "tp 시점 재원 조건이 없는데 입원의 85.6%가 168h 전에 퇴원해 퇴원 후 TP가 생긴다. 결과 창이 퇴원 뒤로 넘어가는 경우의 중도절단 처리도 정의되어 있지 않아 음성 오분류가 생길 수 있다."
+  },
+  {
+   "id": "A052",
+   "half": "dev",
+   "report_id": "49aa680fa20f",
+   "variant": "design_4BE0.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%에서 결측인데 결측 처리 규칙이 없어, 결측 행이 빠지거나 하나의 거대 그룹으로 묶여 그룹 홀드아웃·group k-fold가 무너진다. 결측 시 patient_id로 대체하는 키를 명시해야 한다."
+  },
+  {
+   "id": "A053",
+   "half": "test",
+   "report_id": "f2c8b661eefe",
+   "variant": "design_1D2D.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 결측이라, 그대로 그룹 분할하면 결측 행이 버려지거나 하나의 그룹으로 묶인다. 결측 시 patient_id로 대체하는 규칙을 명시하고 사람이 확인해야 한다."
+  },
+  {
+   "id": "A054",
+   "half": "dev",
+   "report_id": "1a7d608e5959",
+   "variant": "design_D97B.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 재원 중이어야 한다는 조건이 없어 입원×tp 행의 약 47%가 이미 퇴원한 뒤의 존재하지 않는 예측 시점으로 코호트에 들어간다."
+  },
+  {
+   "id": "A055",
+   "half": "test",
+   "report_id": "2021f7af6b23",
+   "variant": "design_7F4F.json",
+   "target": "cohort.inclusion.followup_visit",
+   "problem": "포함 기준의 창이 퇴원(tₚ)부터 퇴원+30일까지라서, 예측 시점 이후에야 알 수 있는 미래 정보로 코호트를 고른다(Q5 선택 시점 위반). 이 창은 결과 창과 완전히 겹친다. 데이터에서도 이 기준으로 제외되는 입원의 재입원율이 21.1%로 포함되는 입원(11.1%)의 약 2배여서 표본이 크게 왜곡된다."
+  },
+  {
+   "id": "A056",
+   "half": "test",
+   "report_id": "9889e5bb73c4",
+   "variant": "design_4BE0.json",
+   "target": "outcome.window",
+   "problem": "48h 결과 창이 퇴원이나 사망 전에 끝나지 않는 경우(입원 중 tp의 47%)를 처리하는 규칙이 없다. 관찰되지 않은 기간이 음성으로 처리되어(양성률 0.35% 대 11.2%) 라벨이 편향되고, 재원기간 정보가 라벨에 섞인다."
+  },
+  {
+   "id": "A057",
+   "half": "test",
+   "report_id": "d972765f7d71",
+   "variant": "design_9AF0.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 group holdout과 group k-fold(cv_key)가 결측 행을 버리거나 한 그룹으로 묶는다. 행 단위로 나누면 같은 환자의 여러 입원과 tp가 train과 test에 섞이므로, 결측 시 대체할 그룹(예: patient_id)을 정해야 한다."
+  },
+  {
+   "id": "A058",
+   "half": "dev",
+   "report_id": "e5b791f71519",
+   "variant": "design_F872.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 비어 있다. 그대로 그룹 분할하면 결측 환자가 한 그룹으로 묶이거나 빠지고, 같은 환자의 여러 입원이 train과 test에 갈라질 수 있다. patient_id 대체 같은 규칙이 필요하며 model.tuning.cv_key도 마찬가지다."
+  },
+  {
+   "id": "A059",
+   "half": "test",
+   "report_id": "4a6420614d33",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_last",
+   "problem": "창을 collect_time으로 걸러 tp 전에 채취했지만 tp 뒤에 보고된 값이 들어간다(데이터상 701개 예측 행). time_column을 report_time으로 바꿔야 한다(Q1 차단)."
+  },
+  {
+   "id": "A060",
+   "half": "dev",
+   "report_id": "e5b791f71519",
+   "variant": "design_F872.json",
+   "target": "features.n_dx",
+   "problem": "범위·창 없이 diagnoses 전체 건수를 세게 되어 있다. 이후 입원의 진단 수까지 포함될 수 있어 미래 정보가 누출되며, 퇴원 시각에 진단 코딩이 끝나 있는지도 불확실하다."
+  },
+  {
+   "id": "A061",
+   "half": "test",
+   "report_id": "ff2a0e6e1c75",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_last",
+   "problem": "collect_time 기준으로 tp까지 잘라서, tp 전에 채취했지만 tp 시점에 아직 보고되지 않은 크레아티닌(보고 지연 최대 6h)이 들어간다. report_time 기준이어야 한다."
+  },
+  {
+   "id": "A062",
+   "half": "test",
+   "report_id": "a243057970e3",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_last",
+   "problem": "창을 collect_time으로 걸러 tp 전에 채취했지만 tp 뒤에 보고된 크레아티닌이 들어간다(701/23,223개 행). time_column을 report_time으로 바꿔야 한다."
+  },
+  {
+   "id": "A063",
+   "half": "dev",
+   "report_id": "ce248b1c3eb5",
+   "variant": "design_E6D6.json",
+   "target": "preprocessing.median_impute",
+   "problem": "fit_scope가 all이라 평가셋 값이 중앙값 대체에 쓰여 정보가 샌다. 학습셋에서만 맞춰야 한다(fit_scope=train)."
+  },
+  {
+   "id": "A064",
+   "half": "dev",
+   "report_id": "0596e4fef32c",
+   "variant": "design_0B14.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 전에 퇴원·사망한 행(코호트의 47%)의 처리 규칙이 없어 관찰되지 않은 결과가 음성으로 들어간다(이 행들의 양성률 0.35%, 나머지 11.2%). 사망은 경쟁위험인데도 음성으로 처리된다."
+  },
+  {
+   "id": "A065",
+   "half": "test",
+   "report_id": "627ec270fa2a",
+   "variant": "design_7F4F.json",
+   "target": "features.dx_chf",
+   "problem": "진단 코드의 입력 시점이 없어 퇴원 시점 가용성이 보장되지 않고 scope/window가 명시되지 않아 다른(이후) 입원 진단이 섞일 수 있다."
+  },
+  {
+   "id": "A066",
+   "half": "dev",
+   "report_id": "4b662376e58b",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "창이 admit~discharge라서 예측 시점(tp) 이후, 곧 결과 창 안의 크레아티닌 최댓값이 특징에 들어가는 미래 정보 누설입니다. 코호트 행의 44%에서 tp 이후 값이 특징 값을 바꿉니다. 창 끝을 tp로 바꾸거나 특징을 빼야 합니다."
+  },
+  {
+   "id": "A067",
+   "half": "test",
+   "report_id": "8da1b1d595a2",
+   "variant": "design_800E.json",
+   "target": "features.dx_chf",
+   "problem": "진단 테이블에 시점 열이 없고 설계에도 scope/window가 없어, 환자 단위로 집계하면 tp 이후 입원의 I50 진단이 들어갈 수 있다. 현재 입원이나 이전 입원으로 한정하고, 퇴원 시각에 코드를 쓸 수 있는지 확인해야 한다."
+  },
+  {
+   "id": "A068",
+   "half": "test",
+   "report_id": "24c8d5c9a081",
+   "variant": "design_D568.json",
+   "target": "features.dx_ckd",
+   "problem": "진단 테이블에 시각 컬럼이 없고, 설계서에 scope와 window도 없습니다. 그래서 다른 입원이나 미래 입원의 진단이 섞일 수 있고, 퇴원 후에 확정되는 코드가 퇴원 시점에 쓸 수 있었는지도 확인할 수 없습니다."
+  },
+  {
+   "id": "A069",
+   "half": "test",
+   "report_id": "359382178a9e",
+   "variant": "design_0B14.json",
+   "target": "split.key",
+   "problem": "분할 키가 예측 시점 행(index_id)이어서 같은 입원·환자·가족의 여러 행이 train과 test에 나뉘어 들어간다(행 단위 분할 시 test 행의 89%가 같은 입원을 train과 공유). split_unit=family, cv_key=family_id와도 맞지 않아 성능이 과대평가되므로 family_id로 분할해야 한다."
+  },
+  {
+   "id": "A070",
+   "half": "test",
+   "report_id": "3fba2c4ea827",
+   "variant": "design_C963.json",
+   "target": "cohort.inclusion.los_7d",
+   "problem": "재원 기간 168h 이상이라는 포함 기준은 퇴원해야 확정되는 값이라서 예측 시점(입원 후 24~168h)에는 알 수 없다. 미래 정보로 코호트를 고르게 되어 선택 편향이 생긴다."
+  },
+  {
+   "id": "A071",
+   "half": "test",
+   "report_id": "83656e0d9ad7",
+   "variant": "design_5350.json",
+   "target": "split.key",
+   "problem": "family_id가 환자 5,000명 중 3,998명(80%)에서 결측이라 그대로는 그룹 분할을 할 수 없다. 결측 처리 규칙(예: patient_id로 대체)이 없어 같은 환자의 입원이 train과 test로 갈라질 수 있다."
+  },
+  {
+   "id": "A072",
+   "half": "dev",
+   "report_id": "62aada1958ed",
+   "variant": "design_4BE0.json",
+   "target": "cohort.inclusion",
+   "problem": "TP 시점에 아직 입원 중이어야 한다는 조건이 없다. 168h까지 재원하는 입원은 14%뿐이라, 조건이 없으면 퇴원 후 시점이 '입원 중 매일' 예측 샘플에 들어간다."
+  },
+  {
+   "id": "A073",
+   "half": "dev",
+   "report_id": "39cf7d8f6d73",
+   "variant": "design_D568.json",
+   "target": "split.key",
+   "problem": "선언된 독립 단위는 family인데 분할 키가 patient_id라서, 가족 210/423개가 학습 세트와 평가 세트에 나뉘어 들어간다. family_id로 분할해야 한다(튜닝 cv_key와도 맞춰야 함)."
+  },
+  {
+   "id": "A074",
+   "half": "dev",
+   "report_id": "685054c0e98c",
+   "variant": "design_0B14.json",
+   "target": "features.renal_ordered",
+   "problem": "투석 오더와 신장내과 협진은 AKI를 의심·확인한 뒤 내는 오더라서 결과의 대리 변수일 수 있습니다. tₚ까지 확인된 AKI를 제외한 뒤 남은 행에서는 아직 판정되지 않은 AKI를 미리 알려 줄 수 있으므로 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A075",
+   "half": "test",
+   "report_id": "7cc761a63ec3",
+   "variant": "design_AF15.json",
+   "target": "split.key",
+   "problem": "family_id가 환자 80%(3,998/5,000)에서 결측이다. 그대로 그룹 홀드아웃을 하면 결측이 한 그룹으로 묶이거나, 같은 환자의 여러 입원이 학습셋과 시험셋에 나뉘어 들어간다. 결측은 patient_id로 대체해야 한다."
+  },
+  {
+   "id": "A076",
+   "half": "dev",
+   "report_id": "ad5253e4ea29",
+   "variant": "design_94F5.json",
+   "target": "outcome.window",
+   "problem": "결과 창(tp~tp+48h) 안에 퇴원하거나 사망한 경우를 어떻게 처리할지 설계에 없습니다. 예측 행의 46.7%(12,226행)가 창이 끝나기 전에 퇴원하고, 그중 4,146행은 창 안에 크레아티닌 측정이 없어 자동으로 음성이 됩니다(48시간 안 사망 291행 포함). 결과율이 낮게 잡히고 일찍 퇴원하는 환자 쪽으로 치우치므로, 48시간을 다 관찰한 행만 남길지, 중도절단·경쟁위험으로 다룰지 정해야 합니다."
+  },
+  {
+   "id": "A077",
+   "half": "dev",
+   "report_id": "e5b791f71519",
+   "variant": "design_F872.json",
+   "target": "features.dx_ckd",
+   "problem": "diagnoses에 시각 정보가 없는데 범위·창이 지정되지 않았다. 이후 입원의 N18 진단이 들어올 수 있어 미래 정보가 누출될 위험이 있고, 퇴원 시각에 쓸 수 있는지도 확인이 필요하다."
+  },
+  {
+   "id": "A078",
+   "half": "test",
+   "report_id": "e2edefa2218a",
+   "variant": "design_D568.json",
+   "target": "features.cr_last",
+   "problem": "창을 collect_time(채취 시각)으로 거르는데 검사 값은 report_time(보고 시각)에 알려지고 둘 사이 지연에 상한이 없어, 퇴원 뒤에 보고된 값이 들어간다(데이터상 6,855행 중 1,442행). time_column을 report_time으로 바꿔야 한다."
+  },
+  {
+   "id": "A079",
+   "half": "dev",
+   "report_id": "e5cd9c9b15b8",
+   "variant": "design_A1C2.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 재원 중이어야 한다는 조건이 없어 코호트 45,355행 중 22,118행이 퇴원 후 tp이고, 퇴원 후 검사가 없으니 모두 음성으로 들어간다. '입원 중 매일 예측'이라는 질문과 맞지 않는다."
+  },
+  {
+   "id": "A080",
+   "half": "dev",
+   "report_id": "780781a639ef",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "procedures에는 날짜만 있어서 창 끝을 tp로 두면 tp 당일 처치가 들어가고, 최대 24시간 뒤에야 알려질 수 있다(752/23,223 예측 행에서 tp 이후). tp 전날까지로 창을 줄여야 한다."
+  },
+  {
+   "id": "A081",
+   "half": "dev",
+   "report_id": "4d41c4036f4e",
+   "variant": "design_E0E0.json",
+   "target": "split.key",
+   "problem": "선언된 독립 단위는 family인데 분할 키가 admission_id라서, 같은 가족·환자의 입원이 학습과 평가에 나뉜다(데이터에서 가족 241/423개가 양쪽에 걸침). split.key를 family_id로 바꾸고, family_id가 없는 환자는 patient_id로 채워야 한다."
+  },
+  {
+   "id": "A082",
+   "half": "test",
+   "report_id": "4c69c8fc95f2",
+   "variant": "design_EC59.json",
+   "target": "features.dx_ckd",
+   "problem": "현재 입원의 진단 코드를 퇴원 시각에 쓸 수 있다고 가정한다(코딩 지연 0). 실제로는 진단 코드를 퇴원 뒤에 입력하므로 배포 시점에는 이 값이 없을 수 있어, 쓸 수 있는 시각을 사람이 확인해야 한다."
+  },
+  {
+   "id": "A083",
+   "half": "dev",
+   "report_id": "0e407e31eb9a",
+   "variant": "design_9672.json",
+   "target": "outcome.window",
+   "problem": "데이터 종료 시점까지 30일 추적이 불가능한 지표입원(8건)에 대한 검열 처리 규칙이 없어, 그대로 두면 음성으로 잘못 분류된다."
+  },
+  {
+   "id": "A084",
+   "half": "dev",
+   "report_id": "86f6ff747d8e",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "창이 admit~discharge이다. 그래서 tₚ 뒤(퇴원 때까지)에 보고된 크레아티닌이 들어가고, 모든 예측 행에서 확인 가능 시각이 tₚ를 넘는다(Q1 차단). 창 끝을 tp로 바꿔야 한다."
+  },
+  {
+   "id": "A085",
+   "half": "test",
+   "report_id": "82c99a3e0192",
+   "variant": "design_AF15.json",
+   "target": "features.ward_type",
+   "problem": "scope가 next_admission이라 다음 입원의 병동 값을 쓴다. 다음 입원이 있는지 자체가 결과(30일 재입원)를 거의 그대로 드러내고, 퇴원 시점에는 알 수 없는 미래 정보라 결과 누설이다."
+  },
+  {
+   "id": "A086",
+   "half": "test",
+   "report_id": "219037c808cb",
+   "variant": "design_A1C2.json",
+   "target": "outcome.ascertainment",
+   "problem": "크레아티닌 측정 횟수가 ICU 하루 1.91회, 일반 병동 0.68회로 2.8배 다른데, 설계서가 병동 종류별 결과 확인 강도 차이를 다루지 않습니다. 그래서 자주 재는 층에서 AKI가 더 많이 확인되는 편향이 생깁니다."
+  },
+  {
+   "id": "A087",
+   "half": "dev",
+   "report_id": "cec85feafb61",
+   "variant": "design_A1C2.json",
+   "target": "cohort.exclusion.aki_known_by_tp",
+   "problem": "제외 조건은 report_time, 결과·기준값은 collect_time 기준이다. tp 전에 채취됐지만 보고가 tp 이후라 이미 AKI인 환자가 제외되지 않고 새 AKI 양성으로 라벨될 수 있다."
+  },
+  {
+   "id": "A088",
+   "half": "dev",
+   "report_id": "b5dc9c59a39d",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "처치 수에 결과(AKI)의 대리 변수인 투석 코드 5A1D70Z가 들어가고, 창 시작점이 없어 이전 입원 기록까지 센다. 결과가 남긴 기록을 특징으로 쓸 수 있어 사람이 확인해야 한다."
+  },
+  {
+   "id": "A089",
+   "half": "test",
+   "report_id": "a302ee8eaee8",
+   "variant": "design_48A5.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 GroupKFold 키도 80% 결측인 family_id다. 같은 환자의 tp가 여러 fold에 나뉘어 튜닝이 낙관적으로 편향된다."
+  },
+  {
+   "id": "A090",
+   "half": "test",
+   "report_id": "358d04627f6f",
+   "variant": "design_9672.json",
+   "target": "outcome.window",
+   "problem": "데이터 종료(2159-12-29) 전 30일 안에 퇴원한 입원 8건은 추적 기간이 30일보다 짧은데도 재입원이 없으면 음성으로 표시된다. 설계서에 최소 추적 기간 기준이 없다."
+  },
+  {
+   "id": "A091",
+   "half": "test",
+   "report_id": "44fab1ce9246",
+   "variant": "design_AF15.json",
+   "target": "features.ward_type",
+   "problem": "다음 입원(scope next_admission)의 병동 값을 쓰는데, 이 값은 퇴원 시각(tₚ) 뒤에야 알려진다(데이터에서 2,022/6,855 행). 또 결과 readmit_30d를 정한 바로 그 입원 행이라 결과가 특징에 그대로 새어 들어간다. 삭제해야 하며, 현재 입원의 병동은 features.unit에 이미 있다."
+  },
+  {
+   "id": "A092",
+   "half": "dev",
+   "report_id": "3472b5c94a07",
+   "variant": "design_7F4F.json",
+   "target": "cohort.inclusion.followup_visit",
+   "problem": "포함 기준이 퇴원(tₚ) 후 30일 안의 외래 방문 여부라서 예측 시점에 알 수 없는 미래 정보로 코호트를 고른다(Q5). 이 창은 결과 창과 같고, 데이터에서 충족군과 미충족군의 재입원율이 11.1%와 21.1%로 달라 선택이 결과와 얽혀 있다."
+  },
+  {
+   "id": "A093",
+   "half": "dev",
+   "report_id": "780781a639ef",
+   "variant": "design_D97B.json",
+   "target": "cohort.exclusion.aki_known_by_tp",
+   "problem": "제외 기준은 report_time으로, 결과의 기준 창은 collect_time으로 나눈다. tp 전에 채취됐지만 tp 뒤에 보고된 크레아티닌(744건)으로 이미 성립한 AKI는 제외되지 않고 새 AKI 결과로 셀 수 있다."
+  },
+  {
+   "id": "A094",
+   "half": "test",
+   "report_id": "8da1b1d595a2",
+   "variant": "design_800E.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝용 group k-fold의 키도 family_id라서 결측이 80%이면 같은 환자의 입원이 여러 fold에 흩어져 교차검증이 누수되거나 결측 그룹 하나가 한 fold를 차지한다. 분할 키와 같은 대체 규칙이 필요하다."
+  },
+  {
+   "id": "A095",
+   "half": "test",
+   "report_id": "7cc761a63ec3",
+   "variant": "design_AF15.json",
+   "target": "features.n_dx",
+   "problem": "시각 정보가 없는 diagnoses를 scope 없이 센다. 환자의 미래 입원 진단까지 포함될 수 있고, 퇴원 시점에 진단 코딩이 끝나 있는지도 확인이 필요하다."
+  },
+  {
+   "id": "A096",
+   "half": "dev",
+   "report_id": "bd71245257e4",
+   "variant": "design_C963.json",
+   "target": "split.key",
+   "problem": "split_unit과 튜닝 cv_key는 family인데 분할 키가 patient_id라서, 같은 가족이 학습셋과 시험셋에 나뉘어 들어가 성능이 낙관적으로 나올 수 있다. family_id(없으면 patient_id)로 분할해야 한다."
+  },
+  {
+   "id": "A097",
+   "half": "test",
+   "report_id": "a243057970e3",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h의 미래 구간이고 결과 aki_48h를 정하는 크레아티닌 행(같은 입원, 같은 결과 창)을 그대로 써서 결과가 특징으로 새어 들어간다. 예측 행 23,223개 모두에서 값이 tp 뒤에 알려지므로 삭제해야 한다."
+  },
+  {
+   "id": "A098",
+   "half": "dev",
+   "report_id": "716f667fe013",
+   "variant": "design_EC59.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 코호트 입원의 약 80%(환자 5,000명 중 3,998명)에서 결측이라 그대로 group holdout을 하면 결측 행이 누락되거나 한 그룹으로 묶여 분할이 깨지고 같은 환자 입원이 train/test에 섞일 수 있다. 결측 시 patient_id로 대체하는 규칙을 명시해야 하며 model.tuning.cv_key에도 동일하게 적용해야 한다."
+  },
+  {
+   "id": "A099",
+   "half": "test",
+   "report_id": "953697f71cd3",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "창 끝이 discharge라서 tp 이후 결과 창의 크레아티닌이 들어가 결과가 그대로 누설된다(cr_max_adm − cr_last 중앙값: 양성 1.16 vs 음성 0.03 mg/dL). 창 끝을 tp로 바꾸거나 이 특성을 빼야 한다."
+  },
+  {
+   "id": "A100",
+   "half": "test",
+   "report_id": "b2a09c4c20ad",
+   "variant": "design_D568.json",
+   "target": "features.dx_chf",
+   "problem": "진단 테이블에는 시각이 없는데 window나 scope가 지정되지 않았습니다. 환자 단위로 집계하면 미래 입원의 진단까지 들어갑니다. 인덱스 입원만 쓰더라도 퇴원 진단 코딩이 tp 시점에 확정되어 있는지 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A101",
+   "half": "dev",
+   "report_id": "b1557c296c10",
+   "variant": "design_E0E0.json",
+   "target": "split.key",
+   "problem": "split_unit은 family인데 split.key가 admission_id여서, 같은 환자 671명과 가족 251개가 train과 test 양쪽에 들어갑니다. 이 때문에 test 성능이 실제보다 좋게 나옵니다. family_id를 쓰고, 결측이면 patient_id로 채워 그룹을 만들어야 합니다."
+  },
+  {
+   "id": "A102",
+   "half": "dev",
+   "report_id": "b1557c296c10",
+   "variant": "design_E0E0.json",
+   "target": "model.tuning.cv_key",
+   "problem": "cv_key인 family_id가 환자의 80%에서 비어 있어서 그대로는 group_kfold 그룹을 만들 수 없습니다. 결측 환자를 한 그룹으로 묶으면 fold가 크게 치우칩니다. 결측을 patient_id로 채우는 규칙을 정해야 합니다."
+  },
+  {
+   "id": "A103",
+   "half": "test",
+   "report_id": "219037c808cb",
+   "variant": "design_A1C2.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자 80%(3,998/5,000)에서 비어 있습니다. 결측을 어떻게 처리할지 정해 두지 않으면 행이 빠지거나 하나의 거대한 묶음이 되고, 두 번 이상 입원한 환자 1,169명의 입원이 학습과 평가에 나뉠 수 있습니다. 같은 키를 쓰는 튜닝용 교차검증(model.tuning.cv_key)도 마찬가지입니다."
+  },
+  {
+   "id": "A104",
+   "half": "dev",
+   "report_id": "0e407e31eb9a",
+   "variant": "design_9672.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%에서 결측이라 그대로는 그룹 분할이 성립하지 않는다(결측이 한 그룹으로 묶이거나 행이 대량 탈락). 결측 시 patient_id로 대체하는 등 규칙을 정해야 하며 model.tuning.cv_key에도 동일하게 적용해야 한다."
+  },
+  {
+   "id": "A105",
+   "half": "test",
+   "report_id": "e2edefa2218a",
+   "variant": "design_D568.json",
+   "target": "split.key",
+   "problem": "선언된 독립 단위는 family인데 분할 키가 patient_id라서 같은 가족이 학습·평가에 나뉜다(가족 423개 중 210개). family_id(없으면 patient_id)로 분할해야 한다."
+  },
+  {
+   "id": "A106",
+   "half": "test",
+   "report_id": "83656e0d9ad7",
+   "variant": "design_5350.json",
+   "target": "features.n_dx",
+   "problem": "창이나 범위 없이 진단 수를 세면 미래 입원(결과인 재입원 포함)의 진단까지 세어져 결과 정보가 새어 들어간다. 데이터에서도 재입원군의 진단 수가 더 많다."
+  },
+  {
+   "id": "A107",
+   "half": "dev",
+   "report_id": "a857e4c75331",
+   "variant": "design_EC59.json",
+   "target": "features.dx_ckd",
+   "problem": "시각 없는 diagnoses를 scope/window 없이 사용해 미래 입원 진단이 섞일 수 있고, 퇴원 시점에 코드가 실제로 이용 가능한지도 불명확하다."
+  },
+  {
+   "id": "A108",
+   "half": "test",
+   "report_id": "359382178a9e",
+   "variant": "design_0B14.json",
+   "target": "outcome.window",
+   "problem": "48시간 결과 창 도중 퇴원·사망·전원하는 행이 47%인데, 이 행들은 측정이 없어 음성으로 처리된다(양성률 0.3% 대 11.2%). 이 때문에 라벨이 퇴원 임박 여부와 섞이고 중도절단이 다뤄지지 않는다."
+  },
+  {
+   "id": "A109",
+   "half": "test",
+   "report_id": "ecccca21c9ab",
+   "variant": "design_E0E0.json",
+   "target": "features.dx_chf",
+   "problem": "진단 코드가 퇴원 시각에 지연 없이 확정된다는 가정(DX_CODING_DELAY_H=0)에서만 퇴원 시각에 쓸 수 있다. 실제로 퇴원 뒤 코딩된다면 tₚ 이후 정보이므로 사람이 확인해야 한다."
+  },
+  {
+   "id": "A110",
+   "half": "dev",
+   "report_id": "62aada1958ed",
+   "variant": "design_4BE0.json",
+   "target": "outcome.ascertainment",
+   "problem": "결과 창에 크레아티닌 측정이 없는 TP(20%)가 음성으로 처리된다. ICU는 병동보다 3.4배 자주 측정하므로, 층별 보고만으로는 측정 빈도 차이 때문에 생긴 라벨 편향이 unit, n_cr 피처를 통해 모델에 들어가는 것을 막지 못한다."
+  },
+  {
+   "id": "A111",
+   "half": "test",
+   "report_id": "24c8d5c9a081",
+   "variant": "design_D568.json",
+   "target": "split.key",
+   "problem": "split_unit은 family이고 튜닝의 cv_key도 family_id인데, 분할 키는 patient_id입니다. 이대로면 가족(1,002명, 423가족)이 학습과 테스트에 나뉘어 들어가 평가가 낙관적으로 나올 수 있으므로 family_id 기준(없으면 patient_id)으로 맞춰야 합니다."
+  },
+  {
+   "id": "A112",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "features.dx_ckd",
+   "problem": "diagnoses 기반 특징이라 시각 정보가 없다. 퇴원 뒤에 확정되는 코드일 수 있고, window나 scope가 없어 이후 입원의 진단이 섞일 수 있다."
+  },
+  {
+   "id": "A113",
+   "half": "dev",
+   "report_id": "9b24b5bd07d5",
+   "variant": "design_E0E0.json",
+   "target": "split.key",
+   "problem": "split_unit과 튜닝 cv_key는 가족 단위인데 분할 키가 admission_id라서, 같은 환자·가족의 입원이 학습셋과 테스트셋에 나뉘어 들어갑니다(시험 분할에서 테스트 2,056건 중 1,009건). family_id가 없는 환자는 patient_id로 대체한 그룹 키로 분할해야 합니다."
+  },
+  {
+   "id": "A114",
+   "half": "dev",
+   "report_id": "72d114346041",
+   "variant": "design_1D2D.json",
+   "target": "preprocessing.median_impute",
+   "problem": "중앙값 대치를 fit_scope 'all'로 적합해 test 데이터 정보가 전처리에 누출된다. train에서만 적합해야 한다."
+  },
+  {
+   "id": "A115",
+   "half": "dev",
+   "report_id": "ef0c7b06437e",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 collect_time 기준 [tp, tp+48h]이어서 예측 시점에는 알 수 없는 미래 크레아티닌 값을 쓴다(Q1 차단)."
+  },
+  {
+   "id": "A116",
+   "half": "dev",
+   "report_id": "24f1e9cde2ae",
+   "variant": "design_E0E0.json",
+   "target": "split.key",
+   "problem": "분할 키가 admission_id라서 선언된 독립 단위 family보다 작다. 같은 가족이나 환자의 입원이 학습과 평가에 나뉜다(가족 241/423개). family_id로 분할하고, 비어 있는 family_id는 patient_id로 채워야 한다."
+  },
+  {
+   "id": "A117",
+   "half": "test",
+   "report_id": "219037c808cb",
+   "variant": "design_A1C2.json",
+   "target": "features.n_dx",
+   "problem": "진단 코드는 퇴원할 때 입력되는데 이 특징에는 시간 창이 없어, 모든 예측 행(23,223/23,223)에서 값을 알 수 있는 시각이 tₚ보다 늦습니다(미래 정보 누수). 게다가 진단 목록에 결과를 대신 나타내는 AKI 코드 N17이 들어 있어 결과가 직접 새어 들어갈 수 있습니다."
+  },
+  {
+   "id": "A118",
+   "half": "dev",
+   "report_id": "49aa680fa20f",
+   "variant": "design_4BE0.json",
+   "target": "outcome.window",
+   "problem": "예측 행의 약 47%가 tp+48h 전에 퇴원·전원·사망으로 결과 창이 잘리고, 그중 34%는 창 안에 크레아티닌 측정이 없어 관찰되지 않은 결과가 자동으로 음성이 된다. 중도 절단 처리 규칙이 필요하다."
+  },
+  {
+   "id": "A119",
+   "half": "dev",
+   "report_id": "803ae2798237",
+   "variant": "design_48A5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(입원 5,642/7,022)에서 비어 있어 그대로 그룹 분할하면 결측 행이 빠지거나 한 그룹으로 묶이고, 반복 입원 환자가 학습·평가에 나뉠 수 있다. 결측일 때 patient_id로 대신하는 등의 규칙을 정해야 한다."
+  },
+  {
+   "id": "A120",
+   "half": "test",
+   "report_id": "e3cb8f54fd0b",
+   "variant": "design_D97B.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%에서 결측이라 그룹 분할 키로 쓸 수 없다. 결측 처리 방식에 따라 한 그룹이 80%를 차지하거나, 같은 환자의 여러 TP·입원이 train과 test에 나뉘어 들어가 누수가 생긴다(model.tuning.cv_key도 같다)."
+  },
+  {
+   "id": "A121",
+   "half": "test",
+   "report_id": "b7f656328750",
+   "variant": "design_800E.json",
+   "target": "features.dx_chf",
+   "problem": "같은 입원의 진단 코드(I50)는 퇴원 뒤에 확정될 수 있어 tₚ=퇴원 시각에는 쓸 수 없을 수 있습니다. 코딩 지연 0이라는 가정에만 기대어 통과했습니다."
+  },
+  {
+   "id": "A122",
+   "half": "dev",
+   "report_id": "a857e4c75331",
+   "variant": "design_EC59.json",
+   "target": "outcome.window",
+   "problem": "데이터 종료 시점까지 30일 추적이 끝나지 않는 입원(7건)을 처리하는 규칙이 없어, 이 입원들이 비재입원(0)으로 잘못 분류된다."
+  },
+  {
+   "id": "A123",
+   "half": "dev",
+   "report_id": "39cf7d8f6d73",
+   "variant": "design_D568.json",
+   "target": "features.cr_last",
+   "problem": "창을 채취 시각(collect_time)으로 걸러서 퇴원 뒤에 보고된 크레아티닌 값이 들어간다(예측 행 1,442/6,855개). 값이 알려지는 시각인 report_time으로 걸러야 한다."
+  },
+  {
+   "id": "A124",
+   "half": "dev",
+   "report_id": "ed10e016c660",
+   "variant": "design_94F5.json",
+   "target": "outcome.window",
+   "problem": "결과 창 tp~tp+48h가 퇴원·사망·전원으로 잘리는 행이 코호트의 47%(10,965행)다. 그중 3,829행은 창 안에 크레아티닌 측정이 하나도 없는데 음성으로 라벨된다. 관찰이 덜 된 행과 경쟁 사건을 어떻게 처리할지 정해야 한다."
+  },
+  {
+   "id": "A125",
+   "half": "dev",
+   "report_id": "8a5e783a1eee",
+   "variant": "design_E6D6.json",
+   "target": "preprocessing.median_impute",
+   "problem": "중앙값 대치를 fit_scope 'all'로 학습·평가 데이터 전체에서 적합해 평가 세트 정보가 학습에 새어 들어간다. 학습 부분(train, 튜닝 시 train_fold)에서만 적합해야 한다."
+  },
+  {
+   "id": "A126",
+   "half": "test",
+   "report_id": "14824aa86d76",
+   "variant": "design_0B14.json",
+   "target": "outcome.window",
+   "problem": "결과 창 안에 크레아티닌 측정이 없거나, 48h 안에 퇴원·전원·사망해 관찰이 끊겨도 음성으로 처리된다. 입원 중인 tp의 20%가 측정 0회이고 측정 빈도가 ICU와 병동 사이에 3배 넘게 차이 나므로, 관찰 불충분 행을 어떻게 다룰지(제외 또는 검열) 정해야 한다."
+  },
+  {
+   "id": "A127",
+   "half": "test",
+   "report_id": "0366b2d8308c",
+   "variant": "design_9AF0.json",
+   "target": "outcome.window",
+   "problem": "tp~tp+48h 창이 퇴원·전원·사망으로 잘리는 경우를 처리하지 않는다. 관찰하지 못한 행(입원 중 TP 26,206행 중 12,226행)이 측정이 없다는 이유로 음성으로 분류된다."
+  },
+  {
+   "id": "A128",
+   "half": "test",
+   "report_id": "9fb8aaf1f0dd",
+   "variant": "design_94F5.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 group_kfold의 cv_key도 80% 결측인 family_id라 동일하게 환자 단위 누수 또는 단일 거대 폴드가 생긴다."
+  },
+  {
+   "id": "A129",
+   "half": "test",
+   "report_id": "50a69085f677",
+   "variant": "design_E0E0.json",
+   "target": "preprocessing.select_k",
+   "problem": "특징 선택(k=5)의 fit_scope가 all입니다. test 데이터의 결과까지 보고 특징을 고르게 되므로 정보 누출이 생깁니다. 다른 전처리처럼 train에서만 fit해야 합니다."
+  },
+  {
+   "id": "A130",
+   "half": "test",
+   "report_id": "42edb86f432e",
+   "variant": "design_A1C2.json",
+   "target": "split.key",
+   "problem": "환자의 80%가 family_id 결측이라 그대로 group 분할하면 결측 행이 누락되거나 하나의 그룹으로 묶이고, 같은 환자의 입원·tp가 train/test에 섞일 수 있다; 결측 시 patient_id로 대체하는 규칙이 필요하다."
+  },
+  {
+   "id": "A131",
+   "half": "test",
+   "report_id": "bff74badef4c",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "창에 시작점이 없어 이번 입원 전, 다른 입원의 처치까지 셉니다. 의도한 범위인지 확인이 필요합니다."
+  },
+  {
+   "id": "A132",
+   "half": "dev",
+   "report_id": "b5dc9c59a39d",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "procedures.chart_date는 날짜만 있어서, 창 끝을 tp로 잡아도 tp 이후 같은 날의 처치(최대 tp+24h)가 들어간다. 데이터에서 예측 행 23,223개 중 752개가 tp 뒤에 알려지는 값을 쓴다."
+  },
+  {
+   "id": "A133",
+   "half": "dev",
+   "report_id": "5dd0db6637c8",
+   "variant": "design_94F5.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 교차검증 키도 같은 family_id라서, 결측 때문에 그룹이 깨지고 같은 환자의 tp가 여러 fold에 나뉘어 튜닝 성능이 부풀려진다."
+  },
+  {
+   "id": "A134",
+   "half": "dev",
+   "report_id": "a1be205167bf",
+   "variant": "design_F872.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자 5,000명 중 3,998명(80%)에서 결측인데, 설계에 결측 처리 규칙이 없습니다. 이대로 실행하면 결측 환자가 모두 한 그룹으로 묶이거나 빠지고, 같은 환자의 입원이 train과 test에 나뉘어 누수가 생길 수 있습니다. patient_id 대체 같은 규칙을 정해야 하며, 같은 키를 쓰는 model.tuning.cv_key도 함께 고쳐야 합니다."
+  },
+  {
+   "id": "A135",
+   "half": "test",
+   "report_id": "627ec270fa2a",
+   "variant": "design_7F4F.json",
+   "target": "cohort.inclusion.followup_visit",
+   "problem": "퇴원 후 30일 내 외래 방문이라는 예측 시점(tp) 이후 정보로 코호트를 선택하며, 이 조건은 결과와 강하게 연관(재입원율 11.1% vs 21.1%)되어 선택 편향·누수를 일으키고 실제 적용 시점에 대상자를 정의할 수 없다."
+  },
+  {
+   "id": "A136",
+   "half": "test",
+   "report_id": "0366b2d8308c",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h로 결과 창과 같아서, 결과를 정하는 미래 크레아티닌 값을 예측 변수로 쓰는 직접 누수다."
+  },
+  {
+   "id": "A137",
+   "half": "dev",
+   "report_id": "1a7d608e5959",
+   "variant": "design_D97B.json",
+   "target": "outcome.window",
+   "problem": "결과 창(tp~tp+48h)이 입원 내로 한정되는데 그 전에 퇴원·전원·사망하는 tp가 많아(약 12,000행) 관측되지 않은 결과가 음성으로 처리되는 중도절단 편향이 생긴다."
+  },
+  {
+   "id": "A138",
+   "half": "test",
+   "report_id": "4c69c8fc95f2",
+   "variant": "design_EC59.json",
+   "target": "features.n_dx",
+   "problem": "현재 입원의 진단 코드 개수는 퇴원 뒤 코딩이 끝나야 확정된다. 퇴원 시점에 이 값을 쓸 수 있는지 사람이 확인해야 한다."
+  },
+  {
+   "id": "A139",
+   "half": "test",
+   "report_id": "83656e0d9ad7",
+   "variant": "design_5350.json",
+   "target": "features.dx_chf",
+   "problem": "dx_ckd와 같은 문제다. 창이나 범위가 없어 미래 입원 진단이 들어갈 수 있고, 진단 코딩 시점이 tp 이전인지 보장되지 않는다."
+  },
+  {
+   "id": "A140",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "preprocessing.median_impute",
+   "problem": "fit_scope가 all이라 테스트셋까지 포함한 전체 데이터로 중앙값을 적합한다. 테스트 정보가 학습으로 누설되므로 train에서만 적합해야 한다."
+  },
+  {
+   "id": "A141",
+   "half": "test",
+   "report_id": "a243057970e3",
+   "variant": "design_9AF0.json",
+   "target": "features.unit",
+   "problem": "admissions.unit은 입원당 값이 하나라서 tp 뒤의 ICU 이동이 반영된 값(예: 최종 병동)인지 알 수 없다. 어느 시점의 값인지 사람이 확인해야 한다."
+  },
+  {
+   "id": "A142",
+   "half": "test",
+   "report_id": "83656e0d9ad7",
+   "variant": "design_5350.json",
+   "target": "preprocessing.target_encode",
+   "problem": "fit_scope가 all이라 테스트셋 결과(readmit_30d)가 인코딩 값에 들어가 정보 누출이 생긴다. train(교차적합)에서만 fit해야 하며, 대상 열이 이진 변수라 target encoding을 쓸 이유도 거의 없다."
+  },
+  {
+   "id": "A143",
+   "half": "test",
+   "report_id": "335043fb4748",
+   "variant": "design_800E.json",
+   "target": "features.dx_ckd",
+   "problem": "dx_chf와 마찬가지로 범위나 시간 창이 없어 미래 입원의 N18 진단이 들어가는 누수가 생길 수 있습니다. 현재 입원으로 한정해야 합니다."
+  },
+  {
+   "id": "A144",
+   "half": "dev",
+   "report_id": "803ae2798237",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "결과 창 (tp, tp+48h]의 크레아티닌 최댓값이라 예측 시점에 알 수 없고, 결과를 정한 바로 그 검사 행을 쓴다. 미래 정보이자 결과 그 자체가 새어 들어가므로 삭제해야 한다."
+  },
+  {
+   "id": "A145",
+   "half": "test",
+   "report_id": "627ec270fa2a",
+   "variant": "design_7F4F.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 그룹 분할(및 동일 키를 쓰는 group_kfold 튜닝)이 정의되지 않고, 같은 환자의 여러 입원이 train/test로 갈라질 수 있으므로 결측 시 patient_id 대체 등 규칙이 필요하다."
+  },
+  {
+   "id": "A146",
+   "half": "test",
+   "report_id": "20b55da4f493",
+   "variant": "design_F872.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 결측이다. 그대로 group holdout을 하면 결측 행이 한 그룹으로 몰리거나 행 단위로 나뉘어, 입원이 여러 번 있는 환자(1,137명)의 입원이 train과 test에 함께 들어갈 수 있다. 결측 시 patient_id로 대체하는 규칙 등을 설계에 명시해야 한다."
+  },
+  {
+   "id": "A147",
+   "half": "dev",
+   "report_id": "f12fa471c4bd",
+   "variant": "design_7F4F.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 그룹 홀드아웃(및 같은 키를 쓰는 group_kfold 튜닝)이 성립하지 않는다. 결측을 하나의 그룹으로 묶으면 분할이 불가능하고, 따로 처리하면 입원이 여러 번인 환자 1,137명의 입원이 train/test에 나뉘어 누수가 생긴다. patient_id로 보완하는 키가 필요하다."
+  },
+  {
+   "id": "A148",
+   "half": "test",
+   "report_id": "9fb8aaf1f0dd",
+   "variant": "design_94F5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 그대로 group_holdout하면 결측 환자가 한 그룹으로 묶이거나 누락되고 같은 환자의 입원·TP가 train/test에 섞일 수 있다; 결측 시 patient_id 대체 등 규칙 확정이 필요하다."
+  },
+  {
+   "id": "A149",
+   "half": "test",
+   "report_id": "a302ee8eaee8",
+   "variant": "design_48A5.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "크레아티닌 측정 횟수를 admit~discharge 전체로 세서 tp 이후의 측정과 재원 정보로 코호트를 고른다. 측정 빈도가 결과 발견과 얽혀 있어(통과 8.0% vs 탈락 1.1%) 선택 편향과 누출이 생긴다. admit~tp로 제한해야 한다."
+  },
+  {
+   "id": "A150",
+   "half": "dev",
+   "report_id": "eac822ae25fc",
+   "variant": "design_4BE0.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 전에 퇴원하거나 사망해 결과 창을 다 관찰하지 못한 경우(적격 TP의 47%, 양성률 0.35% vs 완전 관찰 11.3%)를 어떻게 처리할지 정의가 없다. 관찰하지 못한 구간이 음성으로 처리되어 라벨이 편향된다."
+  },
+  {
+   "id": "A151",
+   "half": "test",
+   "report_id": "64fafbd706ec",
+   "variant": "design_4BE0.json",
+   "target": "split.key",
+   "problem": "분할 키이자 튜닝 키인 family_id가 환자의 약 80%에서 비어 있습니다(입원이 여러 번인 환자 1,169명 포함). 결측 처리 규칙이 없어서, 같은 환자·같은 입원의 행이 학습과 평가로 나뉘거나 결측 그룹이 한쪽으로 몰릴 수 있습니다. 결측이면 patient_id로 대체한다는 규칙이 필요합니다."
+  },
+  {
+   "id": "A152",
+   "half": "dev",
+   "report_id": "9b24b5bd07d5",
+   "variant": "design_E0E0.json",
+   "target": "preprocessing.select_k",
+   "problem": "fit_scope가 all이라 테스트셋의 결과값까지 써서 특성을 고르게 되고, 그만큼 테스트 성능이 부풀려집니다. 학습 데이터(교차검증 각 fold 안)에서만 맞춰야 합니다."
+  },
+  {
+   "id": "A153",
+   "half": "test",
+   "report_id": "9fb8aaf1f0dd",
+   "variant": "design_94F5.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점 재원 중 조건이 없어 설계 코호트 TP의 49%(22,118건)가 퇴원 이후 시점이며, 이후 검사가 없어 전부 음성으로 라벨링되어 퇴원 예측을 학습하게 된다."
+  },
+  {
+   "id": "A154",
+   "half": "test",
+   "report_id": "70dd02ad4777",
+   "variant": "design_AF15.json",
+   "target": "features.ward_type",
+   "problem": "scope가 next_admission이라 예측 시점(퇴원) 뒤에 생기는 다음 입원의 병동 값을 쓰고, 결과(30일 재입원)를 정하는 바로 그 입원 행을 읽으므로 가용 시점 위반이자 결과 누수다. 삭제해야 한다(지금 입원의 병동은 unit 특징에 이미 있다)."
+  },
+  {
+   "id": "A155",
+   "half": "dev",
+   "report_id": "d49b593b7474",
+   "variant": "design_A1C2.json",
+   "target": "features.n_dx",
+   "problem": "진단 코드에 AKI 코드 N17이 포함되어 결과(aki_48h)의 대리 변수가 될 수 있으므로 사람이 확인해야 한다(Q4 경고)."
+  },
+  {
+   "id": "A156",
+   "half": "test",
+   "report_id": "50a69085f677",
+   "variant": "design_E0E0.json",
+   "target": "split.key",
+   "problem": "split_unit은 family이고 tuning cv_key도 family_id인데, 분할 키만 admission_id입니다. 이대로 나누면 같은 환자(687명)와 가족(258개)의 입원이 train과 test 양쪽에 들어가 성능이 부풀려집니다. 키를 family_id로 바꾸고, family_id가 없는 환자(약 80%)는 patient_id로 대체해야 합니다."
+  },
+  {
+   "id": "A157",
+   "half": "test",
+   "report_id": "358d04627f6f",
+   "variant": "design_9672.json",
+   "target": "features.dx_chf",
+   "problem": "진단 코드는 보통 퇴원 뒤에 코딩이 끝나므로 퇴원 시각(tp)에 알 수 없을 수 있다. 점검 통과는 코딩 지연을 0시간으로 둔 가정(DX_CODING_DELAY_H=0)에 기대므로, 배포 시점에 이 값을 받을 수 있는지 사람이 확인해야 한다."
+  },
+  {
+   "id": "A158",
+   "half": "dev",
+   "report_id": "a9a2c5bf2c4e",
+   "variant": "design_E6D6.json",
+   "target": "preprocessing.median_impute",
+   "problem": "중앙값 대치를 fit_scope 'all'로 적합해 시험 부분의 값이 대치 중앙값에 섞여 학습에 들어갑니다(Q3 차단). fit_scope를 train(교차검증 안에서는 train_fold)으로 바꿔야 합니다."
+  },
+  {
+   "id": "A159",
+   "half": "dev",
+   "report_id": "f0081e0a0d44",
+   "variant": "design_EC59.json",
+   "target": "features.dx_ckd",
+   "problem": "dx_chf와 같은 문제입니다. 퇴원 후 코딩되는 현재 입원 진단 코드(N18)를 퇴원 시각에 쓸 수 있다고 가정하므로 가용 시점을 확인해야 합니다."
+  },
+  {
+   "id": "A160",
+   "half": "test",
+   "report_id": "42edb86f432e",
+   "variant": "design_A1C2.json",
+   "target": "features.n_dx",
+   "problem": "진단 테이블에 시간 정보가 없는 퇴원 진단(AKI 코드 N17.9 포함)을 창 없이 집계해, tp 시점에 알 수 없는 결과 정보가 누수된다(N17.9 유무에 따라 양성률 59.7% 대 0.8%)."
+  },
+  {
+   "id": "A161",
+   "half": "dev",
+   "report_id": "86f6ff747d8e",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "결과(aki_48h)를 정하는 (tₚ, tₚ+48h] 구간의 같은 입원 크레아티닌 행을 그대로 포함한다. 결과가 특징에 새어 들어간다(Q4 차단)."
+  },
+  {
+   "id": "A162",
+   "half": "test",
+   "report_id": "a6f541abe0c7",
+   "variant": "design_E6D6.json",
+   "target": "preprocessing.median_impute",
+   "problem": "중앙값 대치를 전체 데이터(fit_scope: all)에서 적합해 평가 부분의 정보가 학습에 들어갑니다. 적합 범위를 train(교차검증에서는 train_fold)으로 바꿔야 합니다."
+  },
+  {
+   "id": "A163",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses에는 시각 정보가 없고 진단 코드는 보통 퇴원 뒤에 확정되어 퇴원 시점에 쓸 수 없을 수 있다. window나 scope가 없어 이후 입원의 진단까지 포함될 위험도 있다."
+  },
+  {
+   "id": "A164",
+   "half": "test",
+   "report_id": "14824aa86d76",
+   "variant": "design_0B14.json",
+   "target": "split.key",
+   "problem": "split_unit은 family이고 튜닝 cv_key는 family_id인데, 분할 키가 시점 행 단위인 index_id로 되어 있다. 같은 입원·환자·가족의 다른 시점이 train과 test에 함께 들어가 누수가 생긴다. family_id는 환자의 80%에서 비어 있으므로 patient_id로 대신하는 규칙도 정해야 한다."
+  },
+  {
+   "id": "A165",
+   "half": "test",
+   "report_id": "953697f71cd3",
+   "variant": "design_2340.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 재원 중이라는 조건이 없어 tp의 47%(22,948개)가 퇴원 뒤 시점이다. 이 행들은 검사가 없어 결과가 모두 0으로 들어간다."
+  },
+  {
+   "id": "A166",
+   "half": "test",
+   "report_id": "c11b49a41acc",
+   "variant": "design_C963.json",
+   "target": "cohort.inclusion.los_7d",
+   "problem": "재원 기간 168시간 이상은 퇴원해야 확정되는 정보인데, 예측 시점(입원 후 24~168시간)보다 늦게 알려지는 이 정보로 코호트를 고르고 있습니다. 그 결과 일찍 퇴원하거나 사망한 환자가 빠집니다. 예측 시점에 아직 입원 중인 행만 남기는 방식으로 바꿔야 합니다."
+  },
+  {
+   "id": "A167",
+   "half": "dev",
+   "report_id": "dc419bf2f8c4",
+   "variant": "design_C963.json",
+   "target": "split.key",
+   "problem": "split_unit과 튜닝 cv_key는 family인데 hold-out 분할 키는 patient_id입니다. 같은 가족이 train과 test에 나뉘어(코호트 내 8가족) 가족 간 정보가 새고, 튜닝과 평가의 그룹 단위도 어긋납니다."
+  },
+  {
+   "id": "A168",
+   "half": "dev",
+   "report_id": "b6ea1a5bcb91",
+   "variant": "design_800E.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 CV 키도 80%가 결측인 family_id라서 같은 환자의 입원이 fold 사이에 나뉘어 튜닝이 낙관적으로 될 수 있다. 분할 키와 같은 대체 규칙이 필요하다."
+  },
+  {
+   "id": "A169",
+   "half": "test",
+   "report_id": "627ec270fa2a",
+   "variant": "design_7F4F.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses 테이블에 시각 정보가 없어 퇴원 시점에 진단 코드가 확정되어 있는지 알 수 없고, scope가 없어 이후 입원의 진단까지 셀 수 있는 정의라 확인이 필요하다."
+  },
+  {
+   "id": "A170",
+   "half": "dev",
+   "report_id": "780781a639ef",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "처치 수에 투석(5A1D70Z)이 들어가는데 투석은 AKI 결과의 대리 변수다. 결과를 정하는 과정의 기록이 특징으로 들어갈 수 있어 투석을 뺄지 사람이 확인해야 한다."
+  },
+  {
+   "id": "A171",
+   "half": "dev",
+   "report_id": "b3d44b3b7f5d",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h(collect_time)로 결과 창과 같아, 결과를 판정하는 크레아티닌을 그대로 특징으로 쓰는 결과 누출이다. 예측 시점에는 알 수 없으므로 빼야 한다."
+  },
+  {
+   "id": "A172",
+   "half": "dev",
+   "report_id": "716f667fe013",
+   "variant": "design_EC59.json",
+   "target": "features.dx_ckd",
+   "problem": "scope·window 미지정이고 진단에 시각이 없어 미래 입원 진단이 포함될 수 있으며, 퇴원 진단 코드가 tp 시점에 이용 가능한지 확인되지 않았다."
+  },
+  {
+   "id": "A173",
+   "half": "test",
+   "report_id": "b2a09c4c20ad",
+   "variant": "design_D568.json",
+   "target": "features.dx_ckd",
+   "problem": "진단 테이블에는 시각이 없는데 window나 scope가 지정되지 않았습니다. 환자 단위로 집계하면 미래 입원의 진단까지 들어갑니다. 인덱스 입원만 쓰더라도 퇴원 진단 코딩이 tp 시점에 확정되어 있는지 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A174",
+   "half": "test",
+   "report_id": "ecccca21c9ab",
+   "variant": "design_E0E0.json",
+   "target": "split.key",
+   "problem": "분할 키가 admission_id(입원)여서 선언한 독립 단위 family보다 작다. 같은 가족·환자의 입원이 학습과 평가에 함께 들어간다(데이터상 가족 241/423개가 나뉨). family_id로 분할해야 한다."
+  },
+  {
+   "id": "A175",
+   "half": "test",
+   "report_id": "59dea5132e5e",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "창이 admit~discharge라서 예측 시점 이후, 결과 창(tp~tp+48h)의 크레아티닌까지 포함한다. 결과 정의 자체를 입력으로 쓰는 미래 정보 누설이다."
+  },
+  {
+   "id": "A176",
+   "half": "test",
+   "report_id": "1f6f070ae4e2",
+   "variant": "design_EC59.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses에는 시각 열이 없는데 scope/window가 정해져 있지 않아, 환자 단위로 세면 퇴원(tp) 이후 입원(재입원 포함)의 진단 수까지 들어가 결과 누수가 생깁니다. 해당 입원으로 한정해야 합니다."
+  },
+  {
+   "id": "A177",
+   "half": "test",
+   "report_id": "4a6420614d33",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h로 결과 창과 같고 결과를 정하는 크레아티닌 행을 그대로 쓴다. 예측 시점에 알 수 없는 미래 값이자 결과 자체가 새는 특징이므로 삭제해야 한다(Q1·Q4 차단)."
+  },
+  {
+   "id": "A178",
+   "half": "dev",
+   "report_id": "754c8892a30b",
+   "variant": "design_5350.json",
+   "target": "features.dx_ckd",
+   "problem": "diagnoses에는 시각 정보가 없고 설계에도 scope/window가 없어 이후 입원(재입원)의 진단이 섞일 수 있으며, 현재 입원 진단도 퇴원 후 확정될 수 있어 퇴원 시점에 쓸 수 있는지 확인이 필요하다."
+  },
+  {
+   "id": "A179",
+   "half": "dev",
+   "report_id": "0e407e31eb9a",
+   "variant": "design_9672.json",
+   "target": "features.dx_ckd",
+   "problem": "diagnoses 테이블에 시각 정보가 없고 퇴원 후 확정되는 코드일 수 있어 퇴원 시점 가용성이 보장되지 않으며, 지표입원으로 한정하는 scope/window도 없어 이후 입원의 진단이 섞일 수 있다."
+  },
+  {
+   "id": "A180",
+   "half": "test",
+   "report_id": "8da1b1d595a2",
+   "variant": "design_800E.json",
+   "target": "features.dx_ckd",
+   "problem": "진단 테이블에 시점 열이 없고 설계에도 scope/window가 없어, 환자 단위로 집계하면 tp 이후 입원의 N18 진단이 들어갈 수 있다. 현재 입원이나 이전 입원으로 한정하고, 퇴원 시각에 코드를 쓸 수 있는지 확인해야 한다."
+  },
+  {
+   "id": "A181",
+   "half": "dev",
+   "report_id": "80454e7a6ba7",
+   "variant": "design_C963.json",
+   "target": "cohort.inclusion.los_7d",
+   "problem": "재원 기간 ≥168h는 퇴원 시각에야 확정되는 미래 정보다. 이것으로 tₚ(입원 후 24~168h) 코호트를 고르면 선택 시점 누수와 생존 편향이 생긴다. 'tₚ 시점에 입원 중'이라는 기준으로 바꿔야 한다."
+  },
+  {
+   "id": "A182",
+   "half": "test",
+   "report_id": "82c99a3e0192",
+   "variant": "design_AF15.json",
+   "target": "features.n_dx",
+   "problem": "시점 제한 없이 진단 수를 세면 이후 입원의 진단까지 포함된다. 실제로 환자 단위 집계는 결과와의 상관이 0.36으로, 인덱스 입원만 쓴 0.10보다 크게 부풀어 누설이 확인된다."
+  },
+  {
+   "id": "A183",
+   "half": "dev",
+   "report_id": "5584dfc2305d",
+   "variant": "design_48A5.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "포함 기준 창이 입원부터 퇴원까지라 tp 시점에 알 수 없는 미래 측정 횟수로 코호트를 고른다. 이 횟수는 AKI 발생과도 연관돼 선택 편향을 만든다."
+  },
+  {
+   "id": "A184",
+   "half": "test",
+   "report_id": "ed0eeba483e5",
+   "variant": "design_C963.json",
+   "target": "split.key",
+   "problem": "split_unit과 튜닝 cv_key는 family인데 holdout 분할 키는 patient_id다. 그래서 같은 가족이 train과 test에 나뉘어 들어간다(423개 가족 중 222개). 가족 단위 누수로 성능이 과대평가될 수 있다."
+  },
+  {
+   "id": "A185",
+   "half": "dev",
+   "report_id": "62aada1958ed",
+   "variant": "design_4BE0.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자 80%(3,998/5,000)에서 결측이다. 그대로 쓰면 결측 환자가 한 그룹으로 묶이거나 탈락하고, 결측을 개별 처리하면 같은 환자(여러 번 입원한 결측 환자 1,169명)의 TP가 train과 test로 갈린다. model.tuning.cv_key도 같다. 결측을 patient_id로 대체하는 규칙이 필요하다."
+  },
+  {
+   "id": "A186",
+   "half": "test",
+   "report_id": "358d04627f6f",
+   "variant": "design_9672.json",
+   "target": "features.dx_ckd",
+   "problem": "CKD 진단 코드도 퇴원 후 코딩되므로 tp에 알 수 없을 수 있다. 코딩 지연 0시간이라는 가정이 맞는지 확인해야 한다."
+  },
+  {
+   "id": "A187",
+   "half": "dev",
+   "report_id": "dc419bf2f8c4",
+   "variant": "design_C963.json",
+   "target": "cohort.inclusion.los_7d",
+   "problem": "재원 ≥168h는 퇴원 시각, 즉 tp 시점에 알 수 없는 미래 정보로 코호트를 고르는 기준입니다. 실제 사용 집단과 달라지고, 중증·사망 환자 쪽으로 쏠려 결과율이 부풀려집니다(재원 중 기준 6.1% → 13.6%)."
+  },
+  {
+   "id": "A188",
+   "half": "dev",
+   "report_id": "0596e4fef32c",
+   "variant": "design_0B14.json",
+   "target": "split.key",
+   "problem": "index_id(입원×tp)로 나누면 같은 입원·환자·가족의 행이 train과 test에 동시에 들어가 누출이 생긴다(같은 seed 기준 환자 3,285명이 양쪽에 걸침). split_unit: family에 맞게 family_id(없으면 patient_id)로 묶어야 한다."
+  },
+  {
+   "id": "A189",
+   "half": "test",
+   "report_id": "e3cb8f54fd0b",
+   "variant": "design_D97B.json",
+   "target": "cohort.inclusion",
+   "problem": "TP 시점에 재원 중이어야 한다는 조건이 없어, 설계대로 TP를 만들면 행의 약 47%가 퇴원 뒤 TP가 되고 결과가 구조적으로 음성이 된다."
+  },
+  {
+   "id": "A190",
+   "half": "dev",
+   "report_id": "cec85feafb61",
+   "variant": "design_A1C2.json",
+   "target": "outcome.window",
+   "problem": "결과 창 48h 안에 크레아티닌 측정이 없거나(측정 간격 최대 72h) 그 전에 퇴원하면 AKI를 관측할 수 없는데 음성으로 처리된다. 미관측 사례를 어떻게 처리할지 정해야 한다."
+  },
+  {
+   "id": "A191",
+   "half": "test",
+   "report_id": "953697f71cd3",
+   "variant": "design_2340.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 전에 퇴원한 tp(재원 tp의 47%)는 결과 창이 잘려 측정 부재가 음성으로 처리된다(결과율 0.35% vs 완전 관찰 11.3%). 중도절단 처리 규칙이 필요하다."
+  },
+  {
+   "id": "A192",
+   "half": "test",
+   "report_id": "20b55da4f493",
+   "variant": "design_F872.json",
+   "target": "features.los_h",
+   "problem": "설계가 참조하는 admissions.length_of_stay_h 컬럼이 데이터에 없다. discharge_time - admit_time으로 계산할지 확인이 필요하다."
+  },
+  {
+   "id": "A193",
+   "half": "dev",
+   "report_id": "ed10e016c660",
+   "variant": "design_94F5.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 입원 중이어야 한다는 조건이 없어 전체 tp의 47%(22,948개)가 퇴원 뒤 시점으로 생성된다. 이 tp는 결과 창에 검사가 없어 자동으로 음성이 된다."
+  },
+  {
+   "id": "A194",
+   "half": "test",
+   "report_id": "df95f46fa469",
+   "variant": "design_5350.json",
+   "target": "preprocessing.target_encode",
+   "problem": "결과(readmit_30d)를 이용하는 타깃 인코딩을 fit_scope 'all'로 전체 데이터에서 적합한다. 평가 세트의 결과가 학습 특징에 직접 새어 들어가므로 train(튜닝 중에는 train_fold) 범위로 바꾸거나 단계를 빼야 한다."
+  },
+  {
+   "id": "A195",
+   "half": "dev",
+   "report_id": "86f6ff747d8e",
+   "variant": "design_2340.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%에서 비어 있는데 결측 처리가 정해져 있지 않다. 구현에 따라 표본이 대부분 빠지거나, 한 그룹으로 몰리거나, 같은 환자가 학습과 평가로 갈라질 수 있다. 결측이면 patient_id로 대체하는 키를 홀드아웃과 CV에 쓸지 사람이 확인해야 한다."
+  },
+  {
+   "id": "A196",
+   "half": "dev",
+   "report_id": "55629d244931",
+   "variant": "design_D568.json",
+   "target": "features.cr_last",
+   "problem": "크레아티닌 값의 창을 채취 시각(collect_time)으로 걸러서, 퇴원 전에 채취했지만 퇴원 뒤에 보고된 값이 들어간다(예측 행 1,442/6,855). 검사 값은 보고 시각에 알 수 있으므로 report_time으로 걸러야 한다."
+  },
+  {
+   "id": "A197",
+   "half": "dev",
+   "report_id": "eac822ae25fc",
+   "variant": "design_4BE0.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 80%(3,998/5,000)에서 비어 있다. 그대로 쓰면 결측 환자가 한 그룹으로 묶이거나 빠진다(model.tuning.cv_key도 같은 문제). patient_id로 대체할지 등 처리 규칙을 확인해야 한다."
+  },
+  {
+   "id": "A198",
+   "half": "dev",
+   "report_id": "716f667fe013",
+   "variant": "design_EC59.json",
+   "target": "features.dx_chf",
+   "problem": "scope·window 미지정이고 진단에 시각이 없어 미래 입원 진단이 포함될 수 있으며, 퇴원 진단 코드가 tp 시점에 이용 가능한지 확인되지 않았다."
+  },
+  {
+   "id": "A199",
+   "half": "dev",
+   "report_id": "1a7d608e5959",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "procedures.chart_date는 날짜만 있어 window.end=tp로 자르면 tp 당일 tp 이후 시행된 시술(특히 AKI 발생 1–2일 뒤 시행되는 투석 5A1D70Z)이 포함되어 결과 정보가 누출되며, window.start도 없어 이전 입원 시술까지 섞인다."
+  },
+  {
+   "id": "A200",
+   "half": "dev",
+   "report_id": "754c8892a30b",
+   "variant": "design_5350.json",
+   "target": "features.n_dx",
+   "problem": "scope/window 없이 진단 수를 세면 이후 입원의 진단까지 포함될 수 있고, 퇴원 후 확정되는 코딩 정보일 수 있어 퇴원 시점에 쓸 수 있는지 확인이 필요하다."
+  },
+  {
+   "id": "A201",
+   "half": "test",
+   "report_id": "f2c8b661eefe",
+   "variant": "design_1D2D.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "크레아티닌 3회 이상 기준의 창이 admit~discharge라 예측 시점 tp 이후에야 알 수 있는 정보로 코호트를 고른다(데이터상 모든 예측 행에서 해당). 창 끝을 tp로 바꿔야 한다."
+  },
+  {
+   "id": "A202",
+   "half": "dev",
+   "report_id": "80454e7a6ba7",
+   "variant": "design_C963.json",
+   "target": "features.unit",
+   "problem": "admissions.unit은 입원당 값이 하나뿐이라 입원 시점 병동인지 최종(전동 후) 병동인지 알 수 없다. 최종 병동이면 tₚ 이후 정보가 되므로 사람이 확인해야 한다."
+  },
+  {
+   "id": "A203",
+   "half": "test",
+   "report_id": "335043fb4748",
+   "variant": "design_800E.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(4,000명 중 3,998명 수준)에서 비어 있습니다. 그대로 그룹 분할을 하면 결측 환자들이 한 그룹으로 묶이거나, 같은 환자의 여러 입원이 train과 test로 나뉠 수 있습니다. 결측일 때 patient_id로 대신하는 등의 규칙이 필요하며 model.tuning.cv_key도 같은 문제가 있습니다."
+  },
+  {
+   "id": "A204",
+   "half": "dev",
+   "report_id": "716f667fe013",
+   "variant": "design_EC59.json",
+   "target": "features.n_dx",
+   "problem": "scope·window가 없고 진단 테이블에 시각이 없어, 환자 단위로 집계하면 미래(결과 재입원 포함) 입원의 진단이 섞여 누수가 생긴다. 지표 입원으로 한정해도 퇴원 진단 코드가 퇴원 시각(tp)에 확정·이용 가능한지 확인이 필요하다."
+  },
+  {
+   "id": "A205",
+   "half": "dev",
+   "report_id": "d49b593b7474",
+   "variant": "design_A1C2.json",
+   "target": "outcome.window",
+   "problem": "tₚ+48h 전에 퇴원·사망하는 예측 행이 많은데(예: tₚ=24h에서 6,975건 중 2,217건), 창이 끝나기 전에 관찰이 끊긴 행의 처리 방법이 없어 관찰되지 않은 사람이 음성으로 표시될 수 있다."
+  },
+  {
+   "id": "A206",
+   "half": "test",
+   "report_id": "ecccca21c9ab",
+   "variant": "design_E0E0.json",
+   "target": "features.n_dx",
+   "problem": "현재 입원의 진단 코드 개수는 퇴원 코딩이 끝나야 확정된다. 코딩 지연이 있으면 tₚ 이후 정보이므로 사람이 확인해야 한다."
+  },
+  {
+   "id": "A207",
+   "half": "dev",
+   "report_id": "cec85feafb61",
+   "variant": "design_A1C2.json",
+   "target": "features.n_dx",
+   "problem": "시각 없는 diagnoses 테이블에서 입원 전체 진단 수를 세므로 tp에 알 수 없는 퇴원 진단을 쓴다. 특히 N17.9(급성 신부전)가 AKI 입원의 89%, 비AKI 입원의 1.4%에만 있어 결과가 직접 누출된다."
+  },
+  {
+   "id": "A208",
+   "half": "test",
+   "report_id": "9889e5bb73c4",
+   "variant": "design_4BE0.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 CV 키도 80%가 결측인 family_id다. 같은 환자의 tp가 fold 사이로 나뉘어 들어가 튜닝 결과가 낙관적으로 편향될 수 있다."
+  },
+  {
+   "id": "A209",
+   "half": "dev",
+   "report_id": "72d114346041",
+   "variant": "design_1D2D.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "포함 기준이 입원 전체(admit~discharge)의 크레아티닌 수를 세어 tp 이후·결과 창 안의 측정까지 코호트 선정에 쓴다. 최종 tp의 55%가 tp 시점에는 3회 미만이라 미래 정보에 의한 결과 연관 선택 편향이 생기므로 창을 admit~tp(report_time 기준)로 바꿔야 한다."
+  },
+  {
+   "id": "A210",
+   "half": "test",
+   "report_id": "b9db24901a6b",
+   "variant": "design_0B14.json",
+   "target": "split.key",
+   "problem": "분할 키가 예측 행 단위인 index_id라서, 선언된 독립 단위인 family보다 작습니다. 그래서 같은 가족·환자·입원의 행이 학습과 평가 양쪽에 들어갑니다(데이터에서 가족 423개 중 389개가 나뉨). family_id로 바꾸고, family_id가 없으면 patient_id를 써야 합니다."
+  },
+  {
+   "id": "A211",
+   "half": "test",
+   "report_id": "358d04627f6f",
+   "variant": "design_9672.json",
+   "target": "features.n_dx",
+   "problem": "진단 코드 개수도 퇴원 후 코딩이 끝나야 확정되므로 tp에 알 수 없을 수 있다. 코딩 지연 0시간이라는 가정이 맞는지 확인해야 한다."
+  },
+  {
+   "id": "A212",
+   "half": "dev",
+   "report_id": "0596e4fef32c",
+   "variant": "design_0B14.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 아직 입원 중이어야 한다는 포함 기준이 없어 퇴원 후 시점(전체 인덱스 행의 47%)이 예측 행이 된다."
+  },
+  {
+   "id": "A213",
+   "half": "dev",
+   "report_id": "e5cd9c9b15b8",
+   "variant": "design_A1C2.json",
+   "target": "outcome.window",
+   "problem": "48h 결과 창이 퇴원이나 사망으로 잘리는 경우(재원 중 10,968행)의 처리가 정의되지 않아, 크레아티닌 측정이 없다는 이유만으로 음성 라벨이 붙는다."
+  },
+  {
+   "id": "A214",
+   "half": "test",
+   "report_id": "ed0eeba483e5",
+   "variant": "design_C963.json",
+   "target": "cohort.inclusion.los_7d",
+   "problem": "재원 기간 168h 이상이라는 조건은 퇴원 후에야 알 수 있는 미래 정보다. tp 시점에는 적용할 수 없고 불멸시간·선택 편향을 만든다. 실제로 입원 6,962건 중 1,009건만 남고, 결과율도 3.8%에서 13.6%로 크게 바뀐다."
+  },
+  {
+   "id": "A215",
+   "half": "dev",
+   "report_id": "0596e4fef32c",
+   "variant": "design_0B14.json",
+   "target": "features.renal_ordered",
+   "problem": "투석 오더·신장내과 협진은 AKI 의심·치료에 따른 진료 행위이고, 투석 오더의 99.5%가 AKI 입원에서 나왔으며 검사로 AKI가 확인되기 전에 나온 경우도 있다. 결과의 대리지표(라벨 누출)일 수 있어 사람이 확인해야 한다."
+  },
+  {
+   "id": "A216",
+   "half": "dev",
+   "report_id": "5584dfc2305d",
+   "variant": "design_48A5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000)에서 결측이다. 결측 처리 규칙(예: patient_id로 대체)이 없으면 그룹 분할이 한 덩어리로 몰리거나 행이 빠진다."
+  },
+  {
+   "id": "A217",
+   "half": "dev",
+   "report_id": "b615c526bace",
+   "variant": "design_D97B.json",
+   "target": "outcome.window",
+   "problem": "tp 행의 47%는 tp+48h 전에 퇴원·전원·사망해 결과 창이 잘리고, 이런 행은 검사가 없어 거의 자동 음성(양성률 0.35% vs 11.3%)이 된다. 결과 미확인을 음성으로 처리하는 편향이 생기므로 잘린 창과 사망·전원의 처리 규칙을 정해야 한다."
+  },
+  {
+   "id": "A218",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%에서 결측인데 처리 방법이 정의되어 있지 않다. 결측을 한 그룹으로 묶거나 버리면 분할이 왜곡된다(model.tuning.cv_key도 같음). patient_id 대체 등 규칙을 확정해야 한다."
+  },
+  {
+   "id": "A219",
+   "half": "test",
+   "report_id": "1f6f070ae4e2",
+   "variant": "design_EC59.json",
+   "target": "features.dx_ckd",
+   "problem": "diagnoses에는 시각 열이 없는데 scope/window가 정해져 있지 않아, 환자 단위로 모으면 퇴원(tp) 이후 입원의 진단까지 들어가 결과 누수가 생깁니다. 해당 입원으로 한정해야 합니다."
+  },
+  {
+   "id": "A220",
+   "half": "test",
+   "report_id": "9889e5bb73c4",
+   "variant": "design_4BE0.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 아직 입원 중이어야 한다는 포함 기준이 없다. 그래서 퇴원 후의 tp 22,118개(제외 후 코호트의 약 49%)가 들어가며, 검사가 없어 모두 음성으로 라벨된다."
+  },
+  {
+   "id": "A221",
+   "half": "test",
+   "report_id": "8da1b1d595a2",
+   "variant": "design_800E.json",
+   "target": "split.key",
+   "problem": "환자의 80%(5,000명 중 3,998명)가 family_id 결측이라 family_id로 group holdout을 하면 결측 환자가 빠지거나 하나의 거대 그룹으로 묶이고, 결측 처리 방식에 따라 여러 번 입원한 같은 환자(1,454명)가 train과 test에 나뉘어 들어갈 수 있다. 결측 시 patient_id로 대체하는 규칙 등을 정해야 한다."
+  },
+  {
+   "id": "A222",
+   "half": "test",
+   "report_id": "14824aa86d76",
+   "variant": "design_0B14.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 아직 입원 중이어야 한다는 조건이 없다. 7개 시점 행의 47%가 퇴원 뒤 시점인데, 측정이 없어 모두 음성으로 들어가므로 결과율과 특성 분포가 왜곡된다."
+  },
+  {
+   "id": "A223",
+   "half": "dev",
+   "report_id": "80454e7a6ba7",
+   "variant": "design_C963.json",
+   "target": "split.key",
+   "problem": "선언된 독립 단위는 family인데 분할 키가 patient_id라서 같은 가족의 환자가 학습·평가에 나뉜다(데이터상 173개 중 8개 가족). family_id로 분할해야 한다."
+  },
+  {
+   "id": "A224",
+   "half": "test",
+   "report_id": "d2f051431c15",
+   "variant": "design_48A5.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "크레아티닌 3회 이상 조건을 입원~퇴원 전체 창에서 세므로 tp 이후 측정까지 사용해 코호트를 고른다; AKI가 생기면 검사가 늘어 결과와 얽힌다(기준 충족 8.0% vs 미충족 1.1%), 운영 시점에 적용 불가."
+  },
+  {
+   "id": "A225",
+   "half": "test",
+   "report_id": "4a6420614d33",
+   "variant": "design_9AF0.json",
+   "target": "features.unit",
+   "problem": "admissions.unit은 입원당 값 하나인데, 입원 시 병동인지 재원 중 옮긴 뒤나 최종 병동인지 알 수 없다. 나중 값이라면 tp에 모르는 정보이므로 기록 시점을 사람이 확인해야 한다."
+  },
+  {
+   "id": "A226",
+   "half": "test",
+   "report_id": "59dea5132e5e",
+   "variant": "design_2340.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000명)에서 결측이고 이들 중 재입원이 많다. 결측 처리 규칙이 없어서 같은 환자의 시점이 train/test(및 group_kfold 폴드)에 함께 들어가거나 거대한 단일 그룹이 생길 수 있다. patient_id 대체 같은 규칙을 정해야 한다."
+  },
+  {
+   "id": "A227",
+   "half": "dev",
+   "report_id": "5a593f852c4b",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_last",
+   "problem": "창을 report_time이 아니라 collect_time으로 걸러 tp 전에 채취됐지만 아직 보고되지 않은 값이 들어간다. 701/23,223 예측 행에서 실제로 그렇다(Q1 차단)."
+  },
+  {
+   "id": "A228",
+   "half": "dev",
+   "report_id": "754c8892a30b",
+   "variant": "design_5350.json",
+   "target": "features.dx_chf",
+   "problem": "diagnoses에는 시각 정보가 없고 설계에도 scope/window가 없어 이후 입원(재입원)의 진단이 섞일 수 있으며, 퇴원 시점에 쓸 수 있는지 확인이 필요하다."
+  },
+  {
+   "id": "A229",
+   "half": "test",
+   "report_id": "1f6f070ae4e2",
+   "variant": "design_EC59.json",
+   "target": "features.dx_chf",
+   "problem": "diagnoses에는 시각 열이 없는데 scope/window가 정해져 있지 않아, 환자 단위로 모으면 퇴원(tp) 이후 입원의 진단까지 들어가 결과 누수가 생깁니다. 해당 입원으로 한정해야 합니다."
+  },
+  {
+   "id": "A230",
+   "half": "dev",
+   "report_id": "d49b593b7474",
+   "variant": "design_A1C2.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자 80%(3,998/5,000)에서 결측이라, 결측을 한 그룹으로 묶으면 분할이 무너지고 버리면 표본 대부분을 잃는다. 결측 시 patient_id로 대체하는 규칙을 명시해야 한다."
+  },
+  {
+   "id": "A231",
+   "half": "test",
+   "report_id": "0366b2d8308c",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_last",
+   "problem": "collect_time 기준이라 TP 전에 채취했지만 TP 뒤에 보고된 크레아티닌 값이 들어간다(입원 중 TP 750행). TP 시점에는 알 수 없는 정보이므로 report_time 기준이어야 한다."
+  },
+  {
+   "id": "A232",
+   "half": "dev",
+   "report_id": "62aada1958ed",
+   "variant": "design_4BE0.json",
+   "target": "outcome.window",
+   "problem": "결과 창(tp~tp+48h) 안의 퇴원·사망을 처리하는 규칙이 없다. 적격 TP의 47%가 창 안에 퇴원하거나 사망하고, 관찰이 끊겨 거의 전부 음성(0.35% 대 11.2%)이 된다. 사망이라는 경쟁 사건도 음성으로 처리된다."
+  },
+  {
+   "id": "A233",
+   "half": "test",
+   "report_id": "d2f051431c15",
+   "variant": "design_48A5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000명)에서 결측이라 그대로 그룹 분할하면 결측이 한 그룹으로 묶이거나 빠지고, 다회 입원 환자의 tp가 train/test에 나뉠 수 있다; 결측 시 patient_id 대체 등 규칙이 필요하다(cv_key도 동일)."
+  },
+  {
+   "id": "A234",
+   "half": "test",
+   "report_id": "0366b2d8308c",
+   "variant": "design_9AF0.json",
+   "target": "model.tuning.cv_key",
+   "problem": "split.key와 같이 결측이 많은 family_id를 CV 그룹 키로 써서, 튜닝 단계에서도 같은 환자의 행이 fold 사이로 새어 나간다."
+  },
+  {
+   "id": "A235",
+   "half": "test",
+   "report_id": "627ec270fa2a",
+   "variant": "design_7F4F.json",
+   "target": "features.los_h",
+   "problem": "설계가 지정한 length_of_stay_h 컬럼이 admissions에 없어, discharge_time−admit_time으로 파생하는 것이 의도한 정의인지 확인이 필요하다."
+  },
+  {
+   "id": "A236",
+   "half": "test",
+   "report_id": "1e242d49def6",
+   "variant": "design_2340.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 결측인데 결측 처리 규칙이 없다. 처리 방식에 따라 표본이 한쪽에 몰리거나 사라지고, 같은 환자의 행이 학습과 평가로 나뉠 수 있다. 결측은 patient_id로 대체하는 등 규칙을 정해야 한다."
+  },
+  {
+   "id": "A237",
+   "half": "dev",
+   "report_id": "5a593f852c4b",
+   "variant": "design_9AF0.json",
+   "target": "split.key",
+   "problem": "환자의 80%(3,998/5,000)가 family_id 결측인데, 설계서에 결측 처리(예: patient_id로 대체) 규칙이 없다. 그대로 구현하면 결측 환자가 한 그룹으로 묶이거나 빠져 분할과 group_kfold가 잘못될 수 있으므로 사람이 확인해야 한다."
+  },
+  {
+   "id": "A238",
+   "half": "dev",
+   "report_id": "1a7d608e5959",
+   "variant": "design_D97B.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 그대로 그룹 분할하면 결측 환자가 한 그룹으로 묶이거나 누락되고, 같은 환자의 여러 입원·tp가 train/test로 나뉠 수 있으므로 patient_id 대체 규칙이 필요하다."
+  },
+  {
+   "id": "A239",
+   "half": "dev",
+   "report_id": "5a593f852c4b",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 (tp, tp+48h]이고 collect_time 기준이라 예측 시점 이후의 크레아티닌을 쓴다. 모든 예측 행에서 tp 뒤에야 알 수 있는 값이다(Q1 차단)."
+  },
+  {
+   "id": "A240",
+   "half": "test",
+   "report_id": "627ec270fa2a",
+   "variant": "design_7F4F.json",
+   "target": "features.dx_ckd",
+   "problem": "진단 코드의 입력 시점이 없어 퇴원 시점 가용성이 보장되지 않고 scope/window가 명시되지 않아 다른(이후) 입원 진단이 섞일 수 있다."
+  },
+  {
+   "id": "A241",
+   "half": "dev",
+   "report_id": "f12fa471c4bd",
+   "variant": "design_7F4F.json",
+   "target": "cohort.inclusion.followup_visit",
+   "problem": "퇴원 후 30일 내 외래 방문 여부는 tp(퇴원 시점)에 알 수 없는 미래 정보이고 결과 관찰 기간과 겹친다. 실제로 코호트의 36%를 빼면서 재입원율이 높은 군(21.1% vs 11.1%)과 전원 환자를 선택적으로 제외해 선택 편향과 적용 불가능한 모델을 만든다."
+  },
+  {
+   "id": "A242",
+   "half": "test",
+   "report_id": "ecccca21c9ab",
+   "variant": "design_E0E0.json",
+   "target": "features.dx_ckd",
+   "problem": "진단 코드가 퇴원 시각에 지연 없이 확정된다는 가정(DX_CODING_DELAY_H=0)에서만 퇴원 시각에 쓸 수 있다. 실제로 퇴원 뒤 코딩된다면 tₚ 이후 정보이므로 사람이 확인해야 한다."
+  },
+  {
+   "id": "A243",
+   "half": "dev",
+   "report_id": "f0081e0a0d44",
+   "variant": "design_EC59.json",
+   "target": "features.n_dx",
+   "problem": "현재 입원의 진단 코드 개수는 퇴원 후 코딩이 끝나야 정해집니다. 코딩 지연 0h 가정 아래에서만 tp에 쓸 수 있으므로 확인이 필요합니다."
+  },
+  {
+   "id": "A244",
+   "half": "dev",
+   "report_id": "b615c526bace",
+   "variant": "design_D97B.json",
+   "target": "split.key",
+   "problem": "환자의 80%가 family_id 결측이고 다회 입원 환자가 1,454명이어서, family_id만으로 그룹 분할(및 model.tuning.cv_key 교차검증)을 하면 결측 행이 누락되거나 한 그룹으로 묶여 같은 환자가 train/test에 동시에 들어갈 수 있다. 결측 시 patient_id로 대체하는 규칙을 명시해야 한다."
+  },
+  {
+   "id": "A245",
+   "half": "test",
+   "report_id": "a243057970e3",
+   "variant": "design_9AF0.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 비어 있어, 결측 처리 방식에 따라 한 그룹이 표본 대부분을 차지하거나 같은 환자의 여러 입원이 학습·평가 양쪽에 나뉠 수 있다. 결측이면 patient_id로 대체하는 규칙을 정하고 설계서에 명시해야 한다."
+  },
+  {
+   "id": "A246",
+   "half": "dev",
+   "report_id": "55629d244931",
+   "variant": "design_D568.json",
+   "target": "split.key",
+   "problem": "분할 키 patient_id가 선언된 독립 단위 family보다 작아서, 가족 423개 중 210개가 학습과 평가에 나뉘어 들어간다. family_id로 분할해야 한다."
+  },
+  {
+   "id": "A247",
+   "half": "dev",
+   "report_id": "f0081e0a0d44",
+   "variant": "design_EC59.json",
+   "target": "features.los_h",
+   "problem": "설계서가 참조하는 admissions.length_of_stay_h 열이 데이터에 없습니다. discharge_time−admit_time으로 파생할지 등 정의를 정해야 합니다."
+  },
+  {
+   "id": "A248",
+   "half": "dev",
+   "report_id": "b5dc9c59a39d",
+   "variant": "design_D97B.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 비어 있는데 처리 방법이 정해져 있지 않다. 빈 값을 한 그룹으로 묶으면 가족 정보가 없는 환자가 모두 한쪽에만 들어가고, 버리면 표본 대부분을 잃는다. family_id가 없으면 patient_id를 쓰는 식으로 명시해야 한다."
+  },
+  {
+   "id": "A249",
+   "half": "dev",
+   "report_id": "0f5e83443aca",
+   "variant": "design_9672.json",
+   "target": "features.dx_chf",
+   "problem": "진단 테이블에 시각이 없고 설계서에 범위(현재 입원인지 환자 전체인지)도 없다. 미래 입원의 진단이 섞이거나, 퇴원 뒤에 확정되는 코드가 쓰여 퇴원 시점에 알 수 없는 정보가 들어갈 수 있다."
+  },
+  {
+   "id": "A250",
+   "half": "dev",
+   "report_id": "803ae2798237",
+   "variant": "design_48A5.json",
+   "target": "outcome.window",
+   "problem": "예측 행의 약 37~66%가 결과 창 48시간이 끝나기 전에 퇴원·사망·전원해 창이 다 관찰되지 않는다. 재측정이 없으면 음성으로 분류되므로 이런 행의 처리(제외·별도 처리)를 사람이 정해야 한다."
+  },
+  {
+   "id": "A251",
+   "half": "dev",
+   "report_id": "a857e4c75331",
+   "variant": "design_EC59.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 80%에서 결측이라 그대로는 group holdout이 성립하지 않고, 결측 처리 방식에 따라 같은 환자의 입원이 train/test에 동시에 들어가 누수가 생긴다. family_id가 없으면 patient_id로 대체하는 키 등으로 고쳐야 한다."
+  },
+  {
+   "id": "A252",
+   "half": "test",
+   "report_id": "64fafbd706ec",
+   "variant": "design_4BE0.json",
+   "target": "outcome.window",
+   "problem": "tₚ에 입원 중인 예측 행의 상당수(tₚ=72h일 때 4,758행 중 2,428행)가 결과 창 48시간 안에 퇴원합니다. 퇴원 후에는 크레아티닌이 측정되지 않으므로, AKI를 확인할 수 없는 행이 음성으로 분류됩니다. 퇴원·사망으로 잘린 창을 어떻게 처리할지 설계서에 정해야 합니다."
+  },
+  {
+   "id": "A253",
+   "half": "dev",
+   "report_id": "754c8892a30b",
+   "variant": "design_5350.json",
+   "target": "preprocessing.target_encode",
+   "problem": "결과를 쓰는 target encoding을 fit_scope=all로 test 포함 전체 데이터에 맞추므로 test 결과 정보가 특성에 새어 들어간다. train(가능하면 fold 내)에서만 fit하거나 이진 변수이므로 제거해야 한다."
+  },
+  {
+   "id": "A254",
+   "half": "dev",
+   "report_id": "ef0c7b06437e",
+   "variant": "design_48A5.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "포함 기준의 창이 admit~discharge여서 tp 뒤의 크레아티닌 측정 횟수로 코호트 포함 여부가 정해진다. 미래 정보로 대상을 선택하는 것이다(Q5 차단)."
+  },
+  {
+   "id": "A255",
+   "half": "dev",
+   "report_id": "0f5e83443aca",
+   "variant": "design_9672.json",
+   "target": "features.dx_ckd",
+   "problem": "진단 테이블에 시각이 없고 설계서에 범위도 없다. 미래 입원의 진단이 섞이거나, 퇴원 뒤에 확정되는 코드가 쓰여 퇴원 시점에 알 수 없는 정보가 들어갈 수 있다."
+  },
+  {
+   "id": "A256",
+   "half": "dev",
+   "report_id": "e5cd9c9b15b8",
+   "variant": "design_A1C2.json",
+   "target": "model.tuning.cv_key",
+   "problem": "split.key와 같이 대부분 비어 있는 family_id를 CV 그룹으로 써서, 결측 처리 규칙이 없으면 같은 환자나 입원의 tp 행이 fold 사이에 섞인다."
+  },
+  {
+   "id": "A257",
+   "half": "test",
+   "report_id": "ff2a0e6e1c75",
+   "variant": "design_9AF0.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%에서 결측이라 그대로 그룹 키로 쓰면 결측 환자가 한 그룹이 되거나 빠지고, 재입원 환자가 train과 test에 나뉠 수 있다. 결측 시 patient_id로 대체하는 등의 규칙을 확정해야 한다(model.tuning.cv_key도 같음)."
+  },
+  {
+   "id": "A258",
+   "half": "test",
+   "report_id": "1e242d49def6",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "창이 admit~discharge라서 예측 시점 tp 뒤에 보고된 크레아티닌까지 쓴다(가용 시점 위반). 데이터상 모든 예측 행에서 tp 이후 값이 들어간다. 창 끝을 tp로 바꿔야 한다."
+  },
+  {
+   "id": "A259",
+   "half": "test",
+   "report_id": "e3cb8f54fd0b",
+   "variant": "design_D97B.json",
+   "target": "outcome.window",
+   "problem": "TP 후 48시간 안에 퇴원·전원·사망해 결과 창을 끝까지 관찰하지 못하는 행(약 1.2만 행)을 처리하는 규칙이 없어, 측정이 없다는 이유로 음성으로 잘못 분류된다."
+  },
+  {
+   "id": "A260",
+   "half": "dev",
+   "report_id": "780781a639ef",
+   "variant": "design_D97B.json",
+   "target": "outcome.window",
+   "problem": "tp+48h 전에 퇴원·전원·사망하면 결과 창이 잘려 측정이 부족한데도 음성으로 붙을 수 있다. tp 시점에 입원 중이어야 한다는 조건과 잘린 창을 어떻게 다룰지가 설계에 없다."
+  },
+  {
+   "id": "A261",
+   "half": "test",
+   "report_id": "14824aa86d76",
+   "variant": "design_0B14.json",
+   "target": "features.renal_ordered",
+   "problem": "dialysis_order는 AKI 진단 뒤에 내리는 치료 오더다(오더가 있는 입원의 99.5%가 AKI). 크레아티닌 기준 충족 전에 이 오더가 있으면 의료진이 이미 AKI로 판단했다는 뜻이어서(해당 행의 결과율 66%) 결과의 대리변수가 된다. 특성으로 넣어도 되는지 사람이 확인해야 한다."
+  },
+  {
+   "id": "A262",
+   "half": "test",
+   "report_id": "953697f71cd3",
+   "variant": "design_2340.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측인데 처리 규칙이 없다. 결측이 그룹 하나로 묶이거나 버려지면 분할이 망가진다. 결측 시 patient_id로 대신하는 식의 규칙을 정해야 한다(tuning.cv_key도 같음)."
+  },
+  {
+   "id": "A263",
+   "half": "dev",
+   "report_id": "b615c526bace",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "procedures.chart_date는 날짜 단위라 'chart_date <= tp'가 tp 당일 tp 이후 시술(특히 AKI 결과로 시행되는 투석 5A1D70Z)을 포함해 미래 정보가 새어 들어온다(당일 투석 행 양성률 82% vs 전체 6%). 창 시작도 없어 이전 입원 시술이 섞일 수 있다. tp 전날까지로 자르거나 특성을 제외해야 한다."
+  },
+  {
+   "id": "A264",
+   "half": "dev",
+   "report_id": "cec85feafb61",
+   "variant": "design_A1C2.json",
+   "target": "cohort.inclusion",
+   "problem": "tp에 환자가 아직 입원 중이어야 한다는 조건이 없다. 이 때문에 퇴원 이후 시점(예: 168h에 재원 중인 입원은 7,022건 중 1,012건)의 행이 생기고, 결과 측정이 없어 모두 음성 라벨이 붙는다."
+  },
+  {
+   "id": "A265",
+   "half": "test",
+   "report_id": "c11b49a41acc",
+   "variant": "design_C963.json",
+   "target": "split.key",
+   "problem": "분할 키 patient_id가 선언된 독립 단위 family보다 작아서 같은 가족이 학습·평가에 나뉩니다(데이터에서 173개 중 8개 가족). 교차검증 키(family_id)와도 맞지 않으므로 family_id로 분할해야 합니다."
+  },
+  {
+   "id": "A266",
+   "half": "dev",
+   "report_id": "a857e4c75331",
+   "variant": "design_EC59.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses에는 시각이 없고 설계에 scope/window도 없어 이후 입원의 진단까지 셀 수 있다(재입원과 직결되는 누수). 현재 입원으로 한정해도 퇴원 진단 코드가 퇴원 시각에 확정되어 있는지 확인이 필요하다."
+  },
+  {
+   "id": "A267",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "features.dx_chf",
+   "problem": "diagnoses 기반 특징이라 시각 정보가 없다. 퇴원 뒤에 확정되는 코드일 수 있고, window나 scope가 없어 이후 입원의 진단이 섞일 수 있다."
+  },
+  {
+   "id": "A268",
+   "half": "dev",
+   "report_id": "5dd0db6637c8",
+   "variant": "design_94F5.json",
+   "target": "cohort.index_time",
+   "problem": "tp 시점에 재원 중이어야 한다는 조건이 없어 코호트 45,341개 중 22,115개(48.8%)가 퇴원 뒤 시점이다. 이 행들은 결과를 관찰할 수 없고, 음성으로 처리하면 쉬운 음성 사례가 대량으로 들어가 성능이 부풀려진다."
+  },
+  {
+   "id": "A269",
+   "half": "test",
+   "report_id": "c671808c8d4f",
+   "variant": "design_7F4F.json",
+   "target": "cohort.inclusion.followup_visit",
+   "problem": "퇴원 후 30일 안의 외래 방문이라는 tp 이후(결과 기간과 같은) 정보로 코호트를 골라, 예측 시점에 알 수 없는 조건으로 대상이 정해지고 결과와 강하게 엮여 있다(방문 있음 재입원율 11.0% vs 없음 19.8%). 일찍 재입원한 고위험 환자가 빠지므로 재입원율과 성능이 왜곡된다."
+  },
+  {
+   "id": "A270",
+   "half": "test",
+   "report_id": "82c99a3e0192",
+   "variant": "design_AF15.json",
+   "target": "features.dx_chf",
+   "problem": "dx_ckd와 같은 문제다. 시점 제한 없이 진단을 집계하면 이후 입원의 I50 진단이 포함되어 미래 정보가 누설된다."
+  },
+  {
+   "id": "A271",
+   "half": "test",
+   "report_id": "fbe3d713f2fb",
+   "variant": "design_F872.json",
+   "target": "features.dx_ckd",
+   "problem": "시각 열이 없는 진단 코드를 예측 시점(퇴원 시각)에 쓰고 있음. 사용 가능 판정은 '코딩 지연 0시간'이라는 규칙표 가정에만 기대고 있음. 실제로 퇴원 뒤에 코딩되면 예측 시점에는 알 수 없는 정보이므로, 코딩 지연을 사람이 확인해야 함."
+  },
+  {
+   "id": "A272",
+   "half": "test",
+   "report_id": "b2a09c4c20ad",
+   "variant": "design_D568.json",
+   "target": "features.cr_last",
+   "problem": "창의 기준이 collect_time입니다. 그래서 퇴원 전에 채취했지만 퇴원 후에 보고된 크레아티닌(전체 4.8%)도 tp 시점 특징에 들어갑니다. 이 때문에 입원의 19.6%에서 마지막 값이 report_time 기준 값과 달라집니다. 같은 설계의 hgb_min처럼 report_time을 써야 합니다."
+  },
+  {
+   "id": "A273",
+   "half": "dev",
+   "report_id": "eac822ae25fc",
+   "variant": "design_4BE0.json",
+   "target": "cohort.inclusion",
+   "problem": "tp 시점에 아직 재원 중이어야 한다는 조건이 없다. 그래서 TP의 47%(22,948/49,154)가 퇴원 뒤 시점에 생기고, 검사가 없으니 자동으로 음성 라벨이 붙는다."
+  },
+  {
+   "id": "A274",
+   "half": "test",
+   "report_id": "b7f656328750",
+   "variant": "design_800E.json",
+   "target": "features.dx_ckd",
+   "problem": "같은 입원의 진단 코드(N18)는 퇴원 뒤에 확정될 수 있어 tₚ=퇴원 시각에는 쓸 수 없을 수 있습니다. 코딩 지연 0이라는 가정에만 기대어 통과했습니다."
+  },
+  {
+   "id": "A275",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "outcome.window",
+   "problem": "데이터 끝 30일 안에 퇴원한 입원(8건)은 30일 추적이 끝나지 않았는데 음성으로 분류된다. 제외 또는 검열 처리 규칙이 없다."
+  },
+  {
+   "id": "A276",
+   "half": "dev",
+   "report_id": "9a271136550f",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "창이 입원부터 퇴원(discharge)까지라서 예측 시점 tp 뒤에 보고된 크레아티닌이 들어간다(데이터상 예측 행 23,223개 모두 해당). 또 결과 창 (tp, tp+48h]에서 결과를 정하는 크레아티닌 행을 그대로 써서 결과가 특징으로 새어 들어간다. 창 끝을 tp로 고치거나 이 특징을 빼야 한다."
+  },
+  {
+   "id": "A277",
+   "half": "test",
+   "report_id": "24c8d5c9a081",
+   "variant": "design_D568.json",
+   "target": "outcome.window",
+   "problem": "30일 추적 기간을 다 채우지 못한 퇴원을 처리하는 규칙이 없습니다. 데이터 종료 직전에 퇴원한 7건이 재입원 없음(음성)으로 잘못 분류될 수 있으므로, 제외 기준이 필요합니다."
+  },
+  {
+   "id": "A278",
+   "half": "dev",
+   "report_id": "b6ea1a5bcb91",
+   "variant": "design_800E.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(행의 80%)에서 결측이라 그대로 그룹 분할하면 결측 행이 하나의 거대 그룹이 되거나 같은 환자의 여러 입원이 train/test에 나뉘어 누출이 생긴다. 결측 시 patient_id로 대체하는 등 그룹 키 정의를 확정해야 한다."
+  },
+  {
+   "id": "A279",
+   "half": "test",
+   "report_id": "0366b2d8308c",
+   "variant": "design_9AF0.json",
+   "target": "cohort.inclusion",
+   "problem": "TP 시점에 아직 재원 중이어야 한다는 조건이 없다. 그래서 퇴원 뒤의 존재하지 않는 예측 시점(49,154행 중 22,948행)이 코호트에 들어간다."
+  },
+  {
+   "id": "A280",
+   "half": "test",
+   "report_id": "a302ee8eaee8",
+   "variant": "design_48A5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이다. 그대로 그룹 분할하면 결측이 한 그룹으로 묶이거나, 여러 입원과 tp를 가진 같은 환자가 train과 test에 나뉘어 들어간다. 결측 시 patient_id로 대체하는 규칙이 필요하다."
+  },
+  {
+   "id": "A281",
+   "half": "test",
+   "report_id": "067956ad442a",
+   "variant": "design_1D2D.json",
+   "target": "preprocessing.median_impute",
+   "problem": "중앙값 대치를 fit_scope 'all'로 적합해 시험 부분의 정보가 학습에 들어간다. train(CV 안에서는 train_fold)에서만 적합해야 한다."
+  },
+  {
+   "id": "A282",
+   "half": "dev",
+   "report_id": "4b662376e58b",
+   "variant": "design_2340.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라 그대로 그룹 키로 쓰면 결측 환자가 한 그룹으로 몰리거나 버려집니다. 한 환자가 여러 입원과 TP를 가지므로 결측일 때 patient_id로 대체하는 규칙이 필요하며, 이를 확인해야 합니다."
+  },
+  {
+   "id": "A283",
+   "half": "dev",
+   "report_id": "a857e4c75331",
+   "variant": "design_EC59.json",
+   "target": "features.dx_chf",
+   "problem": "시각 없는 diagnoses를 scope/window 없이 사용해 미래 입원 진단이 섞일 수 있고, 퇴원 시점에 코드가 실제로 이용 가능한지도 불명확하다."
+  },
+  {
+   "id": "A284",
+   "half": "test",
+   "report_id": "1f6f070ae4e2",
+   "variant": "design_EC59.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 약 80%(3,998/5,000명)에서 결측이라 그대로 group_holdout을 하면 결측 환자가 한 그룹으로 몰리거나 빠집니다. 같은 환자의 여러 입원도 분할 사이에 새지 않게 결측 시 대체 키(예: patient_id)를 정해야 합니다(model.tuning.cv_key도 동일)."
+  },
+  {
+   "id": "A285",
+   "half": "test",
+   "report_id": "d2f051431c15",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "결과 창과 같은 [tp, tp+48h] 구간의 크레아티닌 최댓값으로, 예측 시점에 알 수 없는 미래 값이자 결과를 직접 담은 누설 변수다(양성 평균 2.55 vs 음성 1.10)."
+  },
+  {
+   "id": "A286",
+   "half": "test",
+   "report_id": "24c8d5c9a081",
+   "variant": "design_D568.json",
+   "target": "features.dx_chf",
+   "problem": "dx_ckd와 같은 문제입니다. 시각 정보와 scope가 없어 색인 입원 범위로 한정되지 않고, 퇴원 시점에 이 진단을 알 수 있었는지 확인할 수 없습니다."
+  },
+  {
+   "id": "A287",
+   "half": "dev",
+   "report_id": "685054c0e98c",
+   "variant": "design_0B14.json",
+   "target": "split.key",
+   "problem": "분할 키가 index_id(예측 행)라서 선언된 독립 단위 family보다 작습니다. 같은 입원·환자·가족의 행이 학습과 평가에 함께 들어가며, 데이터에서 가족 423개 중 389개가 양쪽에 나뉘었습니다."
+  },
+  {
+   "id": "A288",
+   "half": "dev",
+   "report_id": "5a593f852c4b",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "결과 aki_48h를 정하는 행(labs creatinine, 같은 입원, 결과 창 (tp, tp+48h])과 같은 행을 쓴다. 결과를 사실상 그대로 담는 결과 출처 누수다(Q4 차단)."
+  },
+  {
+   "id": "A289",
+   "half": "test",
+   "report_id": "4a6420614d33",
+   "variant": "design_9AF0.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 비어 있는데 결측 처리 규칙이 없다. 결측 환자가 한 그룹으로 묶이거나 빠질 수 있으므로, 결측이면 patient_id로 대체하는 등의 규칙을 사람이 정해야 한다."
+  },
+  {
+   "id": "A290",
+   "half": "dev",
+   "report_id": "b6ea1a5bcb91",
+   "variant": "design_800E.json",
+   "target": "features.dx_ckd",
+   "problem": "시각이 없는 진단을 범위나 창 없이 쓰므로 미래 입원의 진단이 섞이거나 퇴원 뒤에 확정된 코드를 쓸 수 있다. 또 필터 'N18'은 데이터 코드 'N18.3'과 정확히 일치하지 않아, 정확 일치로 구현하면 특징이 항상 0이 된다."
+  },
+  {
+   "id": "A291",
+   "half": "dev",
+   "report_id": "2ffe9759165c",
+   "variant": "design_5350.json",
+   "target": "preprocessing.target_encode",
+   "problem": "타깃 인코딩을 fit_scope 'all'(학습+평가 전체)로 적합해 평가 부분의 30일 재입원 결과가 학습 특징에 들어간다. train/train_fold로 적합하거나, 이진 특징이므로 이 단계를 빼야 한다."
+  },
+  {
+   "id": "A292",
+   "half": "dev",
+   "report_id": "b3d44b3b7f5d",
+   "variant": "design_48A5.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%에서 결측이라, 그대로 그룹 키로 쓰면 같은 환자나 같은 입원의 tp가 train과 test에 나뉘거나(결측을 각각 별개 그룹으로 볼 때) 한쪽으로 몰린다(결측을 한 그룹으로 볼 때). model.tuning.cv_key도 같은 문제가 있다. 결측이면 patient_id로 대신하는 규칙이 필요하다."
+  },
+  {
+   "id": "A293",
+   "half": "test",
+   "report_id": "1e242d49def6",
+   "variant": "design_2340.json",
+   "target": "features.cr_max_adm",
+   "problem": "결과 aki_48h를 정하는 결과 창 (tp, tp+48h]의 같은 입원 크레아티닌 행을 그대로 포함해 정답이 특징으로 새어 들어간다."
+  },
+  {
+   "id": "A294",
+   "half": "dev",
+   "report_id": "1e316e2fedc9",
+   "variant": "design_0B14.json",
+   "target": "cohort.inclusion",
+   "problem": "tₚ에 아직 입원 중이라는 조건이 없어 퇴원한 입원에도 예측 행이 생깁니다(tₚ=168h에는 입원 중인 비율이 14%뿐). 이 행들은 결과 창에 검사가 없어 모두 음성으로 붙으므로 결과가 왜곡됩니다."
+  },
+  {
+   "id": "A295",
+   "half": "dev",
+   "report_id": "1e316e2fedc9",
+   "variant": "design_0B14.json",
+   "target": "features.renal_ordered",
+   "problem": "투석 오더와 신장내과 협진은 AKI를 의심하거나 확인한 뒤 내는 경우가 많아 결과를 대신하는 변수일 수 있습니다. 써도 되는지 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A296",
+   "half": "dev",
+   "report_id": "e1869e272eec",
+   "variant": "design_4BE0.json",
+   "target": "outcome.window",
+   "problem": "결과 창 (tp, tp+48h]이 퇴원 뒤로 넘어가는 예측 행(전체의 47%)에 대한 처리 규칙이 없다. 이런 행은 측정이 없어 자동으로 음성이 되고(결과율 0.35%, 완전 관찰 행은 11.3%), 그 결과 tₚ에 알 수 없는 '곧 퇴원함'을 모델이 음성으로 학습해 성능이 부풀려진다. 절단을 어떻게 다룰지 사람이 정해야 한다."
+  },
+  {
+   "id": "A297",
+   "half": "test",
+   "report_id": "359382178a9e",
+   "variant": "design_0B14.json",
+   "target": "features.renal_ordered",
+   "problem": "투석 오더·신장내과 협진은 AKI에 대한 후속 조치다(투석 오더 입원의 99.5%가 AKI, 오더 대부분이 첫 AKI 검체 채취 이후). 따라서 아직 보고되지 않은 AKI나 임상의의 판단을 대신 가리키는 신호가 되어 결과 정보가 새어 들어갈 위험이 있다."
+  },
+  {
+   "id": "A298",
+   "half": "test",
+   "report_id": "7cc761a63ec3",
+   "variant": "design_AF15.json",
+   "target": "features.dx_ckd",
+   "problem": "scope와 시간 기준이 없어서 미래 입원의 N18 진단이 들어갈 수 있다. 또 코드가 N18.3 형식이라 정확 일치 필터로는 0건이 되므로 접두 일치로 구현해야 한다."
+  },
+  {
+   "id": "A299",
+   "half": "dev",
+   "report_id": "ef0c7b06437e",
+   "variant": "design_48A5.json",
+   "target": "features.cr_peak_48h",
+   "problem": "결과 aki_48h를 정하는 행(labs·creatinine·결과 창 (tp, tp+48h])과 같은 행을 써서 결과가 특징에 직접 들어간다(Q4 차단)."
+  },
+  {
+   "id": "A300",
+   "half": "dev",
+   "report_id": "5dd0db6637c8",
+   "variant": "design_94F5.json",
+   "target": "outcome.window",
+   "problem": "결과창 안에 크레아티닌 측정이 없거나 퇴원·사망으로 창이 잘린 경우의 라벨 처리가 정의되어 있지 않다. 측정 누락률이 일반병동 26.6%, ICU 3.5%로 크게 달라, 음성으로 채우면 층별로 차이 나는 위음성이 생기고 모델이 측정 빈도로 라벨 누락을 학습하게 된다."
+  },
+  {
+   "id": "A301",
+   "half": "test",
+   "report_id": "c671808c8d4f",
+   "variant": "design_7F4F.json",
+   "target": "split.key",
+   "problem": "환자의 80%(3,998/5,000)가 family_id 결측이라 이 키로 group holdout을 하면 결측 행이 한 그룹으로 묶이거나 행 단위로 흩어진다. 그러면 같은 환자의 여러 입원이 train과 test에 걸쳐 누수가 생기므로, 결측 시 patient_id로 대체하는 규칙이 필요하다(model.tuning.cv_key도 동일)."
+  },
+  {
+   "id": "A302",
+   "half": "test",
+   "report_id": "24c8d5c9a081",
+   "variant": "design_D568.json",
+   "target": "features.n_dx",
+   "problem": "scope가 없어서 환자의 전체(미래 포함) 입원 진단 수로 셀 수 있습니다. 진단 수가 퇴원 후 코딩이 끝나야 정해지는 값이라 예측 시점에 쓸 수 있는지도 확인해야 합니다."
+  },
+  {
+   "id": "A303",
+   "half": "test",
+   "report_id": "d972765f7d71",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h로 결과 창과 같아서, 예측 시점 이후의 크레아티닌 최댓값(=결과 판정값)을 특징으로 쓰는 직접적인 결과 누출이다."
+  },
+  {
+   "id": "A304",
+   "half": "dev",
+   "report_id": "0e407e31eb9a",
+   "variant": "design_9672.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses 테이블에 시각 정보가 없어 퇴원 시점에 확정된 진단 개수인지 알 수 없고, 범위 지정이 없어 환자 전체(미래 입원 포함) 진단 수로 집계될 위험이 있다."
+  },
+  {
+   "id": "A305",
+   "half": "dev",
+   "report_id": "b6ea1a5bcb91",
+   "variant": "design_800E.json",
+   "target": "features.dx_chf",
+   "problem": "시각이 없는 진단을 범위나 창 없이 쓰므로 미래 입원의 진단이 섞이거나 퇴원 뒤에 확정된 코드를 쓸 수 있다. 또 필터 'I50'은 데이터 코드 'I50.9'와 정확히 일치하지 않아, 정확 일치로 구현하면 특징이 항상 0이 된다."
+  },
+  {
+   "id": "A306",
+   "half": "dev",
+   "report_id": "24f1e9cde2ae",
+   "variant": "design_E0E0.json",
+   "target": "preprocessing.select_k",
+   "problem": "특징 선택을 fit_scope 'all'(평가 부분 포함)로 적합해서 평가 데이터의 결과 정보가 특징 선택에 새어 들어간다. train 또는 train_fold로 바꿔야 한다."
+  },
+  {
+   "id": "A307",
+   "half": "dev",
+   "report_id": "3472b5c94a07",
+   "variant": "design_7F4F.json",
+   "target": "split.key",
+   "problem": "분할 키 family_id가 환자의 약 80%에서 비어 있는데, 설계서에 결측 처리 방법이 없다. 빈 값을 하나의 그룹으로 처리하면 그룹 분할이 사실상 무너지므로, 빈 값을 patient_id로 대체할지 사람이 정해야 한다."
+  },
+  {
+   "id": "A308",
+   "half": "dev",
+   "report_id": "0f5e83443aca",
+   "variant": "design_9672.json",
+   "target": "features.n_dx",
+   "problem": "진단 테이블에 시각이 없고 설계서에 범위도 없다. 진단 개수는 미래 입원의 진단이나 퇴원 뒤 코딩 결과를 반영할 수 있어 퇴원 시점에 알 수 있는 값인지 확인이 필요하다."
+  },
+  {
+   "id": "A309",
+   "half": "dev",
+   "report_id": "e5b791f71519",
+   "variant": "design_F872.json",
+   "target": "features.dx_chf",
+   "problem": "diagnoses에 시각 정보가 없는데 범위·창이 지정되지 않았다. 환자 단위로 모으면 이후 입원의 I50 진단이 섞여 미래 정보가 누출된다(환자 단위 재입원율 24.3%, 입원 단위 18.2%). 진단 코드가 퇴원 시각에 확정되는지도 확인이 필요하다."
+  },
+  {
+   "id": "A310",
+   "half": "dev",
+   "report_id": "41110cf9e387",
+   "variant": "design_94F5.json",
+   "target": "outcome.ascertainment",
+   "problem": "결과 창 안에 크레아티닌 측정이 없으면 음성으로 처리된다. 병동 예측 행의 약 27%(ICU는 3%)가 측정 없이 음성이 되는데, 설계는 층별로 보고만 하고 라벨 편향을 고치지 않는다. 미측정 행을 어떻게 처리할지 사람이 정해야 한다."
+  },
+  {
+   "id": "A311",
+   "half": "test",
+   "report_id": "fbe3d713f2fb",
+   "variant": "design_F872.json",
+   "target": "features.dx_chf",
+   "problem": "시각 열이 없는 진단 코드를 예측 시점(퇴원 시각)에 쓰고 있음. 사용 가능 판정은 '코딩 지연 0시간'이라는 규칙표 가정에만 기대고 있음. 실제로 퇴원 뒤에 코딩되면 예측 시점에는 알 수 없는 정보이므로, 코딩 지연을 사람이 확인해야 함."
+  },
+  {
+   "id": "A312",
+   "half": "dev",
+   "report_id": "e5cd9c9b15b8",
+   "variant": "design_A1C2.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(3,998/5,000)에서 비어 있는데 결측 처리 규칙이 없다. 그래서 같은 환자의 여러 입원과 tp 행(family 없이 다회 입원한 환자 1,169명)이 train과 test에 섞이거나, 결측 환자가 하나의 그룹으로 묶일 수 있다."
+  },
+  {
+   "id": "A313",
+   "half": "dev",
+   "report_id": "4b662376e58b",
+   "variant": "design_2340.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝용 group k-fold의 키도 family_id라서 같은 결측 문제로 fold가 한쪽으로 몰리거나 같은 환자가 여러 fold에 흩어질 수 있습니다. 분할 키와 같은 결측 대체 규칙을 적용해야 합니다."
+  },
+  {
+   "id": "A314",
+   "half": "test",
+   "report_id": "bff74badef4c",
+   "variant": "design_D97B.json",
+   "target": "features.n_proc",
+   "problem": "처치 건수에 투석 코드(5A1D70Z)가 들어 있습니다. 투석은 결과 aki_48h의 대리 변수이므로, 결과를 정하는 과정의 기록이 특징에 섞일 수 있어 사람이 확인해야 합니다."
+  },
+  {
+   "id": "A315",
+   "half": "test",
+   "report_id": "7cc761a63ec3",
+   "variant": "design_AF15.json",
+   "target": "features.ward_type",
+   "problem": "scope가 next_admission이어서 다음 입원의 병동 값을 쓴다. 퇴원 시점에는 알 수 없는 미래 정보이고, 값이 있는지 없는지가 곧 재입원 여부를 드러내므로 결과가 직접 누설된다."
+  },
+  {
+   "id": "A316",
+   "half": "dev",
+   "report_id": "803ae2798237",
+   "variant": "design_48A5.json",
+   "target": "cohort.inclusion.cr_monitored",
+   "problem": "입원 전체(admit~discharge)의 크레아티닌 횟수로 포함 여부를 정해 tp 뒤의 정보로 코호트를 고른다. 창을 tp까지로 바꿔야 한다."
+  },
+  {
+   "id": "A317",
+   "half": "dev",
+   "report_id": "0f5e83443aca",
+   "variant": "design_9672.json",
+   "target": "split.key",
+   "problem": "family_id가 환자의 80%(입원 건의 78%)에서 비어 있어 이대로는 그룹 홀드아웃과 그룹 K-fold(model.tuning.cv_key)를 할 수 없다. 빈 값을 어떻게 처리할지(예: 환자 ID로 대신) 설계서에 정해야 한다."
+  },
+  {
+   "id": "A318",
+   "half": "test",
+   "report_id": "ecccca21c9ab",
+   "variant": "design_E0E0.json",
+   "target": "preprocessing.select_k",
+   "problem": "특징 선택을 fit_scope 'all'로 전체 데이터에 적합해 평가 부분의 결과 정보가 학습에 새어 들어간다. train(또는 train_fold)에서만 적합해야 한다."
+  },
+  {
+   "id": "A319",
+   "half": "test",
+   "report_id": "83656e0d9ad7",
+   "variant": "design_5350.json",
+   "target": "features.dx_ckd",
+   "problem": "시간 창이나 범위가 없고 diagnoses에는 시각 열이 없다. 환자 단위로 모으면 퇴원 뒤(재입원 포함) 입원의 진단이 섞이고, 현재 입원의 퇴원 진단도 퇴원 시각에 쓸 수 있는지 확인해야 한다."
+  },
+  {
+   "id": "A320",
+   "half": "test",
+   "report_id": "d972765f7d71",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_last",
+   "problem": "time_column이 collect_time이라 tp 전에 채취했지만 tp 뒤에 보고된 결과가 들어간다(시점별 최대 4.4%). 예측 시점에 볼 수 없는 정보이므로 report_time 기준으로 바꿔야 한다."
+  },
+  {
+   "id": "A321",
+   "half": "test",
+   "report_id": "335043fb4748",
+   "variant": "design_800E.json",
+   "target": "features.n_dx",
+   "problem": "diagnoses 테이블에 시각 열이 없고 설계서에도 범위나 시간 창이 없어서, 환자 단위로 모으면 미래 입원의 진단까지 셉니다. 실제로 환자 단위 진단 개수만으로 AUC가 0.80이었고 현재 입원 기준은 0.57이어서 누수가 의심됩니다."
+  },
+  {
+   "id": "A322",
+   "half": "test",
+   "report_id": "8da1b1d595a2",
+   "variant": "design_800E.json",
+   "target": "features.n_dx",
+   "problem": "진단 테이블에 시점 열이 없고 설계에도 scope/window가 없어, 환자 단위로 집계하면 tp 이후 입원(결과 입원 포함)의 진단이 들어갈 수 있다. 또 퇴원 진단 코드가 퇴원 시각에 확정되어 있는지도 확인해야 한다."
+  },
+  {
+   "id": "A323",
+   "half": "dev",
+   "report_id": "edc61c9c3a1d",
+   "variant": "design_E6D6.json",
+   "target": "features.los_h",
+   "problem": "설계서가 지정한 admissions.length_of_stay_h 열이 데이터에 없다. 퇴원 시각과 입원 시각으로 파생할지 정의를 확인해야 한다."
+  },
+  {
+   "id": "A324",
+   "half": "dev",
+   "report_id": "b1557c296c10",
+   "variant": "design_E0E0.json",
+   "target": "preprocessing.select_k",
+   "problem": "fit_scope가 all이라 test 라벨을 써서 특징을 고르게 되어 누수가 생깁니다. train(튜닝 때는 각 CV fold의 train) 안에서만 fit해야 합니다."
+  },
+  {
+   "id": "A325",
+   "half": "test",
+   "report_id": "ff2a0e6e1c75",
+   "variant": "design_9AF0.json",
+   "target": "features.cr_peak_48h",
+   "problem": "창이 tp~tp+48h로 결과 창과 같아 미래의 크레아티닌, 곧 결과 자체를 특징으로 쓰는 누출이다. 이 특징은 빼야 한다."
+  },
+  {
+   "id": "A326",
+   "half": "dev",
+   "report_id": "49aa680fa20f",
+   "variant": "design_4BE0.json",
+   "target": "cohort.inclusion",
+   "problem": "질문은 '입원 중 매일' 예측인데 tp 시점에 입원 중(admit ≤ tp < discharge)이라는 포함 기준이 설계서에 없어, 구현에 따라 퇴원 뒤 예측 행이 음성으로 들어갈 수 있다."
+  },
+  {
+   "id": "A327",
+   "half": "dev",
+   "report_id": "ce248b1c3eb5",
+   "variant": "design_E6D6.json",
+   "target": "split.key",
+   "problem": "family_id가 코호트의 약 80%에서 비어 있어 그룹 분할 키로 쓸 수 없다. 결측이 한 그룹으로 묶이거나 오류가 나고, 반복 입원 환자가 학습과 평가에 나뉠 수 있다. 결측이면 patient_id로 대신하는 등 키를 다시 정해야 한다(tuning.cv_key도 같음)."
+  },
+  {
+   "id": "A328",
+   "half": "dev",
+   "report_id": "a857e4c75331",
+   "variant": "design_EC59.json",
+   "target": "model.tuning.cv_key",
+   "problem": "튜닝 group k-fold의 cv_key도 80% 결측인 family_id라서, 교차검증 폴드 사이에 같은 환자가 섞일 수 있다."
+  },
+  {
+   "id": "A329",
+   "half": "dev",
+   "report_id": "0f5e83443aca",
+   "variant": "design_9672.json",
+   "target": "features.los_h",
+   "problem": "설계서가 가리키는 length_of_stay_h 열이 입원 테이블에 없다. 입원·퇴원 시각으로 계산해도 되는지 확인이 필요하다."
+  },
+  {
+   "id": "A330",
+   "half": "test",
+   "report_id": "335043fb4748",
+   "variant": "design_800E.json",
+   "target": "features.los_h",
+   "problem": "admissions 테이블에 length_of_stay_h 열이 없습니다. discharge_time에서 admit_time을 빼서 계산해야 하므로 그 정의가 맞는지 확인이 필요합니다."
+  },
+  {
+   "id": "A331",
+   "half": "test",
+   "report_id": "24c8d5c9a081",
+   "variant": "design_D568.json",
+   "target": "features.cr_last",
+   "problem": "time_column이 collect_time이라서 퇴원 전에 채혈했지만 퇴원 후에 보고된 결과 1,497건이 특성에 들어갑니다. 예측 시점에는 알 수 없는 값이므로, hgb_min처럼 report_time 기준으로 잘라야 합니다."
+  },
+  {
+   "id": "A332",
+   "half": "dev",
+   "report_id": "5584dfc2305d",
+   "variant": "design_48A5.json",
+   "target": "features.age",
+   "problem": "patients.age는 환자당 한 값인데 같은 환자의 입원이 최대 4.6년 떨어져 있다. 어느 시점의 나이인지 불명확해 입원 시점 나이와 다를 수 있으므로 사람이 확인해야 한다(포함 기준 adult에도 같은 값이 쓰인다)."
+  }
+ ]
+}

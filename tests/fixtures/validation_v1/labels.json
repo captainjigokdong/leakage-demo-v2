@@ -1,0 +1,2078 @@
+{
+ "labeler": "Claude (5단계 세션, 초안). 조건 파일·v1 채점 결과를 보지 않고, v2 채점기를 돌리기 전에 붙임",
+ "date": "2026-10-06",
+ "conventions": {
+  "item": "사람이 읽은 대상 항목. 목록 항목은 '구역.이름'(cohort는 'cohort.inclusion.이름'), 그 밖은 최상위 칸 아래 첫 칸까지(예: split.key, model.tuning, outcome.window). '묶음' = 최상위 묶음 전체(cohort.inclusion, outcome.결과이름 포함), '대상 불명' = 하나로 정할 수 없음",
+  "qs": "문장이 말하는 문제 종류. Q1 가용 시점, Q2 독립 단위, Q3 적합 범위, Q4 결과 출처(결과 정보가 입력에 섞임: 대리 기록·결과 창과 겹치는 특징·기준), Q5 선택 시점(기준에 tp 뒤 정보), Q7 결과 확인(층별 측정 강도, 결과 창이 퇴원·사망·자료 끝으로 잘려 관찰 안 된 기간이 음성이 됨, tp 재원 중 조건이 없어 음성 라벨이 붙음). 해당 없음(자료 형식·정의 확인 등)은 빈 목록"
+ },
+ "user_review": "S1 무작위 20개 확인·승인 (2026-10-06)",
+ "labels": {
+  "A001": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A002": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A003": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A004": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A005": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A006": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A007": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A008": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A009": {
+   "item": "features.age",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A010": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A011": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A012": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A013": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A014": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A015": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A016": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A017": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A018": {
+   "item": "features.ward_type",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A019": {
+   "item": "preprocessing.select_k",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A020": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A021": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A022": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A023": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A024": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A025": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A026": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A027": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A028": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A029": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A030": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A031": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A032": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A033": {
+   "item": "cohort.inclusion.los_7d",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A034": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A035": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A036": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A037": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A038": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A039": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A040": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A041": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A042": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A043": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A044": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A045": {
+   "item": "features.renal_ordered",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A046": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A047": {
+   "item": "cohort.inclusion.followup_visit",
+   "qs": [
+    "Q4",
+    "Q5"
+   ]
+  },
+  "A048": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A049": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A050": {
+   "item": "preprocessing.target_encode",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A051": {
+   "item": "tp.offsets_h",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A052": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A053": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A054": {
+   "item": "묶음",
+   "qs": []
+  },
+  "A055": {
+   "item": "cohort.inclusion.followup_visit",
+   "qs": [
+    "Q4",
+    "Q5"
+   ]
+  },
+  "A056": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A057": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A058": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A059": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A060": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A061": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A062": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A063": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A064": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A065": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A066": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A067": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A068": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A069": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A070": {
+   "item": "cohort.inclusion.los_7d",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A071": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A072": {
+   "item": "묶음",
+   "qs": []
+  },
+  "A073": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A074": {
+   "item": "features.renal_ordered",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A075": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A076": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A077": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A078": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A079": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A080": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A081": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A082": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A083": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A084": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A085": {
+   "item": "features.ward_type",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A086": {
+   "item": "outcome.ascertainment",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A087": {
+   "item": "cohort.exclusion.aki_known_by_tp",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A088": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A089": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A090": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A091": {
+   "item": "features.ward_type",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A092": {
+   "item": "cohort.inclusion.followup_visit",
+   "qs": [
+    "Q4",
+    "Q5"
+   ]
+  },
+  "A093": {
+   "item": "cohort.exclusion.aki_known_by_tp",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A094": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A095": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A096": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A097": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A098": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A099": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A100": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A101": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A102": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A103": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A104": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A105": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A106": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A107": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A108": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A109": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A110": {
+   "item": "outcome.ascertainment",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A111": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A112": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A113": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A114": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A115": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A116": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A117": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A118": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A119": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A120": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A121": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A122": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A123": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A124": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A125": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A126": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A127": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A128": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A129": {
+   "item": "preprocessing.select_k",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A130": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A131": {
+   "item": "features.n_proc",
+   "qs": []
+  },
+  "A132": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A133": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A134": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A135": {
+   "item": "cohort.inclusion.followup_visit",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A136": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A137": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A138": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A139": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A140": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A141": {
+   "item": "features.unit",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A142": {
+   "item": "preprocessing.target_encode",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A143": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A144": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A145": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A146": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A147": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A148": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A149": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A150": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A151": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A152": {
+   "item": "preprocessing.select_k",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A153": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A154": {
+   "item": "features.ward_type",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A155": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A156": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A157": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A158": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A159": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A160": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A161": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A162": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A163": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A164": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A165": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A166": {
+   "item": "cohort.inclusion.los_7d",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A167": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A168": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A169": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A170": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A171": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A172": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A173": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A174": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A175": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A176": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A177": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A178": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A179": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A180": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A181": {
+   "item": "cohort.inclusion.los_7d",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A182": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A183": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A184": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A185": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A186": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A187": {
+   "item": "cohort.inclusion.los_7d",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A188": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A189": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A190": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A191": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A192": {
+   "item": "features.los_h",
+   "qs": []
+  },
+  "A193": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A194": {
+   "item": "preprocessing.target_encode",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A195": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A196": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A197": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A198": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A199": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A200": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A201": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A202": {
+   "item": "features.unit",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A203": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A204": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A205": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A206": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A207": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A208": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A209": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A210": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A211": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A212": {
+   "item": "묶음",
+   "qs": []
+  },
+  "A213": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A214": {
+   "item": "cohort.inclusion.los_7d",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A215": {
+   "item": "features.renal_ordered",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A216": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A217": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A218": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A219": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A220": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A221": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A222": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A223": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A224": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A225": {
+   "item": "features.unit",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A226": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A227": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A228": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A229": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A230": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A231": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A232": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A233": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A234": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A235": {
+   "item": "features.los_h",
+   "qs": []
+  },
+  "A236": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A237": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A238": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A239": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A240": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A241": {
+   "item": "cohort.inclusion.followup_visit",
+   "qs": [
+    "Q4",
+    "Q5"
+   ]
+  },
+  "A242": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A243": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A244": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A245": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A246": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A247": {
+   "item": "features.los_h",
+   "qs": []
+  },
+  "A248": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A249": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A250": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A251": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A252": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A253": {
+   "item": "preprocessing.target_encode",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A254": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A255": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A256": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A257": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A258": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A259": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A260": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A261": {
+   "item": "features.renal_ordered",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A262": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A263": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A264": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A265": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A266": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A267": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A268": {
+   "item": "cohort.index_time",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A269": {
+   "item": "cohort.inclusion.followup_visit",
+   "qs": [
+    "Q4",
+    "Q5"
+   ]
+  },
+  "A270": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A271": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A272": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A273": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A274": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A275": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A276": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A277": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A278": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A279": {
+   "item": "묶음",
+   "qs": []
+  },
+  "A280": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A281": {
+   "item": "preprocessing.median_impute",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A282": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A283": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A284": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A285": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A286": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A287": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A288": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A289": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A290": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A291": {
+   "item": "preprocessing.target_encode",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A292": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A293": {
+   "item": "features.cr_max_adm",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A294": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A295": {
+   "item": "features.renal_ordered",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A296": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A297": {
+   "item": "features.renal_ordered",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A298": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A299": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A300": {
+   "item": "outcome.window",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A301": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A302": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A303": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A304": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A305": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A306": {
+   "item": "preprocessing.select_k",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A307": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A308": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A309": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A310": {
+   "item": "outcome.ascertainment",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A311": {
+   "item": "features.dx_chf",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A312": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A313": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A314": {
+   "item": "features.n_proc",
+   "qs": [
+    "Q4"
+   ]
+  },
+  "A315": {
+   "item": "features.ward_type",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A316": {
+   "item": "cohort.inclusion.cr_monitored",
+   "qs": [
+    "Q5"
+   ]
+  },
+  "A317": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A318": {
+   "item": "preprocessing.select_k",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A319": {
+   "item": "features.dx_ckd",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A320": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A321": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A322": {
+   "item": "features.n_dx",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A323": {
+   "item": "features.los_h",
+   "qs": []
+  },
+  "A324": {
+   "item": "preprocessing.select_k",
+   "qs": [
+    "Q3"
+   ]
+  },
+  "A325": {
+   "item": "features.cr_peak_48h",
+   "qs": [
+    "Q1",
+    "Q4"
+   ]
+  },
+  "A326": {
+   "item": "묶음",
+   "qs": [
+    "Q7"
+   ]
+  },
+  "A327": {
+   "item": "split.key",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A328": {
+   "item": "model.tuning",
+   "qs": [
+    "Q2"
+   ]
+  },
+  "A329": {
+   "item": "features.los_h",
+   "qs": []
+  },
+  "A330": {
+   "item": "features.los_h",
+   "qs": []
+  },
+  "A331": {
+   "item": "features.cr_last",
+   "qs": [
+    "Q1"
+   ]
+  },
+  "A332": {
+   "item": "features.age",
+   "qs": [
+    "Q1"
+   ]
+  }
+ },
+ "revisions": [
+  {
+   "date": "2026-10-06",
+   "by": "S1 사용자 지시 1",
+   "rule": "관찰 안 된 기간이 음성이 됨·tp 재원 중 조건 없음+음성 라벨 → Q4가 아니라 Q7 (Q4는 결과 정보가 입력에 섞임, Q7은 결과 확인)",
+   "changed": [
+    "A013",
+    "A026",
+    "A036",
+    "A041",
+    "A043",
+    "A044",
+    "A051",
+    "A056",
+    "A064",
+    "A076",
+    "A079",
+    "A083",
+    "A090",
+    "A108",
+    "A110",
+    "A118",
+    "A122",
+    "A124",
+    "A126",
+    "A127",
+    "A137",
+    "A150",
+    "A153",
+    "A165",
+    "A189",
+    "A190",
+    "A191",
+    "A193",
+    "A205",
+    "A213",
+    "A217",
+    "A220",
+    "A222",
+    "A232",
+    "A250",
+    "A252",
+    "A259",
+    "A260",
+    "A264",
+    "A268",
+    "A273",
+    "A275",
+    "A277",
+    "A294",
+    "A296",
+    "A300",
+    "A310",
+    "A326"
+   ],
+   "note": "채점기를 (A)에 돌리기 전에 고침. 개발/시험 나눔 그대로"
+  }
+ ]
+}

@@ -1,340 +1,316 @@
-"""5단계 채점기 시험. 진짜 정답표는 쓰지 않는다 (가짜 정답표 + 가짜 보고서).
+"""5단계 채점기 v2 시험 = 검증 세트 (B). 진짜 정답표는 쓰지 않는다 (가짜 정답표 + 가짜 제출).
 
-가짜 변형은 기본 설계서에 공개 사례 패치를 적용해 만든다 (designs/inject.py와 같은 방식).
+가짜 변형은 깨끗한 설계서(designs/clean_v2/)에 공개 사례 패치(designs/patches_v1_cases.py)를 적용해 만든다.
+정답표 항목은 designs/answer_key_v2.py의 함수로 만든다 (진짜 정답표와 같은 형식, 정당한 지적 목록은 잠긴 목록 그대로).
+변형 파일(designs/variants/)끼리, 또는 변형과 깨끗한 설계서를 비교하지 않는다.
 """
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import re
 from pathlib import Path
 
 import pytest
 
+from designs import answer_key_v2 as ak
 from designs import inject as inj
+from designs.patches_v1_cases import V1_CASE_PATCHES
 from experiment import grader as gr
 from experiment import prompt
 
 ROOT = Path(__file__).resolve().parent.parent
-BASES = inj.load_bases()
+CLEAN = ROOT / "designs" / "clean_v2"
+QUESTION = {"E01": "Q1", "E02": "Q1", "E03": "Q1", "E04": "Q1", "E05": "Q2", "E06": "Q2", "E07": "Q2",
+            "E08": "Q3", "E09": "Q3", "E10": "Q3", "E11": "Q1", "E12": "Q4", "E13": "Q4", "E14": "Q5",
+            "E15": "Q5", "E16": "Q5", "E17": "Q7", "E18": "Q7"}
 
 
-def variant(t: str, case_ids: list[str] = (), legit: str | None = None) -> tuple[dict, dict]:
-    """(가짜 변형 설계서, 정답표 항목) — inject.build와 같은 구조."""
-    cases = {c["id"]: c for c in inj.public_cases()}
-    d = BASES[t]
-    entry = {"design_type": t, "defects": [], "legit_changes": [], "sha256": "-"}
-    for cid in case_ids:
-        c = cases[cid]
-        d = inj.apply_ops(d, c["ops"])
-        entry["defects"].append({k: c[k] for k in ("id", "name", "question", "expected_verdict",
-                                                   "holdout", "adjustment", "targets")})
-    if legit:
-        ops = inj.LEGIT_CHANGES[legit]["ops"]
+def base(name: str) -> dict:
+    return json.loads((CLEAN / f"{name}.json").read_text(encoding="utf-8"))
+
+
+def variant(b: str, cases: tuple = (), holdout: bool = False) -> tuple[dict, dict]:
+    """(가짜 변형 설계서, 정답표 항목) — answer_key_v2 형식."""
+    d = base(b)
+    defects = []
+    for cid in cases:
+        ops = V1_CASE_PATCHES[cid]
         d = inj.apply_ops(d, ops)
-        entry["legit_changes"].append({"name": legit, "targets": inj.targets_of(ops), "note": "결함 아님"})
-    return d, entry
+        exc = ak.PUBLIC_EXCEPTIONS.get(cid, {})
+        defects.append(ak.defect_entry(cid, QUESTION[cid], holdout, "차단", ops,
+                                       exc.get("support_targets"), exc.get("accept_questions")))
+    return d, ak.variant_entry("-", b, d["design_type"], defects)
 
 
-def as_holdout(entry: dict, adjusted: bool = False) -> dict:
-    e = copy.deepcopy(entry)
-    for d in e["defects"]:
-        d["holdout"], d["adjustment"] = True, ("가짜 조정" if adjusted else None)
-    return e
+def sub(items: list[dict] | None) -> str | None:
+    return None if items is None else json.dumps(items, ensure_ascii=False)
 
 
-def report(items: list[dict] | None, prose: str = "설계를 검토했다.") -> str:
-    if items is None:
-        return prose
-    return prose + "\n\n```findings\n" + json.dumps(items, ensure_ascii=False, indent=1) + "\n```\n"
+def P(target, problem="문제가 있다", kind="문제"):
+    return {"target": target, "kind": kind, "problem": problem}
 
 
-def grade(design, entry, items, prose="설계를 검토했다.", rid="r1"):
-    return gr.grade_report({"report_id": rid, "variant": "v.json", "text": report(items, prose)}, design, entry)
+def grade(design, entry, items, rid="r1"):
+    return gr.grade_report({"report_id": rid, "variant": "v.json", "findings": sub(items)}, design, entry)
 
 
-# ---------------------------------------------------------------- 목록 추출
+# ---------------------------------------------------------------- 형식 검사 (구조와 kind만)
 
-def test_parse_formats():
-    assert gr.parse_findings("목록 없이 서술만") == ([], "목록 없음", 0)
-    assert gr.parse_findings("```findings\n[{bad json\n```")[1] == "JSON 오류"
-    assert gr.parse_findings("```findings\n{\"target\": \"x\"}\n```")[1] == "목록 아님"
-    items, err, bad = gr.parse_findings(report([
-        {"target": "features.age", "problem": "a"},
-        {"target": ["split.key", "model.tuning.cv_key"], "problem": "b"},
-        {"problem": "대상 없음"}, "문자열"]))
-    assert err is None and bad == 2
-    assert [x["target"] for x in items] == ["features.age", "split.key", "model.tuning.cv_key"]
-    assert gr.parse_findings(report([]))[:2] == ([], None)
+def test_validate_scope_structure_and_kind_only():
+    assert gr.validate_findings(None) == ["파일 없음"]
+    assert gr.validate_findings("[") == ["JSON 오류"]
+    assert gr.validate_findings('{"a": 1}') == ["목록 아님"]
+    assert gr.validate_findings("[]") == []
+    assert gr.validate_findings(sub([P("features.no_such_feature"), P(["split.key", "설계 전체"])])) == []  # 경로는 보지 않음
+    assert gr.validate_findings(sub([P("split.key", kind="경고")])) == ["0: kind"]
+    assert gr.validate_findings(sub([{"target": "", "kind": "문제", "problem": "x"}])) == ["0: target"]
+    assert gr.validate_findings(sub([{"target": "a", "kind": "가정"}])) == ["0: problem"]
 
 
-def test_only_last_block_and_prose_ignored():
-    d, e = variant("dynamic", ["E02"])
-    text = ("본문에서 features.cr_last가 채취 시각 기준이라 미래 정보라고 썼다.\n"
-            "```findings\n[{\"target\": \"features.age\", \"problem\": \"초안\"}]\n```\n"
-            "```findings\n[]\n```")
-    g = gr.grade_report({"report_id": "r", "variant": "v.json", "text": text}, d, e)
-    assert g.defects[0]["primary"] is False and g.false_alarms == []
+def test_empty_list_vs_missing_file():
+    d, e = variant("aki_a", ("E02",))
+    g0 = grade(d, e, [])
+    gn = grade(d, e, None)
+    assert g0.format_error is None and g0.n_entries == 0
+    assert gn.format_error == "파일 없음" and gn.n_entries == 0
+    assert not g0.defects[0]["primary"] and not gn.defects[0]["primary"]
+    assert g0.false_alarms == gn.false_alarms == []
 
 
-# ---------------------------------------------------------------- 문제 종류
-
-@pytest.mark.parametrize("text,q", [
-    ("채취 시각으로 걸러서 tₚ 이후에 보고된 값이 들어간다", "Q1"),
-    ("uses information not yet available at prediction time", "Q1"),
-    ("같은 환자의 입원이 학습과 평가에 나뉘어 들어간다", "Q2"),
-    ("rows from the same patient end up in both train and test sets", "Q2"),
-    ("중앙값 대치를 전체 데이터로 적합한다", "Q3"),
-    ("the selector is fit on the full dataset before splitting", "Q3"),
-    ("결과를 정한 행과 같은 행을 쓴다", "Q4"),
-    ("this order is a proxy for the outcome (target leakage)", "Q4"),
-    ("불멸 시간 편향이 생긴다", "Q5"),
-    ("ICU와 병동의 측정 빈도가 달라 결과 확인 강도가 다르다", "Q7"),
-    ("surveillance bias: ICU patients are tested more often", "Q7"),
-    ("[차단] Q3 적합 범위", "Q3"),
-])
-def test_keywords(text, q):
-    k = gr.classify(text)
-    assert k.status == "kinds" and q in k.qs
+def test_list_target_and_malformed_entry():
+    d, e = variant("aki_a", ("E02",))
+    g = grade(d, e, [P(["features.cr_last", "features.age"]), {"target": "features.sex", "kind": "?", "problem": "x"}])
+    assert g.n_entries == 2 and g.n_malformed == 1
+    assert g.defects[0]["primary"] and g.false_alarms == ["features.age"]
 
 
-@pytest.mark.parametrize("text,q", [   # 5단계 시험에서 종류 불명으로 떨어졌던 자연스러운 표현 (사전 보강)
-    ("이번 입원의 진단명은 퇴원 후에 코딩되어 예측 시점에 사용할 수 없습니다.", "Q1"),
-    ("가족 구성원이 학습과 검증에 나뉘어 들어가 독립성이 깨집니다.", "Q2"),
-    ("행 단위로 나누면 한 사람의 데이터가 양쪽에 섞여 성능이 과대평가됩니다.", "Q2"),
-    ("변수 선택을 전체 표본에서 하면 시험 세트 정보를 미리 본 것입니다.", "Q3"),
-    ("다음 입원의 정보를 쓰는데, 다음 입원 자체가 예측하려는 결과입니다.", "Q4"),
-])
-def test_keywords_natural_expressions(text, q):
-    k = gr.classify(text)
-    assert k.status == "kinds" and q in k.qs
+# ---------------------------------------------------------------- kind
 
-
-def test_kind_special_cases():
-    assert gr.classify("이 특징은 좀 이상하다").status == "unknown"
-    assert gr.classify("이 값은 적합하지 않아 보인다").status == "unknown"   # '적합'(알맞음)은 Q3가 아님
-    assert gr.classify("시도 횟수를 기록해야 한다 (multiple testing)").status == "q6"
-    assert gr.classify("규칙표에 없어 확인 불가: Q1 가용 시점").status == "unable"   # 점검 불가가 먼저
-    assert gr.classify("출처 불명: Q1~Q3 확인 불가").status == "unable"
-    assert gr.classify("Q1~Q3 위반").qs == {"Q1", "Q2", "Q3"}
-    # 포함·제외 기준의 시점 문제는 선택 시점(Q5)이기도 하다
-    assert gr.classify("퇴원 때 확정되는 미래 정보", "cohort.inclusion.los_7d").qs >= {"Q1", "Q5"}
-    assert "Q5" not in gr.classify("퇴원 때 확정되는 미래 정보", "features.los_h").qs
-
-
-# ---------------------------------------------------------------- 대상 항목
-
-@pytest.mark.parametrize("target,item", [
-    ("features.cr_last", "features.cr_last"),
-    ("features[name=cr_last].time_column", "features.cr_last"),
-    ("features:cr_last", "features.cr_last"),
-    ("`features.cr_last` 특징의 시간 기준", "features.cr_last"),
-    ("cr_last", "features.cr_last"),
-    ("preprocessing[name=median_impute].fit_scope", "preprocessing.median_impute"),
-    ("cohort.exclusion.aki_known_by_tp", "cohort.exclusion.aki_known_by_tp"),
-    ("split.key", "split"), ("split_unit", "split"), ("model.tuning.cv_key", "split"),
-    ("outcome.aki_48h", "outcome"), ("outcome.window", "outcome.window"),
-    ("outcome.ascertainment", "outcome.ascertainment"),
-    ("cohort.subgroups (unit)", "cohort.subgroups"),
-    ("model.family", "model"),
-])
-def test_resolve(target, item):
-    assert gr.resolve(target, BASES["dynamic"]) == item
-
-
-@pytest.mark.parametrize("target", ["features", "features.nonexistent", "설계 전체", "features.age, features.sex", "cohort"])
-def test_resolve_unresolved(target):
-    assert gr.resolve(target, BASES["dynamic"]) is None
-
-
-# ---------------------------------------------------------------- 탐지: 주 분석(항목) vs 보조 분석(항목+종류)
-
-def test_primary_and_secondary_detection():
-    d, e = variant("dynamic", ["E02"])                      # Q1, features.cr_last
-    g = grade(d, e, [{"target": "features.cr_last", "problem": "채취 시각 기준이라 tₚ 이후 보고 값이 섞인다"}])
-    assert g.defects[0]["secondary"] and g.defects[0]["primary"] and g.false_alarms == []
-
-
-def test_right_item_wrong_kind_is_primary_only():
-    d, e = variant("dynamic", ["E02"])
-    g = grade(d, e, [{"target": "features.cr_last", "problem": "결측 대치를 전체 데이터로 적합한다"}])
-    assert (g.defects[0]["secondary"], g.defects[0]["primary"]) == (False, True)
-    assert g.defects[0]["extra_kinds"] == ["Q3"]
-
-
-def test_unknown_kind_is_primary_only_and_counted():
-    d, e = variant("dynamic", ["E02"])
-    g = grade(d, e, [{"target": "features.cr_last", "problem": "이상할 수도 있다"}])
-    assert (g.defects[0]["secondary"], g.defects[0]["primary"]) == (False, True)
-    assert g.n_unknown_kind == 1 and g.false_alarms == []
-
-
-def test_vague_prose_without_list_is_miss():
-    d, e = variant("dynamic", ["E02"])
-    g = grade(d, e, None, prose="cr_last는 채취 시각 기준이라 tₚ 이후 값이 섞일 수 있다.")
-    assert g.format_error == "목록 없음"
+def test_kind_assumption_and_unable_on_defect_cell():
+    d, e = variant("aki_a", ("E02",))
+    g = grade(d, e, [P("features.cr_last", kind="가정"), P("features.cr_last", kind="점검 불가"), P("features.age", kind="가정")])
     assert not g.defects[0]["primary"] and g.false_alarms == []
+    c = g.counts
+    assert (c["n_assumption"], c["n_unable"], c["n_defect_cell_assumption"], c["n_defect_cell_unable"]) == (2, 1, 1, 1)
 
 
-def test_warning_level_counts():
-    d, e = variant("dynamic", ["E13"])                      # 기대 판정 경고 (Q4)
-    g = grade(d, e, [{"target": "features.renal_ordered",
-                      "problem": "투석 오더는 AKI 결과의 대리 변수일 수 있어 사람이 확인해야 한다"}])
-    assert g.defects[0]["secondary"]
+def test_assumption_written_as_problem():
+    """가정 칸을 kind=문제로 적음: 깨끗한 변형에서 목록 칸(L8 split.key)이면 중립, 수는 따로 셈."""
+    d, e = variant("readmit_c")
+    g = grade(d, e, [P("split.key", "family_id 결측 행은 대체 키로 묶여 가족이 나뉠 수 있다")])
+    assert g.false_alarms == [] and g.counts["n_justified"] == 1 and g.counts["n_assumption_cell_problem"] == 1
 
 
-# ---------------------------------------------------------------- 추가 판정 vs 오경보
-
-def test_extra_kind_on_defect_item_is_not_false_alarm():
-    d, e = variant("fixed", ["E12"])                        # Q4, features.ward_type
-    g = grade(d, e, [{"target": "features.ward_type",
-                      "problem": "다음 입원 정보라 퇴원 시점에는 아직 알 수 없는 미래 정보이고, 결과를 정한 행과 같은 행이다"}])
-    assert g.defects[0]["secondary"] and g.defects[0]["extra_kinds"] == ["Q1"]
-    assert g.false_alarms == []
+def test_assumption_cell_as_problem_on_defect_cell_is_detection():
+    d, e = variant("readmit_c", ("E06",))
+    g = grade(d, e, [P("split.key", "family_id 결측")])
+    assert g.defects[0]["primary"] and g.counts["n_assumption_cell_problem"] == 1
 
 
-def test_two_entries_on_defect_item():
-    d, e = variant("fixed", ["E12"])
-    g = grade(d, e, [{"target": "features.ward_type", "problem": "미래 정보"},
-                     {"target": "features.ward_type", "problem": "결과 정의에 쓰인 행"}])
-    assert g.defects[0]["secondary"] and g.false_alarms == []
+# ---------------------------------------------------------------- 우선순위
+
+def test_defect_cell_that_is_also_justified_is_detection_and_sensitivity():
+    """E02 정답 features.cr_last, 목록 L11 칸 features.cr_last.time_column: 탐지가 우선. 민감도(목록 먼저)는 미탐지."""
+    d, e = variant("aki_a", ("E02",))
+    g = grade(d, e, [P("features[name=cr_last].time_column", "채취 시각이라 tp 뒤 보고 값이 들어간다")])
+    x = g.defects[0]
+    assert x["primary"] and x["secondary"] and not x["primary_justified_first"]
+    assert g.false_alarms == [] and g.counts["n_justified"] == 0
 
 
-def test_false_alarm_on_undefected_item_deduplicated():
-    d, e = variant("dynamic", ["E02"])
-    g = grade(d, e, [{"target": "features.cr_last", "problem": "미래 정보"},
-                     {"target": "features.age", "problem": "나이는 tₚ 이후 정보"},
-                     {"target": "features[name=age]", "problem": "다시 지적"},
-                     {"target": "preprocessing.standardize", "problem": "이상하다"}])
-    assert g.defects[0]["secondary"]
-    assert g.false_alarms == ["features.age", "preprocessing.standardize"]
+def test_justified_first_includes_exception_routes():
+    """민감도 ⑤는 예외(분할 묶음)로 맞은 지적도 포함: E06 정답 split, 지적 model.tuning.cv_key(L8 목록 칸)."""
+    d, e = variant("readmit_c", ("E06",))
+    g = grade(d, e, [P("model.tuning.cv_key", "같은 가족이 fold에 나뉜다")])
+    x = g.defects[0]
+    assert x["primary"] and x["via_bundle_or_exception_only"] and not x["primary_justified_first"]
 
 
-def test_clean_variant_any_flag_is_false_alarm():
-    d, e = variant("fixed")
-    g = grade(d, e, [{"target": "features.dx_ckd", "problem": "진단 코드는 퇴원 후에야 확정되는 미래 정보"}])
-    assert g.defects == [] and g.false_alarms == ["features.dx_ckd"]
-    assert grade(d, e, []).false_alarms == []
+def test_support_is_neutral():
+    d, e = variant("readmit_a", ("E09",))
+    g = grade(d, e, [P("features.prior_dx_main", "범주형 진단 코드")])
+    assert not g.defects[0]["primary"] and g.false_alarms == [] and g.counts["n_support"] == 1
 
 
-def test_legit_change_flag_is_false_alarm():
-    d, e = variant("dynamic", legit="prior_admission_dx")
-    g = grade(d, e, [{"target": "features.prior_dx_renal_cardiac", "problem": "진단 코드는 퇴원 시각에야 알려진다"}])
-    assert g.false_alarms == ["features.prior_dx_renal_cardiac"]
+def test_legit_change_is_false_alarm():
+    d, e = variant("aki_b")
+    g = grade(d, e, [P("features.k_last_6h", "의심")])
+    assert g.false_alarms == ["features.k_last_6h"] and g.legit_flagged == ["features.k_last_6h"]
 
 
-def test_not_graded_items_and_q6():
-    d, e = variant("dynamic")
-    g = grade(d, e, [{"target": "model.family", "problem": "로지스틱 회귀는 단순하다"},
-                     {"target": "attempts", "problem": "다중 시도 보정이 없다"},
-                     {"target": "설계 전체", "problem": "합성 데이터라 일반화가 어렵다"}])
-    assert g.false_alarms == [] and g.n_q6 == 1 and g.n_unresolved == 1
+@pytest.mark.parametrize("b,item", [("aki_c", "n_admissions_to_tp"), ("readmit_b", "prior_dx_group"), ("readmit_c", "prior_cr_last")])
+def test_legit_item_not_absorbed_by_broad_route(b, item):
+    """S3 뒤 결정: 좁게 맞음이 넓게 맞음보다 먼저. legit 항목을 항목 단위로 지적 → 오경보,
+    그 항목의 목록 칸(history_key, 목록 L6)을 지적 → 중립."""
+    d, e = variant(b)
+    g = grade(d, e, [P(f"features.{item}", "의심")])
+    assert g.false_alarms == [f"features.{item}"] and g.legit_flagged == [f"features.{item}"] and g.counts["n_justified"] == 0
+    g2 = grade(d, e, [P(f"features.{item}.history_key", "등록 번호로만 묶는다")])
+    assert g2.false_alarms == [] and g2.counts["n_justified"] == 1
 
 
-# ---------------------------------------------------------------- 점검 불가
-
-def test_unable_on_defect_is_miss_not_false_alarm():
-    d, e = variant("dynamic", ["E02"])
-    g = grade(d, e, [{"target": "features.cr_last", "problem": "규칙표에 없어 확인 불가"},
-                     {"target": "features.age", "problem": "출처 불명: Q1~Q3 확인 불가"}])
-    assert not g.defects[0]["primary"] and g.false_alarms == [] and g.n_unable == 2
+def test_non_legit_item_still_absorbed_by_broad_route():
+    d, e = variant("readmit_a")
+    g = grade(d, e, [P("features.prior_dx_ckd", "x")])
+    assert g.false_alarms == [] and g.counts["n_justified"] == 1 and g.counts["n_justified_strict"] == 0
 
 
-# ---------------------------------------------------------------- 동의어 묶음
-
-@pytest.mark.parametrize("target", ["split.key", "split_unit", "split", "model.tuning.cv_key"])
-def test_split_group(target):
-    d, e = variant("dynamic", ["E07"])                      # Q2, split.key = patient_id
-    g = grade(d, e, [{"target": target, "problem": "같은 가족이 학습과 평가에 나뉜다"}])
-    assert g.defects[0]["secondary"] and g.false_alarms == []
-
-
-@pytest.mark.parametrize("target,hit", [("outcome", True), ("outcome.aki_48h", True),
-                                        ("outcome.ascertainment", True), ("outcome.window", False),
-                                        ("cohort.subgroups", True)])
-def test_outcome_group(target, hit):
-    d, e = variant("dynamic", ["E17"])                      # Q7, outcome.ascertainment 삭제
-    g = grade(d, e, [{"target": target, "problem": "ICU와 병동의 측정 빈도가 달라 결과 확인 강도가 다르다"}])
-    assert g.defects[0]["secondary"] is hit
-    assert (g.false_alarms == []) is hit
+def test_justified_k2_is_neutral_k1_is_false_alarm():
+    da, ea = variant("aki_c")
+    ga = grade(da, ea, [P("data_source.death_source", "원내 사망만 쓴다")])
+    assert ga.false_alarms == [] and ga.counts["n_justified"] == 1
+    db, eb = variant("readmit_b")
+    gb = grade(db, eb, [P("features.n_clinic_365d", "추적 외래가 결과 대리 기록과 겹친다")])
+    assert gb.false_alarms == ["features.n_clinic_365d"] and gb.false_alarms_no_k == []
 
 
-def test_subgroups_only_for_ascertainment():
-    """cohort.subgroups는 정답이 outcome.ascertainment일 때만 같은 항목. 그 밖에는 오경보."""
-    d = BASES["dynamic"]
-    assert gr.matches("cohort.subgroups", gr.key_target("outcome.ascertainment", d))
-    assert gr.matches("cohort.subgroups", "outcome.ascertainment.by_stratum")
-    for key in ("outcome", "outcome.window", "split", "features.cr_last"):
-        assert not gr.matches("cohort.subgroups", key)
-    d, e = variant("dynamic", ["E02"])
-    g = grade(d, e, [{"target": "cohort.subgroups", "problem": "ICU와 병동의 측정 빈도가 다르다"}])
-    assert g.false_alarms == ["cohort.subgroups"] and not g.defects[0]["primary"]
-    d, e = variant("dynamic")
-    assert grade(d, e, [{"target": "cohort.subgroups", "problem": "측정 빈도"}]).false_alarms == ["cohort.subgroups"]
+def test_k5_cell_reference():
+    d, e = variant("readmit_a")
+    g = grade(d, e, [P("cohort.rows_per_unit", "점검기 코호트는 마지막 입원만 고르지 않는다")])
+    assert g.false_alarms == ["cohort.rows_per_unit"] and g.false_alarms_no_k == []
+    d2, e2 = variant("aki_a")   # 동적 바탕은 K5가 아니다
+    g2 = grade(d2, e2, [P("cohort.rows_per_unit", "x")])
+    assert g2.false_alarms_no_k == ["cohort.rows_per_unit"]
 
 
-def test_h2_random_counts_subgroups_for_ascertainment():
-    d, _ = variant("dynamic", ["E17"])
-    uni = gr.universe(d)
-    k = sum(gr.matches(u, "outcome.ascertainment") for u in uni)
-    assert k == 2     # outcome, cohort.subgroups
+# ---------------------------------------------------------------- 칸 넓이
+
+def test_breadth_item_level_broader_matches_justified_but_not_strict():
+    d, e = variant("aki_a")
+    g = grade(d, e, [P("features.cr_last", "마지막 값을 입력 시각 순으로 고른다")])
+    assert g.false_alarms == [] and g.counts["n_justified"] == 1
+    assert g.false_alarms_strict == ["features.cr_last"] and g.counts["n_justified_strict"] == 0
 
 
-def test_coarse_key_targets():
-    d = BASES["dynamic"]
-    assert gr.matches("cohort.inclusion.adult", gr.key_target("cohort", d))
-    assert not gr.matches("features.age", gr.key_target("cohort", d))
-    assert gr.matches("split", gr.key_target("model", d)) and gr.matches("model", gr.key_target("model", d))
-    assert gr.key_target("cohort.inclusion:los_7d", d) == "cohort.inclusion.los_7d"
+def test_breadth_broader_on_accept_and_strict():
+    """E18 정답에 outcome.ascertainment.scope.sites 등. outcome.ascertainment(최상위 아래 칸) 지적은 관대판 탐지, 엄격판 미탐지."""
+    d, e = variant("readmit_a", ("E18",))
+    x = grade(d, e, [P("outcome.ascertainment", "A·B 밖 병원 재입원을 놓친다")]).defects[0]
+    assert x["primary"] and not x["primary_strict"] and not x["via_bundle_or_exception_only"]
 
 
-def test_selection_time_via_context():
-    d, e = variant("dynamic", ["E14"])                      # Q5, cohort.inclusion.los_7d
-    g = grade(d, e, [{"target": "cohort.inclusion.los_7d", "problem": "재원 기간은 퇴원 때 확정되는 미래 정보다"}])
-    assert g.defects[0]["secondary"]
+def test_top_bundle_finding_is_too_broad():
+    d, e = variant("readmit_a", ("E18",))
+    g = grade(d, e, [P("outcome", "결과 확인이 고르지 않다"), P("features", "x"), P("outcome.readmit_30d", "x")])
+    assert not g.defects[0]["primary"] and g.false_alarms == []
+    assert g.counts["n_too_broad"] == 3 and set(g.false_alarms_with_broad) == {"outcome", "features"}
+
+
+def test_bundle_key_and_strict_drops_it():
+    """E18 정답 칸에 cohort(묶음)가 있다: 관대판은 어떤 cohort.* 지적도 탐지(묶음 경로로만), 엄격판은 묶음 칸을 뺀다."""
+    d, e = variant("readmit_a", ("E18",))
+    x = grade(d, e, [P("cohort.exclusion.died_in_hospital", "x")]).defects[0]
+    assert x["primary"] and x["via_bundle_or_exception_only"] and not x["primary_strict"]
+
+
+@pytest.mark.parametrize("target,route,strict", [
+    ("split.key", "bundle", True), ("split", "bundle", True), ("split.method", "bundle", True),
+    ("split_unit", "exception", False), ("model.tuning.cv_key", "exception", False)])
+def test_split_group(target, route, strict):
+    d, e = variant("readmit_c", ("E06",))
+    x = grade(d, e, [P(target, "같은 가족이 학습과 평가에 나뉜다")]).defects[0]
+    assert x["primary"] and x["via_bundle_or_exception_only"] and x["primary_strict"] is strict
+    assert gr.match_route(gr.resolve(target, d), "split", d) == route
+
+
+def test_subgroups_exception_only_for_ascertainment():
+    d, e = variant("aki_a", ("E17",))
+    x = grade(d, e, [P("cohort.subgroups", "ICU·병동 측정 빈도가 다르다")]).defects[0]
+    assert x["primary"]   # E17은 정답에 cohort 묶음도 있다
+    assert gr.match_route("cohort.subgroups", "outcome.ascertainment", d) == "exception"
+    assert gr.match_route("cohort.subgroups", "outcome.window", d) is None
+
+
+def test_sibling_cell_is_not_detection():
+    """형제 칸: 정답 outcome.ascertainment(E17)인데 outcome.window 지적 → 탐지 아님, 그 칸의 판정(여기서는 오경보), 수는 기록."""
+    d, e = variant("aki_a", ("E17",))
+    g = grade(d, e, [P("outcome.window", "결과 창이 잘린다")])
+    assert not g.defects[0]["primary"] and g.false_alarms == ["outcome.window"]
+    assert g.counts["n_sibling_of_defect"] == 1
+
+
+def test_nonexistent_paths():
+    d, e = variant("aki_a")
+    g = grade(d, e, [P("features.no_such"), P("no_such_section.x"), P("설계 전체"),
+                     P("features (age, sex, unit)"), P("features.age.no_such_cell")])
+    assert g.counts["n_unresolved"] == 4 and g.false_alarms == ["features.age"]
+
+
+def test_duplicates_counted_once_per_item():
+    d, e = variant("aki_a")
+    g = grade(d, e, [P("features.age"), P("features.age"), P("features.age.source"), P("features.sex")])
+    assert g.false_alarms == ["features.age", "features.sex"]
+
+
+def test_not_graded_heads():
+    d, e = variant("aki_a")
+    g = grade(d, e, [P("attempts.n_models_tried", "다중 시도"), P("notes")])
+    assert g.false_alarms == [] and g.counts["n_not_graded"] == 2
+
+
+def test_natural_target_strings():
+    d, e = variant("aki_a", ("E02",))
+    for t in ("features[name=cr_last].time_column", "features:cr_last", "cr_last", "`features.cr_last`",
+              "features.cr_last (time_column=collect_time)"):
+        assert grade(d, e, [P(t)]).defects[0]["primary"], t
+
+
+def test_secondary_uses_accept_questions():
+    d, e = variant("aki_a", ("E02",))
+    assert grade(d, e, [P("features.cr_last", "보고 시각 전 값이다")]).defects[0]["secondary"]
+    x = grade(d, e, [P("features.cr_last", "이상할 수도 있다")])
+    assert x.defects[0]["primary"] and not x.defects[0]["secondary"] and x.counts["n_unknown_kind"] == 1
+    d4, e4 = variant("aki_a", ("E04",))   # E04 accept_questions = Q1, Q4
+    assert grade(d4, e4, [P("features.n_proc", "투석은 결과의 대리 변수")]).defects[0]["secondary"]
 
 
 def test_two_defects_one_variant():
-    d, e = variant("dynamic", ["E02", "E08"])
-    g = grade(d, e, [{"target": "preprocessing.median_impute", "problem": "전체 데이터로 적합"}])
-    assert [x["secondary"] for x in g.defects] == [False, True]
+    d, e = variant("aki_a", ("E02", "E13"))
+    g = grade(d, e, [P("features.renal_ordered", "결과의 대리 변수")])
+    assert [x["primary"] for x in g.defects] == [False, True]
 
 
-# ---------------------------------------------------------------- 점검기 출력 채점
+# ---------------------------------------------------------------- 점검기 출력
 
 def test_grade_checker_output():
-    d, e = variant("dynamic", ["E02", "E13"])
+    d, e = variant("aki_a", ("E02",))
     out = {"findings": [
-        {"question": "Q1", "verdict": "차단", "target": "features.cr_last", "reason": "확인 가능 시각이 기준 시점(tp) 뒤일 수 있다"},
-        {"question": "Q4", "verdict": "경고", "target": "features.renal_ordered", "reason": "대리 변수 목록과 일치"},
-        {"question": "Q2", "verdict": "통과", "target": "설계 전체", "reason": "-"},
-        {"question": "Q1~Q3", "verdict": "경고", "target": "features.age", "reason": "출처 불명: Q1~Q3 확인 불가."},
-        {"question": "Q6", "verdict": "기록", "target": "attempts", "reason": "설계 1개"}]}
+        {"question": "Q1", "verdict": "차단", "target": "features.cr_last", "reason": "확인 가능 시각이 tp 뒤"},
+        {"question": "Q2", "verdict": "통과", "target": "split.key", "reason": "-"},
+        {"question": "Q1~Q3", "verdict": "경고", "target": "features.age", "reason": "출처 불명: 확인 불가."}],
+        "assumptions": [{"question": "Q2", "verdict": "가정", "target": "split.key", "reason": "family 결측"}]}
     g = gr.grade_checker({"report_id": "c1", "variant": "v.json", "exit_code": 1, "checker": out}, d, e)
-    assert [x["secondary"] for x in g.defects] == [True, True]
-    assert g.false_alarms == [] and g.n_unable == 1
+    assert g.defects[0]["secondary"] and g.false_alarms == []
+    assert (g.counts["n_unable"], g.counts["n_assumption"]) == (1, 1)
     g2 = gr.grade_checker({"report_id": "c2", "variant": "v.json", "exit_code": 2, "checker": None}, d, e)
-    assert g2.n_unable == 1 and not any(x["primary"] for x in g2.defects)
+    assert not g2.defects[0]["primary"]
 
 
-@pytest.mark.skip(reason="5단계 완료 시 반드시 통과 (v1 기본 설계서·v1 채점기 기준. v2 깨끗한 설계서·v2 채점기로 바꿈, 3단계 승인 ②)")
 def test_checker_on_clean_base_has_no_false_alarm():
-    """동결된 점검기의 실제 출력(설계서 단계)을 깨끗한 기본 설계에 채점하면 오경보 0."""
+    """깨끗한 설계서 8개의 점검기 판정(설계서 단계)이 기대 집합과 같다. v2 채점기로 채점하면 오경보는 K1 하나뿐이고,
+    점검기의 가정 칸은 grader.ASSUMPTION_CELLS와 같다. 점검기는 고치지 않고 변형에는 돌리지 않는다."""
     from leakcheck.checks import run_checks
-    for t in ("dynamic", "fixed"):
-        d, e = variant(t)
-        out = run_checks(d).to_dict()
-        g = gr.grade_checker({"report_id": t, "variant": "v.json", "exit_code": 0, "checker": out}, d, e)
-        assert g.false_alarms == [] and g.n_unresolved == 0
+    from tests.test_inject import EXPECTED_CLEAN_PROBLEMS
+    for name in sorted(EXPECTED_CLEAN_PROBLEMS):
+        d, e = variant(name)
+        r = run_checks(d)
+        assert sorted((f.verdict, f.rule, f.target) for f in r.problems()) == EXPECTED_CLEAN_PROBLEMS[name]
+        out = r.to_dict()
+        assert sorted({a["target"] for a in out["assumptions"]}) == sorted(gr.ASSUMPTION_CELLS[name]), name
+        g = gr.grade_checker({"report_id": name, "variant": "v.json", "exit_code": 0, "checker": out}, d, e)
+        want = ["features.n_clinic_365d"] if name == "readmit_b" else []
+        assert g.false_alarms == want and g.false_alarms_no_k == [] and g.counts["n_unresolved"] == 0, name
 
 
 # ---------------------------------------------------------------- 맹검
 
 def test_blind_guard():
-    d, e = variant("dynamic", ["E02"])
-    for k in ("condition", "arm", "조건"):
+    d, e = variant("aki_a", ("E02",))
+    for k in ("condition", "arm", "조건", "skill"):
         with pytest.raises(ValueError):
-            gr.grade_report({"report_id": "r", "variant": "v.json", "text": "", k: "가"}, d, e)
+            gr.grade_report({"report_id": "r", "variant": "v.json", "findings": "[]", k: "가"}, d, e)
     with pytest.raises(ValueError):
         gr.grade_checker({"report_id": "r", "variant": "v.json", "exit_code": 0, "checker": None, "condition": "가"}, d, e)
 
@@ -345,82 +321,89 @@ def test_grade_all_has_no_condition_input():
         assert not {"condition", "conditions"} & set(inspect.signature(fn).parameters)
 
 
-# ---------------------------------------------------------------- 요약 · H1 · H2
+# ---------------------------------------------------------------- 요약 · 가설
 
-def _fake_run():
-    """가짜 변형 4개 (결함 공개 1 · 결함 보류 1 · 깨끗한 것 2) × 조건 2 × 반복 3."""
-    specs = {"vA.json": variant("dynamic", ["E02"]), "vB.json": variant("fixed", ["E06"]),
-             "vC.json": variant("dynamic"), "vD.json": variant("fixed", legit="prior_admission_dx")}
-    d, e = specs["vB.json"]
-    specs["vB.json"] = (d, as_holdout(e))
+def _fake_run(reps: int = 2):
+    """가짜 변형 5개 (공개 결함 2, 보류 결함 1, 깨끗한 2) × 조건 2 × 반복."""
+    specs = {"vA.json": variant("aki_a", ("E02",)), "vB.json": variant("readmit_c", ("E06",)),
+             "vH.json": variant("aki_b", ("E13",), holdout=True),
+             "vC.json": variant("aki_c"), "vD.json": variant("readmit_b")}
     designs = {k: v[0] for k, v in specs.items()}
     key = {k: v[1] for k, v in specs.items()}
-    good = {"vA.json": [{"target": "features.cr_last", "problem": "채취 시각이라 tₚ 이후 값"}],
-            "vB.json": [{"target": "split.key", "problem": "같은 환자의 입원이 학습과 평가에 나뉜다"}],
-            "vC.json": [], "vD.json": [{"target": "features.prior_dx_renal_cardiac", "problem": "이상하다"}]}
-    weak = {"vA.json": [{"target": "features.cr_last", "problem": "좀 의심스럽다"}],
-            "vB.json": [{"target": "features.age", "problem": "확인 필요"}],
-            "vC.json": [{"target": "features.age", "problem": "확인 필요"}], "vD.json": []}
+    good = {"vA.json": [P("features.cr_last", "채취 시각이라 tp 뒤 보고 값")],
+            "vB.json": [P("split.key", "같은 환자의 입원이 학습과 평가에 나뉜다")],
+            "vH.json": [P("features.renal_ordered", "결과의 대리 변수")],
+            "vC.json": [P("data_source.death_source", "원내 사망만")],
+            "vD.json": [P("features.n_clinic_365d", "대리 기록과 겹친다")]}
+    weak = {"vA.json": [P("features.cr_last", "좀 의심스럽다")], "vB.json": [P("features.age", "확인 필요")],
+            "vH.json": [], "vC.json": [P("features.age", "확인 필요"), P("outcome", "x")], "vD.json": []}
     reports, conds, i = [], {}, 0
     for cond, items in (("가", good), ("나", weak)):
-        for rep in range(3):
+        for rep in range(1, reps + 1):
             for v in specs:
                 i += 1
                 rid = f"r{i:03d}"
-                reports.append({"report_id": rid, "variant": v, "text": report(items[v])})
-                conds[rid] = {"condition": cond, "rep": rep}
+                reports.append({"report_id": rid, "variant": v, "findings": sub(items[v])})
+                conds[rid] = {"condition": cond, "rep": rep, "turn_capped": False, "format_retries": 0}
     return reports, conds, key, designs
 
 
 def test_summary_end_to_end():
     reports, conds, key, designs = _fake_run()
-    grades = gr.grade_all(reports, key, designs=dict(designs))
-    s = gr.summarize(grades, conds, key, dict(designs))
+    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key)
     ga, gb = s["conditions"]["가"], s["conditions"]["나"]
-    assert ga["detection"]["all"]["secondary"] == 1.0 and gb["detection"]["all"]["secondary"] == 0.0
-    assert gb["detection"]["all"]["primary"] == 0.5          # vA는 항목만 맞힘 (주 분석 탐지)
-    assert ga["detection"]["holdout"]["secondary"] == 1.0 and ga["detection"]["public"]["n"] == 3
-    # 오경보: 깨끗한·결함 변형 모두, 두 조건 모두
-    assert ga["false_alarms"]["clean"] == {"reports": 6, "total": 3, "mean_per_report": 0.5}
-    assert ga["false_alarms"]["defect"]["total"] == 0
-    assert gb["false_alarms"]["clean"]["total"] == 3 and gb["false_alarms"]["defect"]["total"] == 3
-    # 종류 불명 개수는 조건별로
-    assert ga["counts"]["n_unknown_kind"] == 3 and gb["counts"]["n_unknown_kind"] == 9
-    assert ga["stability"]["secondary"] == 1.0
-    # H1: 차이 1.0, CI 하한 > 0, 깨끗한 변형 오경보 평균 0.5 ≤ 1
-    assert s["H1"]["secondary"]["diff"] == 1.0 and s["H1"]["secondary"]["met"]
-    # H2: (가)와 (나) 모두 보고
-    h = s["H2"]["all_holdout"]
-    assert h["가"]["secondary"]["observed"] == 1.0 and h["가"]["secondary"]["met"]
-    assert 0 < h["가"]["secondary"]["expected_random"] < 1
-    assert h["나"]["secondary"]["observed"] == 0.0
-    assert s["H2"]["unadjusted_holdout"]["가"]["n"] == 3
+    assert ga["detection"]["all"]["primary"] == 1.0 and gb["detection"]["all"]["primary"] == pytest.approx(1 / 3)
+    assert ga["detection"]["holdout"]["n"] == 2 and ga["detection"]["public"]["n"] == 4
+    assert ga["false_alarms"]["clean"]["false_alarms"] == {"total": 2, "mean_per_report": 0.5}
+    assert ga["false_alarms"]["clean"]["false_alarms_no_k"]["total"] == 0
+    assert gb["counts"]["n_too_broad"] == 2 and gb["false_alarms"]["clean"]["false_alarms_with_broad"]["total"] == 4
+    assert ga["counts"]["n_justified"] == 2
+    assert ga["counts"]["detections_via_bundle_or_exception_only"] == 2   # vB split.key → split 묶음 정답
+    h = s["hypotheses"]
+    assert h["H1a"]["diff"] == pytest.approx(2 / 3) and h["H1a"]["n_units"] == 3
+    assert h["H1b"] == {"fa_clean_mean_ga": 0.5, "reports": 4, "met": True}
+    # (가): vD의 K1 1건 × 2회 / 4 = 0.5, (나): vC의 features.age 1건 × 2회 / 4 = 0.5 ("outcome"은 넓음이라 세지 않음)
+    assert h["H1c"]["n_units"] == 2 and h["H1c"]["diff"] == pytest.approx(0.0)
+    assert h["H2a"]["n_units"] == 1 and h["H2a"]["diff"] == 1.0
+    assert h["H2b"]["note"] == "기술만 (기준 없음)" and "met" not in h["H2b"]
+    assert set(s["reference"]) >= {"strict_breadth", "justified_first", "without_assumption_overlap_cases",
+                                   "fa_without_k1_k5", "fa_with_too_broad", "fa_strict"}
+    assert s["reference"]["without_turn_capped"] is None and s["reference"]["narrative_fixed_drawn"] == []
+    assert s["reference"]["fa_without_k1_k5"]["H1b"] == 0.0
+    assert s["n_reps"] == [1, 2]
 
 
-def test_h1_fails_on_false_alarms_and_disagreement_flag():
+def test_strict_reported_for_h1a_and_h2a():
     reports, conds, key, designs = _fake_run()
-    noisy = [{"target": f"features.{n}", "problem": "의심"} for n in ("age", "sex", "unit")]
-    for r in reports:
-        if conds[r["report_id"]]["condition"] == "가" and r["variant"] in ("vC.json", "vD.json"):
-            r["text"] = report(noisy)
-    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key, dict(designs))
-    assert s["conditions"]["가"]["false_alarms"]["clean"]["mean_per_report"] == 3.0
-    assert s["H1"]["secondary"]["ci95"][0] > 0 and not s["H1"]["secondary"]["met"]
-    # 주·보조 결론이 같으면 불일치 목록은 비어 있다
-    assert "H1" not in s["primary_secondary_disagree"]
+    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key)
+    st = s["reference"]["strict_breadth"]
+    assert {"H1a", "H2a"} <= set(st) and st["H2a"]["n_units"] == 1
 
 
-def test_disagreement_reported():
+def test_one_rep_only_and_turn_capped_reference():
+    reports, conds, key, designs = _fake_run(reps=1)
+    rid = next(r for r in conds if conds[r]["condition"] == "가")
+    conds[rid]["turn_capped"] = True
+    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key)
+    assert s["n_reps"] == [1] and s["conditions"]["가"]["reports"] == 5
+    assert s["conditions"]["가"]["counts"]["turn_capped"] == 1 and s["reference"]["without_turn_capped"] is not None
+
+
+def test_near_zero_and_narrative_fixed_reference():
     reports, conds, key, designs = _fake_run()
-    for r in reports:   # (가)가 종류를 말하지 않음 → 주 분석(항목) 차이 > 0, 보조 분석(항목+종류) 차이 0
-        if conds[r["report_id"]]["condition"] == "가" and r["variant"] in ("vA.json", "vB.json"):
-            tgt = "features.cr_last" if r["variant"] == "vA.json" else "split.key"
-            r["text"] = report([{"target": tgt, "problem": "의심"}])
-        elif conds[r["report_id"]]["condition"] == "나" and r["variant"] == "vA.json":
-            r["text"] = report([])
-    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key, dict(designs))
-    assert not s["H1"]["secondary"]["met"] and s["H1"]["primary"]["met"]
-    assert "H1" in s["primary_secondary_disagree"]
+    key = copy.deepcopy(key)
+    key["vH.json"]["defects"][0]["id"] = "C18"
+    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key, near_zero=[["vA.json", "E02"]])
+    assert s["reference"]["narrative_fixed_drawn"] == ["C18"]
+    assert s["reference"]["without_narrative_fixed"]["H2a"]["n_units"] == 0
+    assert s["reference"]["without_near_zero"]["H1a"]["n_units"] == 2   # vA의 배치가 빠져 vA는 단위에서 빠짐
+    assert s["reference"]["without_near_zero"]["H1a"]["diff"] != s["hypotheses"]["H1a"]["diff"]
+
+
+def test_secondary_not_used_for_judgment():
+    reports, conds, key, designs = _fake_run()
+    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key)
+    assert "secondary" in s and set(s["hypotheses"]) == {"H1a", "H1b", "H1c", "H2a", "H2b"}
 
 
 def test_checker_only_metric():
@@ -428,33 +411,25 @@ def test_checker_only_metric():
     chk = [{"report_id": r["report_id"], "variant": r["variant"], "exit_code": 1,
             "checker": {"findings": [{"question": "Q1", "verdict": "차단", "target": "features.cr_last", "reason": "-"}]}}
            for r in reports if conds[r["report_id"]]["condition"] == "가"]
-    s = gr.summarize(gr.grade_all(reports, key, chk, designs=dict(designs)), conds, key, dict(designs))
+    s = gr.summarize(gr.grade_all(reports, key, chk, designs=dict(designs)), conds, key)
     c = s["checker_only"]
-    assert c["runs"] == 12 and c["detection"]["secondary"] == 0.5     # vA만 맞힘
-    assert c["false_alarms"]["clean"]["total"] == 6                   # vC·vD에서 cr_last 지적
+    assert c["runs"] == 10 and c["detection"]["primary"] == pytest.approx(1 / 3)
+    # vC·vD의 cr_last 지적은 목록 L11 칸(cr_last.time_column)보다 넓은 항목 단위 → 관대판 중립, 엄격판 오경보
+    assert c["false_alarms"]["clean"]["false_alarms"]["total"] == 0
+    assert c["false_alarms"]["clean"]["false_alarms_strict"]["total"] == 4
 
 
-def test_random_hit_prob():
-    assert gr.random_hit_prob(10, 1, 0) == (0.0, 0.0)
-    item_only, item_kind = gr.random_hit_prob(10, 1, 1)     # (주 분석, 보조 분석)
-    assert item_only == pytest.approx(0.1) and item_kind == pytest.approx(0.1 / 6)
-    assert gr.random_hit_prob(10, 1, 10)[0] == pytest.approx(1.0)
-    assert gr.random_hit_prob(10, 2, 3)[0] == pytest.approx(1 - (8 * 7 * 6) / (10 * 9 * 8))
-
-
-def test_universe_on_real_variants():
-    """실제 맹검 변형 20개에서 항목 목록을 만들 수 있다 (정답표는 쓰지 않는다)."""
-    for p in sorted(gr.VARIANT_DIR.glob("design_*.json")):
-        d = json.loads(p.read_text(encoding="utf-8"))
-        u = gr.universe(d)
-        assert len(u) == len(set(u)) and all(gr.resolve(i, d) == i for i in u)
+def test_stability():
+    reports, conds, key, designs = _fake_run()
+    s = gr.summarize(gr.grade_all(reports, key, designs=dict(designs)), conds, key)
+    assert s["conditions"]["가"]["stability"]["primary"] == 1.0
 
 
 # ---------------------------------------------------------------- 변형 해시 대조
 
 def test_verify_variants(tmp_path):
-    """잠금 기준: v2 변형 목록 docs/variants_v2.md (4b 사용자 결정 ㉢. grader.py는 5단계 잠금 대상이라 바꾸지 않는다)."""
-    log = gr.injection_log_hashes(ROOT / "docs" / "variants_v2.md")
+    """잠금 기준: v2 변형 목록 docs/variants_v2.md (4b 사용자 결정 ㉢)."""
+    log = gr.injection_log_hashes()
     assert len(log) == 30
     fake_key = {f: {"sha256": h} for f, h in log.items()}
     assert gr.verify_variants(fake_key, log=log) == []
@@ -466,29 +441,77 @@ def test_verify_variants(tmp_path):
     assert len(bad) == 2 and all(first in b for b in bad)
 
 
-# ---------------------------------------------------------------- 지시문
+def test_resolve_on_real_variants():
+    """실제 맹검 변형 30개의 모든 목록 항목을 해석할 수 있다 (정답표는 쓰지 않는다, 변형끼리 비교하지 않는다)."""
+    for p in sorted(gr.VARIANT_DIR.glob("design_*.json")):
+        d = json.loads(p.read_text(encoding="utf-8"))
+        for s, ns in gr._names(d).items():
+            for n in ns:
+                assert gr.resolve(f"{gr.LIST_SECTIONS[s]}.{n}", d) == f"{gr.LIST_SECTIONS[s]}.{n}"
+
+
+# ---------------------------------------------------------------- 검증 세트 (A)
+
+def test_validation_set_a_test_half_passes():
+    """(A) 시험 절반: 항목 일치 ≥ 0.95, Q 일치(라벨 Q ⊆ 채점기 Q) ≥ 0.85 (5단계 기준)."""
+    from tools import validation_report as vr
+    m = vr.metrics(vr.rows("test"))
+    assert m["n"] == 168 and m["item_agree"] >= vr.ITEM_MIN and m["q_agree"] >= vr.Q_MIN
+
+
+def test_validation_set_labels_fixed():
+    lab = json.loads((ROOT / "tests" / "fixtures" / "validation_v1" / "labels.json").read_text(encoding="utf-8"))
+    assert len(lab["labels"]) == 332 and len(lab["revisions"][0]["changed"]) == 48
+
+
+# ---------------------------------------------------------------- 실행 규칙 상수
+
+def test_run_limits_match_criteria():
+    doc = (ROOT / "docs" / "success_criteria_v2.md").read_text(encoding="utf-8")
+    assert (gr.MAX_TURNS, gr.MAX_TURNS_RETRY, gr.FORMAT_RETRIES) == (60, 5, 1)
+    assert "턴 수 상한 **60**" in doc and "재제출 턴 상한 **5**" in doc
+
+
+# ---------------------------------------------------------------- 지시문 · 형식 설명 · 설명서 사본
+
+BANNED = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "가용 시점", "독립 단위", "적합 범위", "결과 출처",
+          "선택 시점", "확인 균질성", "누수", "leak", "스킬", "skill", "점검기", "run_check"]
+
 
 def test_prompt_fixed_and_neutral():
     t = prompt.text()
-    assert prompt.PROMPT_SHA256 in (ROOT / "docs" / "success_criteria.md").read_text(encoding="utf-8")
-    assert "한국어" in t and "```findings" in t
-    banned = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "가용 시점", "독립 단위", "적합 범위", "결과 출처",
-              "선택 시점", "확인 균질성", "누수", "leak", "스킬", "skill", "점검기", "run_check"]
-    assert not [w for w in banned if w.lower() in t.lower()]
-    r = prompt.render("design_0000.json", "data/synth")
-    assert "{{" not in r and "design_0000.json" in r and "data/synth" in r
+    assert prompt.PROMPT_SHA256 in (ROOT / "docs" / "success_criteria_v2.md").read_text(encoding="utf-8")
+    assert "한국어" in t and "findings.json" in t and all(k in t for k in gr.FINDING_KINDS)
+    assert not [w for w in BANNED if w.lower() in t.lower()]
+    r = prompt.render("design.json", "data", "design_format.md", "data_dictionary.md")
+    assert "{{" not in r and "design.json" in r and "design_format.md" in r and "data_dictionary.md" in r
 
 
-def test_prompt_example_block_parses():
-    items, err, bad = gr.parse_findings(prompt.text())
-    assert err is None and bad == 0 and len(items) == 1
+def test_prompt_example_parses():
+    m = re.search(r"```json\n(.*?)```", prompt.text(), re.S)
+    assert m and gr.validate_findings(m.group(1)) == []
+
+
+@pytest.mark.parametrize("path", [prompt.FORMAT_FILE, prompt.DICTIONARY_FILE])
+def test_agent_docs_neutral_and_locked(path):
+    """두 조건이 같은 파일을 받는다. 분류 이름·근거 표기·정당한 지적 목록·K 항목·검수 기록 내용이 없다."""
+    t = path.read_text(encoding="utf-8")
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == prompt.AGENT_DOC_SHA256[path.name]
+    banned = BANNED + ["K L", "P+AI", "PROBAST", "Kapoor", "검수", "정당한 지적", "justified", "known_issues",
+                       "sealed", "봉인", "v1", "v2", "꼬리표"]
+    hits = [w for w in banned if w.lower() in t.lower()]
+    # 점검기 문제(K1~K7)·목록 번호(L1~L11)·사례 번호(E01~E18, C01~C30)가 낱말로 없다 (ICD 코드 K21.9·E11.9 등은 제외)
+    hits += re.findall(r"(?<![\w.])(?:K[1-7]|L(?:1[01]|[1-9])|E(?:0[1-9]|1[0-8])|C(?:[0-2][0-9]|30))(?![\w.])", t)
+    assert not hits, hits
 
 
 def test_locked_files_match_success_criteria():
-    """5단계에 고정한 지시문·채점기·채점 규칙이 바뀌지 않았다."""
-    import hashlib
-    doc = (ROOT / "docs" / "success_criteria.md").read_text(encoding="utf-8")
-    locked = dict(re.findall(r"^\| (experiment/\S+) \| `([0-9a-f]{64})` \|", doc, re.M))
-    assert set(locked) == {"experiment/agent_prompt.md", "experiment/grader.py", "experiment/scoring_rules.md"}
+    """5단계에 고정한 지시문·채점기·채점 규칙·에이전트용 문서가 바뀌지 않았다 (run.py는 6단계에서 고치므로 잠그지 않음)."""
+    doc = (ROOT / "docs" / "success_criteria_v2.md").read_text(encoding="utf-8")
+    locked = dict(re.findall(r"^\| `?((?:experiment|docs)/\S+?)`? \| `([0-9a-f]{64})` \|", doc, re.M))
+    assert set(locked) == {"experiment/agent_prompt.md", "experiment/grader.py", "experiment/scoring_rules.md",
+                           "experiment/prompt.py", "docs/agent/design_format.md", "docs/agent/data_dictionary.md",
+                           "docs/analysis_plan_v2.md"}
+    assert "experiment/run.py" not in locked
     for f, h in locked.items():
         assert hashlib.sha256((ROOT / f).read_bytes()).hexdigest() == h, f
