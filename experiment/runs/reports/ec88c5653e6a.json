@@ -1,0 +1,5 @@
+{
+ "report_id": "ec88c5653e6a",
+ "variant": "design_6E63.json",
+ "findings": "[\n  {\n    \"target\": \"outcome.ascertainment.scope.sites\",\n    \"kind\": \"문제\",\n    \"problem\": \"결과(재입원)를 A 병원에서만 찾는데, 데이터에는 B 병원 입원도 있고 B로 가는 재입원 비율이 퇴원처마다 다르다. 그래서 놓치는 비율이 자택 0.007, 전원 0.107로 15.8배 차이 난다(Q7 결과 확인 균질성). outcome.description은 '같은 사람의 예정되지 않은 입원'으로 적어 병원을 가리지 않는다고 읽히므로 서술과 칸 값도 맞지 않는다. sites에 B를 넣거나, 퇴원처별로 따로 다루도록 고쳐야 한다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"가정\",\n    \"problem\": \"family_id가 약 80% 비어 있어 비어 있는 행은 대체 키 person_id로 묶는다. 기록되지 않은 가족은 학습 부분과 평가 부분에 나뉘어 들어갈 수 있다는 가정을 두고 진행한다.\"\n  },\n  {\n    \"target\": \"model.tuning.cv_key\",\n    \"kind\": \"가정\",\n    \"problem\": \"교차검증 묶음도 family_id가 비면 person_id로 묶는다. 기록되지 않은 가족은 같은 폴드에 묶이지 않을 수 있다는 가정을 둔다.\"\n  },\n  {\n    \"target\": \"cohort.rows_per_unit\",\n    \"kind\": \"가정\",\n    \"problem\": \"에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없다는 것을 알아야 한다. 이것을 퇴원 때 안다고 가정한다.\"\n  },\n  {\n    \"target\": \"outcome.ascertainment.scope.sites\",\n    \"kind\": \"가정\",\n    \"problem\": \"A·B 밖 병원에서 생긴 재입원은 데이터에 없다. 확인 범위 밖의 결과는 보이지 않는다는 가정을 두고 진행한다.\"\n  }\n]\n"
+}
