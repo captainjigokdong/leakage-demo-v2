@@ -1,74 +1,74 @@
 {
  "가": {
   "planned": 60,
-  "done": 7,
+  "done": 15,
   "discarded": 0,
   "failed": 0,
   "retries": 0,
   "retry_reasons": {},
-  "checker_invoked": 7,
-  "findings_valid": 7,
+  "checker_invoked": 15,
+  "findings_valid": 15,
   "findings_missing": 0,
   "turn_capped": 0,
   "format_retries": 0,
-  "cost_usd": 4.106,
+  "cost_usd": 8.697,
   "permission_denials": 2,
   "checker_denied": 0,
   "no_checker_after_denial": 0,
   "tokens": {
-   "input": 120,
-   "cache_creation": 360793,
-   "cache_read": 1893104,
-   "output": 42029
+   "input": 250,
+   "cache_creation": 774202,
+   "cache_read": 3857830,
+   "output": 86529
   },
-  "mean_seconds_per_attempt": 90.1,
+  "mean_seconds_per_attempt": 82.7,
   "turns_mean_max": [
-   10.4,
+   10.1,
    15
   ],
   "checker_invoked_rate": 1.0,
   "blank": 0,
   "mean_tokens_per_row": {
    "input": 17,
-   "cache_creation": 51542,
-   "cache_read": 270443,
-   "output": 6004
+   "cache_creation": 51613,
+   "cache_read": 257189,
+   "output": 5769
   }
  },
  "나": {
   "planned": 60,
-  "done": 3,
+  "done": 7,
   "discarded": 0,
   "failed": 0,
   "retries": 0,
   "retry_reasons": {},
   "checker_invoked": 0,
-  "findings_valid": 3,
+  "findings_valid": 7,
   "findings_missing": 0,
   "turn_capped": 0,
   "format_retries": 0,
-  "cost_usd": 2.085,
-  "permission_denials": 3,
+  "cost_usd": 4.387,
+  "permission_denials": 4,
   "checker_denied": 0,
   "no_checker_after_denial": 0,
   "tokens": {
-   "input": 54,
-   "cache_creation": 165243,
-   "cache_read": 1025417,
-   "output": 27873
+   "input": 106,
+   "cache_creation": 370362,
+   "cache_read": 1829496,
+   "output": 52911
   },
-  "mean_seconds_per_attempt": 99.8,
+  "mean_seconds_per_attempt": 87.0,
   "turns_mean_max": [
-   10.0,
+   8.7,
    12
   ],
   "checker_invoked_rate": 0.0,
   "blank": 0,
   "mean_tokens_per_row": {
-   "input": 18,
-   "cache_creation": 55081,
-   "cache_read": 341806,
-   "output": 9291
+   "input": 15,
+   "cache_creation": 52909,
+   "cache_read": 261357,
+   "output": 7559
   }
  },
  "skills_only_in": {
