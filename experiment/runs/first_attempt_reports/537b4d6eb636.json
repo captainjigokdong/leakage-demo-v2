@@ -1,0 +1,5 @@
+{
+ "report_id": "537b4d6eb636",
+ "variant": "design_E1CC.json",
+ "findings": "[\n  {\"target\": \"preprocessing.median_impute\", \"kind\": \"문제\", \"problem\": \"중앙값 대치를 fit_scope=all(학습+평가 전체)에서 적합한다. 평가 부분의 분포 정보가 학습에 들어가므로 fit_scope를 train(교차검증 안에서는 train_fold)으로 바꿔야 한다.\"},\n  {\"target\": \"split.key\", \"kind\": \"가정\", \"problem\": \"family_id가 약 80% 비어 있어 대체 키 person_id로 묶는다. 기록되지 않은 가족은 학습과 평가로 나뉠 수 있으나 데이터로 피할 방법이 없어 그대로 진행한다.\"},\n  {\"target\": \"model.tuning.cv_key\", \"kind\": \"가정\", \"problem\": \"교차검증 묶음도 family_id가 비면 person_id로 대체한다. 기록되지 않은 가족은 폴드 사이에 나뉠 수 있다고 보고 진행한다.\"},\n  {\"target\": \"cohort.rows_per_unit\", \"kind\": \"가정\", \"problem\": \"에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없음을 알아야 한다. 이는 퇴원 시점에 알 수 있다고 가정한다.\"},\n  {\"target\": \"outcome.ascertainment.scope.sites\", \"kind\": \"가정\", \"problem\": \"A·B 밖 병원의 재입원은 데이터에 없어 음성으로 처리된다. 결과 확인 범위를 A·B로 한정한다고 가정하고 진행한다.\"}\n]\n"
+}

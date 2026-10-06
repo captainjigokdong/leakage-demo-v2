@@ -366,7 +366,11 @@
 - 통과 시점 해시: `experiment/run.py` `68f373066f287718b18dc6f1431abc0dec1cc091ce0748d67c45128e47a7fb19`, `experiment/bash_allow_hook.py` `5f4020d4759cdef19c7c6e7ff439d3e6c2fc0fa9f9cec3b1734ff61d4b29251c`
 
 **본 실행 기록**
-- 1회차 60회 완료 (2026-10-06, `experiment/runs`, 묶음 1). 한도 멈춤 1회(12/60에서 세션 한도, 리셋 뒤 같은 순서로 이어 감), 529 0회. 첫 10회 뒤 재추정: `experiment/runs/estimate_after10.json`. 2회차는 승인 뒤.
+- 1회차 60회 완료 (2026-10-06, `experiment/runs`, 묶음 1). 한도 멈춤 1회(12/60에서 세션 한도, 리셋 뒤 같은 순서로 이어 감), 529 0회. 첫 10회 뒤 재추정: `experiment/runs/estimate_after10.json`. 2회차는 승인 뒤 (사용량 기준으로 승인).
+- 2회차 60회 완료 (2026-10-06, 묶음 2). 한도 멈춤 1회(10/60에서, 리셋 뒤 같은 순서로 이어 감), 529 0회.
+- 120회: 완료 120, 빈칸 0, 폐기 0, 재실행 0, 조작 확인 실패 0, 턴 상한 0, 형식 재제출 0, findings 없음 0, (가) 점검기 출력 미수거 0, 점검기 호출 거부 0. 모델 120회 모두 `claude-opus-5-5`, 두 조건 스킬 차이 모든 실행에서 {`leakage-check`}. 권한 거부는 `known_issues_v2.md` K10.
+- 첫 시도 묶음 `experiment/runs/first_attempt_reports/` (`python -m experiment.run first-attempts`, 120행 모두 채택 시도).
+- `test_analyze.py::test_real_run_files_without_key`: 실행 기록이 생겨 건너뜀이 아니라 실행됨. 시험 안의 v1 숫자(빈칸 1행) 때문에 실패 (v2 빈칸 0행). 고치기 전 사용자 승인 대기.
 
 **할 일** (`v2_plan.md` 6, 7절, 시행착오 2, 3, 8, 14)
 - [ ] (4a에서 정함, 2026-10-05 사용자 결정) **변형끼리, 또는 변형과 깨끗한 설계서를 비교하지 않는다. 정답표와 봉인 파일을 열지 않는다.** (비교하면 심은 결함, 특히 보류 사례가 드러난다)
@@ -375,20 +379,20 @@
 - [ ] 실행 스크립트가 `findings.json`을 수거하고, 작업 폴더를 지우지 않고 보관(커밋하지 않음)
 - [ ] (3단계에서 넘김) (가) 조건에서는 점검기 출력 파일 `checker.json`도 실행 스크립트가 따로 수거한다 (제출 형식과 별개, 두 조건의 제출 형식은 같다). 데이터 폴더 이름은 `data/`
 - [ ] (3단계에서 넘김) **점검기 출력 수거 규칙**: 점검기는 실행마다 새 파일에 쓴다 (`checker.json`, 다시 돌리면 `checker_2.json`, `checker_3.json` …. 기존 파일을 덮어쓰지 않는다). 실행 스크립트는 작업 폴더의 `checker*.json`을 모두 수거하고, 각 파일의 `checked.design_file`·`checked.design_sha256`으로 "원래 설계서(입력으로 준 파일, 같은 해시)를 점검한 결과"를 고른다. 같은 설계서를 여러 번 점검했으면 번호가 가장 작은(처음) 것을 쓴다. 점검기는 결과를 **실행한 폴더**에 쓰므로, 에이전트가 다른 폴더(자기 임시 폴더 등)에서 고친 설계서를 점검한 결과는 작업 폴더에 없다 (3b 3회차에서 확인). 실행 폴더 전체에서 `checker*.json`을 찾을지 6단계 계획에서 정한다. 고친 설계서를 점검한 결과는 기록으로만 보관한다 (`tools/skill_review.py`가 같은 규칙으로 고른다)
-- [ ] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성
+- [x] 사전 점검 8개 (`v2_plan.md` 7절)를 스크립트로 작성 (`experiment/preflight_v2.py`)
 - [ ] (승인 C, 2026-10-06 사용자 지시) 사전 점검에 넣는다: 반복문 등이 권한 규칙에 거부되어 명령이 잘게 나뉘는 문제 (4a 검수에서도 나옴), 시험 실행의 실행당 턴 수 기록
 - [ ] (2b에서 넘김) 사전 점검에 넣는다: heredoc(`<<`), `find -exec` 같은 명령이 권한 규칙에 막히면 에이전트가 데이터를 열지 않고 끝낼 수 있다 (2b 예비 검수 4회 중 2회). 에이전트가 데이터를 읽으려면 시스템 python(`/usr/local/bin/python3`)에 numpy·pandas와 그 의존 패키지가 **에이전트의 HOME과 무관한 위치**에 있어야 한다. 2b 세션 컨테이너에는 numpy·pandas가 없어서 `requirements-lock.txt`로 설치했는데, python-dateutil은 `/root/.local`에만 있어 HOME을 따로 정한 에이전트에서는 `import pandas`가 실패했다 (예비 검수 에이전트는 csv 모듈로 우회해 데이터를 읽었다). 사전 점검 5번(패키지 import)을 에이전트와 같은 환경 변수로 확인한다
 - [ ] (3단계에서 확인한 원인) 세션 컨테이너 이미지의 `/root/.local/lib/python3.11/site-packages`에 python-dateutil이 처음부터 들어 있다 (다른 도구가 설치해 둔 것). 그래서 사용자 폴더를 무시하지 않고 `pip install`하면 pip가 "이미 있음"으로 보고 시스템 위치에 설치하지 않는다. `PYTHONNOUSERSITE=1 python3 -m pip install -r requirements-lock.txt`로 설치하면 시스템 위치(`/usr/local/lib/python3.11/dist-packages`)에 설치되고, `PYTHONNOUSERSITE=1`에서도 `import pandas`가 된다 (3단계 세션에서 확인). 사전 점검에 이 설치 방법과 확인을 넣는다
 - [ ] (3단계 3b 스킬 검수에서 넘김) 권한 규칙이 셸 `for` 반복문이 든 명령(`ls data && for f in data/*; do …; done | cut …`)을 거부했다 (동적 1회차, 점검기 실행 뒤 데이터를 훑어보는 명령). 에이전트는 Python 스크립트 파일로 다시 확인했고 점검기 호출 거부는 0이었다. 환경(권한 규칙) 문제라 스킬은 고치지 않았다. 사전 점검 6번에 반복문 형태를 넣을지 6단계 계획에서 정한다 (`docs/skill_review_v2.md`)
 - [ ] (3단계 3b 스킬 검수에서 넘김) 실행 시간·토큰 참고값: (가) 1회 약 100초, 출력 토큰 약 7,600, 캐시 읽기 20만~32만 토큰 (`docs/skill_review_v2.md`). 6단계 실행 계획(시간 초과·Pro 한도)에 쓴다
-- [ ] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
+- [x] `test_run.py`의 `test_pilot*` 10개를 어떻게 할지(v1 시험 실행 기록을 가져올지, v2용으로 바꿀지) 6단계 계획에서 **실행 전에** 정한다
 - [ ] (2b에서 넘김) `experiment/run.py`의 `LEAKCHECK_FILES`가 v1 생성기(`synth/generate.py`, `synth/stats.py`)를 복사한다. v2 로더(`synth/generate_v2.py`, `synth/tables_v2.py` 등)가 필요하면 목록을 고친다. `DATA_DIR`(`data/synth/`)의 파일은 v2 17개 테이블 + `MANIFEST.json`이다
-- [ ] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
-- [ ] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
-- [ ] (5단계에서 넘김) `experiment/run.py`를 v2 제출 형식에 맞춘다: `findings.json` 수거(기록 `{"report_id", "variant", "findings": 내용 또는 None}`), 형식 검사(`grader.validate_findings`, 파일 없음 포함) 실패 때 재제출 요청 1회(`grader.FORMAT_RETRIES`, 턴 상한 `grader.MAX_TURNS_RETRY` = 5), 실행당 턴 상한 `grader.MAX_TURNS` = 60(두 조건 같음), 조건 파일에 `turn_capped`·`format_retries` 기록, 지시문 `prompt.render(설계서, "data")`와 `prompt.agent_docs()`의 문서 2개를 두 조건 작업 폴더에 같은 이름으로 둠, init 기록의 스킬 목록 저장. 지금 `run.py`는 v1 보고서 블록 형식이다 (`docs/success_criteria_v2.md` 3절)
-- [ ] (5단계에서 넘김) 실행은 반복 단위로: 1회차 60 → 2회차 60. 1회차만 하면 60회로 분석한다 (`docs/analysis_plan_v2.md` 2절)
+- [x] 사전 점검 전: `test_run.py`의 `test_pilot3_*`(6개), `test_pilot4_*`(4개)가 건너뜀이 아니라 통과인지 확인 (0단계 표)
+- [x] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
+- [x] (5단계에서 넘김) `experiment/run.py`를 v2 제출 형식에 맞춘다: `findings.json` 수거(기록 `{"report_id", "variant", "findings": 내용 또는 None}`), 형식 검사(`grader.validate_findings`, 파일 없음 포함) 실패 때 재제출 요청 1회(`grader.FORMAT_RETRIES`, 턴 상한 `grader.MAX_TURNS_RETRY` = 5), 실행당 턴 상한 `grader.MAX_TURNS` = 60(두 조건 같음), 조건 파일에 `turn_capped`·`format_retries` 기록, 지시문 `prompt.render(설계서, "data")`와 `prompt.agent_docs()`의 문서 2개를 두 조건 작업 폴더에 같은 이름으로 둠, init 기록의 스킬 목록 저장. 지금 `run.py`는 v1 보고서 블록 형식이다 (`docs/success_criteria_v2.md` 3절)
+- [x] (5단계에서 넘김) 실행은 반복 단위로: 1회차 60 → 2회차 60. 1회차만 하면 60회로 분석한다 (`docs/analysis_plan_v2.md` 2절)
 - [x] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. (2번째에 통과) **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
-- [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
+- [x] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
 - [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 
 **완료 기준**: 사전 정한 통과 기준 충족, 120행 기록

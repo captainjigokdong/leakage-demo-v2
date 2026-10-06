@@ -1,0 +1,5 @@
+{
+ "report_id": "a1be205167bf",
+ "variant": "design_0F90.json",
+ "findings": "[\n  {\n    \"target\": \"features.icu_any.window\",\n    \"kind\": \"문제\",\n    \"problem\": \"창이 (admit, tp] 반열린 구간이라 in_time이 admit_time과 같은 첫 병동 구간이 빠진다. 처음부터 ICU로 입원한 경우(데이터에서 ICU 구간 2221개 중 1934개)가 icu_any=0이 되므로, 시작을 포함하도록(예: in_time >= admit 또는 out_time 기준) 고쳐야 한다.\"\n  },\n  {\n    \"target\": \"features.cr_last_over_hgb\",\n    \"kind\": \"가정\",\n    \"problem\": \"made_by(leakcheck.features)가 어떤 과정인지 설계서와 데이터로 확인할 수 없다. 측정법 보정을 마친 cr_last를 대치 전 hgb_min으로 나눈 값으로 만들고, 둘 중 하나라도 없으면 결측으로 둔 뒤 결측 표시와 대치를 적용한다고 가정한다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"점검 불가\",\n    \"problem\": \"family_id는 가족의 절반만 기록되어 있다(80.4% 결측). 기록되지 않은 가족도 위험을 공유하므로 같은 가족이 학습과 평가로 나뉠 수 있지만, 데이터로는 이런 가족을 찾을 수 없어 영향을 판단할 수 없다.\"\n  },\n  {\n    \"target\": \"features.age\",\n    \"kind\": \"가정\",\n    \"problem\": \"patients.age는 95에서 잘려 있어 계산한 인덱스 입원 때 나이가 실제보다 낮을 수 있다. 잘린 값을 그대로 쓰고 경과 연수만 더한다고 가정한다.\"\n  }\n]\n"
+}

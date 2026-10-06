@@ -1,0 +1,5 @@
+{
+ "report_id": "82c99a3e0192",
+ "variant": "design_E1CC.json",
+ "findings": "[\n  {\n    \"target\": \"preprocessing.median_impute\",\n    \"kind\": \"문제\",\n    \"problem\": \"중앙값 대치의 fit_scope가 all이라 평가 부분(test)의 값까지 써서 중앙값을 추정한다. 평가 정보가 학습에 새어 들어가므로, one_hot·standardize처럼 학습 부분(교차검증 안에서는 train_fold)에서만 추정하도록 고쳐야 한다.\"\n  },\n  {\n    \"target\": \"features.hgb_min.window\",\n    \"kind\": \"가정\",\n    \"problem\": \"episode가 index_episode인 특징(hgb_min, cr_last, dialysis_ordered, sbp_last, icu_any)의 창 시작 'admit'은 에피소드 첫 입원 기록의 admit_time으로 보고, 같은 에피소드의 앞 입원 기록 행도 tp까지 포함한다고 가정한다.\"\n  },\n  {\n    \"target\": \"features.cr_last_over_hgb\",\n    \"kind\": \"가정\",\n    \"problem\": \"비율은 jaffe 보정(cr_method_align)을 마친 cr_last와 hgb_min으로 대치 전에 계산하고, 둘 중 하나가 결측이면 비율도 결측으로 두어 median_impute에서 따로 대치한다고 가정한다.\"\n  },\n  {\n    \"target\": \"cohort.deduplication.key\",\n    \"kind\": \"점검 불가\",\n    \"problem\": \"이 환경에서는 명령 실행이 막혀 데이터에 admission_id 중복이 실제로 있는지, labs.method가 2155-01-01 기준과 맞는지 등을 직접 확인하지 못했다. 데이터 설명서에는 admission_id 7724개가 모두 고유하다고 적혀 있다.\"\n  }\n]\n"
+}

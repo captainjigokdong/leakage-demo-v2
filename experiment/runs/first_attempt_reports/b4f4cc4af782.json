@@ -1,0 +1,5 @@
+{
+ "report_id": "b4f4cc4af782",
+ "variant": "design_7DE2.json",
+ "findings": "[\n  {\n    \"target\": \"cohort.inclusion.clinic_visit\",\n    \"kind\": \"문제\",\n    \"problem\": \"포함 기준이 tp(퇴원) 뒤 외래 방문(window tp~inf)을 요구해서, 퇴원 시각에는 알 수 없는 미래 정보로 코호트를 고른다. 게다가 추적 외래는 재입원·사망 전에만 열리므로(설계서 proxies에도 결과 대리 기록으로 적혀 있음), 이 기준은 사실상 결과로 표본을 고르는 셈이다. 그래서 양성(특히 조기 재입원·사망)이 빠지고, 배포 시점에는 적용할 수 없는 기준이 된다. 삭제하거나 tp 이전 정보로 바꿔야 한다.\"\n  },\n  {\n    \"target\": \"features.hgb_min.window\",\n    \"kind\": \"가정\",\n    \"problem\": \"episode가 index_episode인 특징(hgb_min, cr_last, sbp_last, icu_any, dialysis_ordered)에서 window.start의 'admit'은 에피소드 첫 입원 기록의 admit_time으로 보고, 같은 에피소드의 두 입원 기록을 모두 집계한다고 가정한다.\"\n  },\n  {\n    \"target\": \"features.cr_last.assessment\",\n    \"kind\": \"가정\",\n    \"problem\": \"jaffe 보정을 할 대상은 채취일(2155-01-01 전)로 계산하지 않고 labs.method == 'jaffe'인 크레아티닌 행으로 정한다고 가정한다. 데이터 설명서상 두 기준은 같다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"가정\",\n    \"problem\": \"family_id가 약 80% 결측이라 대부분의 행은 fallback_key인 person_id로 묶는다. 기록되지 않은 가족끼리는 위험을 공유해도 데이터로 묶을 방법이 없으므로, 이 남은 의존성은 그대로 두고 진행한다고 가정한다.\"\n  }\n]\n"
+}
