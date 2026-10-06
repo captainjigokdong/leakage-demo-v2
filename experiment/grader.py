@@ -83,10 +83,13 @@ KEYWORDS: dict[str, list[str]] = {
         "예측 시점에 사용할 수 없", "예측 시점에는 사용할 수 없", "예측 시점에 쓸 수 없", "예측 시점에는 쓸 수 없",
         "예측 시점에 이용할 수 없", "예측 시점에 존재하지", "예측 시점에는 존재하지",
         "coded after discharge", "coding delay", "not usable at prediction", "cannot be used at prediction",
+        # 5단계 (A) 개발 절반으로 보강
+        "미래 입원", "이후 입원", "퇴원 뒤에 확정", "퇴원 후 확정", "퇴원 뒤 확정", "퇴원 후에 확정", "퇴원 뒤에 코딩",
+        "가용성", "이용 가능", "코딩이 끝", "퇴원 시점에 쓸 수", "퇴원 시각에 쓸 수", "알 수 있었는지", "어느 시점",
     ],
     "Q2": [  # 독립 단위
         "독립 단위", "분할 단위", "분할 키", "분할 묶음", "그룹 분할", "묶음 분할",
-        "같은 환자", "동일 환자", "같은 가족", "동일 가족", "가족 단위", "환자 단위",
+        "같은 환자", "동일 환자", "같은 가족", "동일 가족", "가족 단위", "환자 단위 분할", "환자 단위로 분할", "환자 단위로 나누",
         "학습과 평가에 함께", "학습·평가에", "학습/평가에", "학습과 평가 양쪽", "학습과 평가에 나뉘",
         "학습과 테스트", "학습 세트와 테스트", "서로 독립이 아", "독립적이지 않", "독립이 아니",
         "행 단위 분할", "행 단위로 분할", "입원 단위 분할", "입원 단위로 분할", "무작위 행 분할",
@@ -101,6 +104,9 @@ KEYWORDS: dict[str, list[str]] = {
         "학습과 검증에", "학습과 검증 세트", "학습·검증", "학습/검증", "가족 구성원이",
         "행 단위로 나누", "행 단위로 분할", "한 사람의 데이터", "같은 사람", "동일 인물", "양쪽에 섞", "양쪽에 들어",
         "independence", "same person", "same individual", "both sides of the split",
+        # 5단계 (A) 개발 절반으로 보강
+        "그룹 홀드아웃", "group holdout", "group_holdout", "group_kfold", "그룹 키", "그룹 k-fold",
+        "fold 사이", "폴드 사이", "train과 test", "train/test", "학습과 평가",
     ],
     "Q3": [  # 적합 범위
         "적합 범위", "fit_scope", "fit scope", "범위에서 적합",
@@ -121,7 +127,7 @@ KEYWORDS: dict[str, list[str]] = {
     ],
     "Q4": [  # 결과 출처
         "결과 출처", "결과 정의", "결과를 정한", "결과를 정의", "결과를 정하는", "결과와 같은 행",
-        "결과 창", "결과 기간", "결과와 겹", "대리 변수", "대리변수", "결과의 대리", "결과를 반영",
+        "결과 창과 같", "결과 창과 겹", "결과 창 안의", "결과 기간과 같", "기간과 겹", "결과와 겹", "대리 변수", "대리변수", "결과의 대리", "결과를 반영",
         "결과 정보", "결과가 섞", "결과 누수", "레이블 누수", "라벨 누수", "타깃 누수", "타겟 누수",
         "결과 자체", "결과를 직접", "결과를 암시", "결과를 그대로",
         "target leakage", "label leakage", "outcome leakage", "proxy", "outcome definition",
@@ -130,6 +136,9 @@ KEYWORDS: dict[str, list[str]] = {
         "consequence of the outcome", "downstream of the outcome",
         "예측하려는 결과", "예측할 결과", "예측하는 결과", "예측 대상인 결과", "예측 대상 자체", "결과 그 자체",
         "outcome we are predicting", "outcome being predicted", "is the outcome itself", "is itself the outcome",
+        # 5단계 (A) 개발 절반으로 보강
+        "결과를 대신", "대리지표", "대리 지표", "결과로 시행", "aki 코드", "n17", "재입원과 직결", "재입원 포함",
+        "결과 입원 포함",
     ],
     "Q5": [  # 선택 시점
         "선택 시점", "선택 편향", "불멸 시간", "생존 편향", "코호트 선택 시점", "대상자 선택 시점",
@@ -143,6 +152,10 @@ KEYWORDS: dict[str, list[str]] = {
         "ascertainment", "surveillance bias", "detection bias", "verification bias",
         "measurement frequency", "testing frequency", "monitoring intensity", "measured more often",
         "tested more often", "differential measurement", "differential testing", "informative observation",
+        # 5단계 (A) 개발 절반으로 보강 (관찰 안 된 기간이 음성이 됨)
+        "음성으로 처리", "음성으로 분류", "음성으로 라벨", "음성 라벨", "음성이 된", "음성으로 들어", "음성으로 잘못",
+        "음성으로 붙", "음성으로 표시", "자동 음성", "자동으로 음성", "관찰되지 않은", "관찰하지 못한", "관찰이 끊",
+        "관측이 끊", "중도절단", "중도 절단", "검열", "censor", "추적이 끝나지", "추적 기간",
     ],
     "Q6": [  # 다중 시도 (기록만)
         "다중 시도", "다중 비교", "다중 검정", "시도 횟수", "multiple testing", "multiple comparison",
@@ -299,19 +312,31 @@ def _split_member(f: str) -> bool:
     return _within(f, "split") or f == "split_unit" or _within(f, "model.tuning.cv_key")
 
 
-def matches(f: str, t: str, design: dict, strict: bool = False) -> bool:
+def match_route(f: str, t: str, design: dict, strict: bool = False) -> str | None:
     """지적 경로 f가 정답·목록 칸 t를 가리키는가 (scoring_rules.md 2절).
     - 같거나 더 좁으면(f가 t 안) 일치.
-    - 더 넓으면(t가 f 안) 관대판만 일치, 단 f가 최상위 묶음 전체이면 불인정. 엄격판은 불인정.
+    - 더 넓으면(t가 f 안) 관대판만 일치, 단 f가 최상위 묶음 전체이면 불인정.
+    - 엄격판(strict)은 같거나 더 좁을 때만 일치 (아래 두 예외도 불인정).
     - 분할 묶음: 칸이 `split` 전체이면 split.*, split_unit, model.tuning.cv_key 지적이 일치.
-    - 하위 집단 예외: 칸이 outcome.ascertainment(또는 그 하위)이면 cohort.subgroups 지적도 일치."""
+    - 하위 집단 예외: 칸이 outcome.ascertainment(또는 그 하위)이면 cohort.subgroups 지적도 일치.
+    - 형제 칸(같은 상위 아래 다른 칸, 예: 칸이 outcome.window인데 outcome.ascertainment 지적)은 일치하지 않는다.
+    돌려주는 값: 일치 경로 "same"·"narrower"·"broader"·"bundle"(칸 자체가 최상위 묶음)·"exception"(분할 묶음·하위 집단), 불일치면 None."""
+    bundle_key = is_bundle(t, design) or t in ("cohort", "model")
     if _within(f, t):
-        return True
+        return "bundle" if bundle_key else ("same" if f == t else "narrower")
+    if strict:   # 엄격판: 같거나 더 좁을 때만 (예외·넓은 지적 불인정)
+        return None
     if t == "split" and _split_member(f):
-        return True
+        return "exception"
     if _within(t, "outcome.ascertainment") and _within(f, "cohort.subgroups"):
-        return True
-    return (not strict) and _within(t, f) and not is_bundle(f, design)
+        return "exception"
+    if _within(t, f) and not is_bundle(f, design):
+        return "broader"
+    return None
+
+
+def matches(f: str, t: str, design: dict, strict: bool = False) -> bool:
+    return match_route(f, t, design, strict) is not None
 
 
 # ---------------------------------------------------------------- 제출 파일
@@ -375,7 +400,8 @@ class Entry:
 
 COUNT_KEYS = ("n_problem", "n_assumption", "n_unable", "n_unresolved", "n_too_broad", "n_not_graded",
               "n_support", "n_justified", "n_justified_strict", "n_unknown_kind",
-              "n_assumption_cell_problem", "n_defect_cell_assumption", "n_defect_cell_unable")
+              "n_assumption_cell_problem", "n_defect_cell_assumption", "n_defect_cell_unable",
+              "n_sibling_of_defect")
 
 
 @dataclass
@@ -391,6 +417,7 @@ class Grade:
     false_alarms: list[str] = field(default_factory=list)          # 관대판, 항목 단위 중복 없음
     false_alarms_strict: list[str] = field(default_factory=list)   # 엄격판 (넓게 적은 지적은 목록·정답 불인정)
     false_alarms_no_k: list[str] = field(default_factory=list)     # K1·K5 칸 오경보를 뺀 참고값
+    false_alarms_with_broad: list[str] = field(default_factory=list)  # 대상 불명(넓음)도 오경보로 센 참고값
     legit_flagged: list[str] = field(default_factory=list)         # 오경보 중 legit_changes 칸
 
     def to_dict(self) -> dict:
@@ -410,6 +437,13 @@ def _accept_keys(d: dict, design: dict, strict: bool) -> list[str]:
     return ks
 
 
+def _sibling(f: str, t: str) -> bool:
+    """f가 t의 형제 칸인가: 같은 상위(최상위 칸 아래) 밑의 다른 칸이고 서로 포함하지 않음 (기록용 수)."""
+    pf, pt = f.split("."), t.split(".")
+    return (len(pf) >= 2 and len(pt) >= 2 and pf[:-1] == pt[:-1] and pf[0] not in LIST_SECTIONS
+            and pf[0] != "cohort" and not _within(f, t) and not _within(t, f))
+
+
 def _any(f: str, keys: list[str], design: dict, strict: bool = False) -> bool:
     return any(matches(f, k, design, strict) for k in keys)
 
@@ -425,8 +459,8 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
     kcells = [c for k in K_CELLS.values() if base in k["bases"] for c in k["cells"]]
     assume = ASSUMPTION_CELLS.get(base, [])
     c = g.counts
-    hit = [dict(pri=[], sec=[], pri_s=[], sec_s=[], pri_j=[]) for _ in defects]
-    fa, fa_s, fa_k, lg = [], [], [], []
+    hit = [dict(pri=[], sec=[], pri_s=[], sec_s=[], pri_j=[], plain=[]) for _ in defects]
+    fa, fa_s, fa_k, fa_b, lg = [], [], [], [], []
 
     def add(lst, f):
         if item_of(f) not in lst:
@@ -457,6 +491,8 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
             sec_ok = bool(e.qs & set(d["accept_questions"]))
             if i in on_defect:
                 hit[i]["pri"].append(True)
+                if any(match_route(f, k, design) in ("same", "narrower", "broader") for k in acc[i]):
+                    hit[i]["plain"].append(True)
                 hit[i]["sec"].append(sec_ok)
                 if not in_just:
                     hit[i]["pri_j"].append(True)
@@ -464,6 +500,8 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
                 hit[i]["pri_s"].append(True)
                 hit[i]["sec_s"].append(sec_ok)
         # 관대판 분류 (우선순위: 결함 > support > 목록 > 묶음 > 채점 안 함 > legit·그 밖 = 오경보)
+        if not on_defect and any(_sibling(f, k) for a in acc for k in a):
+            c["n_sibling_of_defect"] += 1
         if on_defect:
             pass
         elif _any(f, sup, design):
@@ -472,10 +510,13 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
             c["n_justified"] += 1
         elif is_bundle(f, design):
             c["n_too_broad"] += 1
+            if f not in fa_b:
+                fa_b.append(f)
         elif not graded(f):
             c["n_not_graded"] += 1
         else:
             add(fa, f)
+            add(fa_b, f)
             if _any(f, legit, design):
                 add(lg, f)
             if not _any(f, kcells, design):
@@ -494,8 +535,10 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
         g.defects.append({"id": d["id"], "question": d["question"], "holdout": d["holdout"],
                           "primary": bool(h["pri"]), "secondary": any(h["sec"]),
                           "primary_strict": bool(h["pri_s"]), "secondary_strict": any(h["sec_s"]),
-                          "primary_justified_first": bool(h["pri_j"])})
+                          "primary_justified_first": bool(h["pri_j"]),
+                          "via_bundle_or_exception_only": bool(h["pri"]) and not h["plain"]})
     g.false_alarms, g.false_alarms_strict, g.false_alarms_no_k, g.legit_flagged = fa, fa_s, fa_k, lg
+    g.false_alarms_with_broad = fa_b
     return g
 
 
@@ -616,7 +659,7 @@ def detection(grades: list[dict], keep=lambda d: True) -> dict:
     return out
 
 
-FA_FIELDS = ("false_alarms", "false_alarms_strict", "false_alarms_no_k")
+FA_FIELDS = ("false_alarms", "false_alarms_strict", "false_alarms_no_k", "false_alarms_with_broad")
 
 
 def false_alarms(grades: list[dict], key_variants: dict) -> dict:
@@ -694,6 +737,8 @@ def _counts(gs: list[dict], meta: dict[str, dict]) -> dict:
     out["n_malformed"] = sum(g["n_malformed"] for g in gs)
     out["format_errors"] = {e: sum(g["format_error"] == e for g in gs) for e in ("파일 없음", "JSON 오류", "목록 아님")}
     out["empty_list"] = sum(g["format_error"] is None and g["n_entries"] == 0 and g["n_malformed"] == 0 for g in gs)
+    out["detections_via_bundle_or_exception_only"] = sum(d["primary"] and d["via_bundle_or_exception_only"]
+                                                         for g in gs for d in g["defects"])
     out["format_retries"] = sum(meta.get(g["report_id"], {}).get("format_retries", 0) for g in gs)
     out["turn_capped"] = sum(bool(meta.get(g["report_id"], {}).get("turn_capped")) for g in gs)
     return out
@@ -759,6 +804,8 @@ def summarize(grades: list[dict], conditions: dict[str, dict], key_variants: dic
                       "H1c": boot_fa_diff(ga, gb, key_variants, "false_alarms_strict")},
         "fa_without_k1_k5": {"H1b": _fa_mean(ga, key_variants, "false_alarms_no_k"),
                              "H1c": boot_fa_diff(ga, gb, key_variants, "false_alarms_no_k")},
+        "fa_with_too_broad": {"H1b": _fa_mean(ga, key_variants, "false_alarms_with_broad"),
+                              "H1c": boot_fa_diff(ga, gb, key_variants, "false_alarms_with_broad")},
     }
     if nz:
         keep_nz = {(g["variant"], d["id"]) for g in reps for d in g["defects"]} - nz
