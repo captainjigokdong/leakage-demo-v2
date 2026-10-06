@@ -1,0 +1,5 @@
+{
+ "report_id": "783a716f0e3f",
+ "variant": "design_958F.json",
+ "findings": "[\n  {\"target\": \"split.key\", \"kind\": \"가정\", \"problem\": \"family_id는 약 80%가 비어 있어 대체 키 person_id로 묶는다. 기록되지 않은 가족은 학습·평가 부분에 나뉠 수 있으며, 이 한계는 형식상 피할 수 없다는 가정을 두고 진행한다.\"},\n  {\"target\": \"model.tuning.cv_key\", \"kind\": \"가정\", \"problem\": \"교차검증 묶음도 family_id가 결측이면 person_id로 묶는다. 기록되지 않은 가족이 다른 폴드로 나뉠 수 있다고 보고 진행한다.\"},\n  {\"target\": \"cohort.rows_per_unit\", \"kind\": \"가정\", \"problem\": \"에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어지는 입원이 없음을 알아야 한다. 퇴원 시점에 이를 안다고 가정한다.\"},\n  {\"target\": \"outcome.ascertainment.scope.sites\", \"kind\": \"가정\", \"problem\": \"A·B 밖 병원의 재입원은 데이터에 없어 음성으로 센다(lost_to_followup=count_as_negative). 결과 확인 범위는 A·B 병원과 사망 연계까지라고 가정하고 진행한다.\"}\n]\n"
+}
