@@ -351,9 +351,28 @@ def text_cleanup(t: str, d: dict) -> None:
         _append_desc(o["ascertainment"], "창 안 퇴원 비율도 병동별로 보고한다", "method")
 
 
+def sealcheck_fixes(t: str, d: dict) -> None:
+    """4b 봉인 확인 조건에 따라 수정 (칸 20·설계서 4, 이유는 봉인 기록에만)."""
+    if t != "dynamic":
+        return
+    d["cohort"]["subgroups"] = d["cohort"]["subgroups"] + ["admit_weekday"]
+    asc = d["outcome"]["ascertainment"]
+    asc["by_stratum"] = asc["by_stratum"] + ["admit_weekday"]
+    asc["method"] = asc["method"].replace("KDIGO의 기준값은 정의상 이전 크레아티닌이다", "기준값은 outcome.reference 칸이 정한다")
+    _append_desc(asc, "주말·야간에는 병동 채혈이 적어 결과가 늦게 잡히거나 빠지므로 입원 요일별로도 측정 빈도와 결과율을 따로 보고한다",
+                 "method")
+    ex = next(x for x in d["cohort"]["exclusion"] if x["name"] == "aki_known_by_tp")
+    ex["description"] = ex["description"].replace("판정 규칙은 결과와 같다 (각 값을 먼저 채취한 같은 측정법의 값과 비교, ",
+                                                  "판정 규칙: 각 값을 먼저 채취한 같은 측정법의 값과 비교한다 (")
+    h = d["outcome"]["history"][0]
+    h["handled"] = h["handled"].replace("KDIGO 판정은 같은 입원 안에서 측정법이 같은 값끼리만 비교한다",
+                                        "크레아티닌으로 결과를 판정할 때는 측정법이 같은 값끼리만 비교한다")
+
+
 def finish(name: str, t: str, d: dict) -> dict:
     round1_fixes(t, d)
     text_cleanup(t, d)
+    sealcheck_fixes(t, d)
     split_note = (d.pop("notes_split") + " " + EPISODE_NOTE[t] + ".").strip()
     if d["split"]["method"] != "temporal":
         extra = ""

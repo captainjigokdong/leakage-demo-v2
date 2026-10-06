@@ -238,11 +238,13 @@ def test_seeds_are_the_committed_constants():
 
 def test_locked_files_unchanged():
     lock = json.loads(LOCK.read_text(encoding="utf-8"))
-    assert lock["status"].startswith("잠정")
-    for group in ("provisional", "fixed_for_4b"):
+    assert lock["status"].startswith("확정")             # 4b 봉인 확인 뒤 확정 (4a는 잠정, provisional_4a)
+    for group in ("locked", "fixed_for_4b"):
         for rel, digest in lock[group].items():
             assert hashlib.sha256((ROOT / rel).read_bytes()).hexdigest() == digest, rel
-    assert sorted(lock["provisional"]) == sorted(
+    assert sorted(lock["provisional_4a"]) == sorted(lock["locked"])
+    assert len(lock["exclusions_4b_sha256"]) == 64
+    assert sorted(lock["locked"]) == sorted(
         ["docs/justified_findings_v2.json"] + [f"designs/clean_v2/{n}.json" for n in B.CLEAN_NAMES])
 
 

@@ -1,0 +1,72 @@
+[
+  {
+    "target": "outcome.scope / cohort.inclusion.in_hospital_at_tp / outcome.censoring.lost_to_followup",
+    "kind": "문제",
+    "problem": "결과 판정 범위가 index_admission이라 두 입원 기록으로 이어진 에피소드(220개, 첫 입원은 모두 discharge_status=transfer, 다음 입원까지 1시간 이하 간격, A→A 121·A→B 96·B→B 3)에서 기관 내 전동이 '퇴원'으로 처리된다. 환자는 계속 입원 중인데 결과 창이 첫 입원 퇴원 시각에서 잘리고 count_as_negative로 음성이 된다. 첫 입원의 랜드마크 713행 중 347행이 창 안에서 이 '퇴원'을 맞고, 이 가운데 에피소드 전체로 추적하면 AKI 양성이 되는 행이 6개다. KDIGO 기준값도 '같은 입원의 값'으로 한정되어, 두 번째 입원 초기 값은 첫 입원의 크레아티닌과 비교되지 않는다. 특징은 episode=index_episode로 에피소드 전체를 쓰는데 결과·기준값·재원 조건은 입원 단위라 범위가 서로 맞지 않는다. 결과 scope·reference·in_hospital_at_tp를 episode 단위로 맞춰야 한다."
+  },
+  {
+    "target": "cohort.exclusion.aki_known_by_tp",
+    "kind": "문제",
+    "problem": "이 제외 기준에만 episode 칸이 없어 index_admission 범위로 판정된다(같은 에피소드 기준인 dialysis_by_tp에는 episode=index_episode가 있다). 두 번째 입원의 랜드마크 725행 중 89행은 첫 입원까지 합쳐 tp까지 보고된 크레아티닌으로 보면 이미 AKI인데도 제외되지 않는다. 그래서 '아직 AKI가 없는 환자'라는 위험 집합 정의가 깨지고, 이미 생긴 AKI가 결과로 다시 잡힐 수 있다. episode=index_episode로 맞춰야 한다."
+  },
+  {
+    "target": "tp.anchor / features[*].window.start=admit (episode=index_episode)",
+    "kind": "가정",
+    "problem": "tp는 입원 기록마다 그 기록의 admit에서 24~168시간으로 잡히므로, 에피소드의 두 번째 입원은 실제로 이미 며칠 입원한 상태에서 랜드마크가 다시 시작된다. episode=index_episode인 특징의 window.start 'admit'은 에피소드 첫 입원 시각으로 해석해 구현한다고 가정한다. 이 해석이 다르면 cr_min_adm·n_cr·nephrotoxic_by_tp 같은 특징 값이 달라진다."
+  },
+  {
+    "target": "evaluation.subgroups",
+    "kind": "문제",
+    "problem": "cohort.subgroups와 outcome.ascertainment.by_stratum에는 ['unit_at_tp','admit_weekday']가 있고 notes는 하위 집단을 신뢰구간과 함께 보고한다고 적었는데, evaluation.subgroups에는 unit_at_tp만 있다. admit_weekday 하위 집단 성능을 보고할지 설계서 안에서 서로 맞지 않는다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup / outcome.ascertainment",
+    "kind": "가정",
+    "problem": "결과를 원내 사건으로 정의해, 창 안에 퇴원하거나 측정이 없으면 음성으로 둔다. 데이터 확인 결과(직접 만든 랜드마크 25,869행, 결과율 6.2%) 창 안 퇴원 비율은 병동 51%·ICU 33%, 창 안 크레아티닌 측정이 없는 비율은 병동 29%·ICU 7%, 창 안 평균 측정 횟수는 병동 0.81·ICU 2.38이다. 다른 병원 전원(discharge_status=transfer 중 에피소드에 이어지지 않은 약 844건)도 음성이 된다. 병동 결과율(5.1%)은 덜 잡힌 값이고, 모델은 '곧 퇴원' 또는 '채혈이 적음'을 음성으로 배울 수 있다. 설계서가 밝힌 대로 한계로 적고 층별로 보고한다고 가정한다."
+  },
+  {
+    "target": "features.n_cr",
+    "kind": "가정",
+    "problem": "n_cr은 tp에 알 수 있는 값이라 누출은 아니다. 다만 채혈 빈도는 결과 확인 가능성(측정이 있어야 양성)과 직접 이어져 있고, 병동 채혈 빈도는 연도별로 늘어난다(창 안 평균 0.76(2150)→0.90(2159)). 그래서 이 특징이 위험보다 측정 과정을 학습할 수 있다. 특징으로 그대로 쓰고 해석할 때 주의한다고 가정한다."
+  },
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "가정",
+    "problem": "tp 전에 채취했지만 tp까지 보고되지 않은 크레아티닌으로 AKI가 판정되면 양성으로 센다(count_as_outcome). 사건 시각이 tp 앞이지만 tp에는 알 수 없으므로 정의상 허용한다. 직접 계산에서 이 경우로만 양성이 되는 행은 35개다. 특징은 report_time 기준이라 이 값을 보지 않는다."
+  },
+  {
+    "target": "outcome.description (jaffe 보정 시 14행)",
+    "kind": "가정",
+    "problem": "결과 판정은 보정하지 않은 값으로, 같은 측정법끼리만 비교한다. 직접 다시 구현해 jaffe 값을 0.10 내려 보면 음성→양성이 16행(양성→음성 0행)으로, 설계서의 14행과 조금 다르다(경계값·제외 판정 구현 차이로 보인다). 방향은 같고 보정하지 않은 값을 쓰는 결정에는 영향이 없다고 본다."
+  },
+  {
+    "target": "preprocessing.cr_method_align / features.cr_last.assessment / outcome.history",
+    "kind": "점검 불가",
+    "problem": "jaffe가 enzymatic보다 0.10 mg/dL 높다는 근거인 '데이터 설명서'가 작업 폴더에 없다. 데이터에서는 method 칸과 채취 시각이 일치한다(A는 2155-01-01 00:02부터 enzymatic, B는 2154-12-05 마지막 jaffe·2155-01-29 첫 enzymatic, 외래 검사도 같음). 연도별 평균은 jaffe 1.27~1.38, enzymatic 1.15~1.20으로 대략 0.1~0.15 차이지만, 같은 검체를 두 방법으로 잰 값이 없어 0.10이라는 고정 차이를 직접 확인할 수는 없다."
+  },
+  {
+    "target": "features.age / outcome.ascertainment.method",
+    "kind": "점검 불가",
+    "problem": "나이가 95에서 잘림, patients.age가 등록 번호의 첫 입원 때 나이임, 병동 채혈 빈도 증가는 '데이터 설명서'를 근거로 드는데 그 문서가 없다. 데이터에서는 age 최댓값 95(103명), 18세 미만 0명이고(따라서 adult 기준에 '첫 입원 때 나이'를 써도 잘못 빠지는 사람은 없다), 병동 채혈 증가 추세도 보여 서술과 어긋나지 않는다. 다만 '첫 입원'이 2150-01-01 연구 시작 전 입원일 수 있는지는 확인할 수 없다."
+  },
+  {
+    "target": "cohort.exclusion.admit_near_extraction_end / outcome.censoring.end_of_data",
+    "kind": "가정",
+    "problem": "데이터에서 재원 기간 최댓값은 26.4일(30일 넘는 입원 0건)이고, 2159-12의 입원 수는 22건으로 앞의 달(약 70건)보다 적어 종료 시 재원 중인 입원이 빠졌다는 서술과 맞는다. 2159-12-02 뒤 입원(21건)을 빼면 남는 행은 모두 tp+48h가 추출 종료 전이어서, exclude_incomplete로 추가로 빠지는 행은 없다고 본다."
+  },
+  {
+    "target": "features.prior_dx_ckd / features.problem_ckd_active (history_key=patient_id)",
+    "kind": "가정",
+    "problem": "person_id는 tp에 알 수 없으므로 patient_id로만 이력을 찾는다. 등록 번호가 둘 이상인 사람 111명은 다른 번호의 CKD 이력이 빠진다. 2150-01-01 전 이력도 없어(왼쪽 절단) 초기 연도 환자의 이력 특징이 덜 잡힌다. 진단 coded_time은 모두 퇴원 1일 이상 뒤라 인덱스 입원 진단은 들어가지 않는다. problem_list는 entry_id별 버전이 있고 entered_in_error·resolved 버전이 있으며 1,580행은 퇴원 뒤 기록이다. version_then_filter(tp 시점 최신 버전을 고른 뒤 active 필터)로 구현한다."
+  },
+  {
+    "target": "split / model.tuning (family_id → person_id)",
+    "kind": "가정",
+    "problem": "묶음 키는 family_id, 없으면 person_id로 둔다. 데이터에서 한 사람(person_id)의 여러 patient_id가 서로 다른 family 값을 갖거나 결측과 값이 섞인 경우는 0건이라, 같은 사람이 학습·시험에 나뉘지 않는다. 그래도 묶음은 사람 단위로 family를 먼저 정한 뒤 만든다."
+  },
+  {
+    "target": "cohort.exclusion.dialysis_by_tp",
+    "kind": "가정",
+    "problem": "투석 처치(procedures 5A1D70Z)가 있는 입원 227건은 모두 dialysis_order도 있어, orders만으로 제외해도 빠지는 투석 환자는 없다. procedures는 coded_time 지연이 있어 tp 판정에 쓰지 않는다."
+  }
+]
