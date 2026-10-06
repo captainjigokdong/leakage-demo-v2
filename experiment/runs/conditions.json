@@ -94,14 +94,18 @@
   "rep": 1,
   "batch": 1,
   "variant": "design_FC79.json",
-  "order": 10
+  "order": 10,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "667fe5b7cf7f": {
   "condition": "나",
   "rep": 1,
   "batch": 1,
   "variant": "design_E819.json",
-  "order": 11
+  "order": 11,
+  "turn_capped": false,
+  "format_retries": 0
  },
  "783a716f0e3f": {
   "condition": "가",

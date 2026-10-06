@@ -1,0 +1,5 @@
+{
+ "report_id": "667fe5b7cf7f",
+ "variant": "design_E819.json",
+ "findings": "[\n  {\n    \"target\": \"cohort.subgroups\",\n    \"kind\": \"가정\",\n    \"problem\": \"admit_weekday는 데이터 열이나 파생 열, 특징으로 정의되어 있지 않다. 인덱스 입원 admissions.admit_time의 요일(입원 시각에 알려짐)로 만든다고 가정한다. evaluation.subgroups와 outcome.ascertainment.by_stratum에도 같은 가정을 적용한다.\"\n  },\n  {\n    \"target\": \"cohort.exclusion.aki_known_by_tp\",\n    \"kind\": \"가정\",\n    \"problem\": \"다른 입원 내 특징과 달리 episode 칸이 없다. 결과(outcome.scope=index_admission)처럼 이번 입원 기록만으로 판정한다고 가정한다. 이 경우 이어진 입원의 앞 입원에서 이미 생긴 AKI는 제외되지 않는다.\"\n  },\n  {\n    \"target\": \"split.key\",\n    \"kind\": \"점검 불가\",\n    \"problem\": \"family_id는 약 80%가 결측이다. 데이터 설명서에 따르면 기록되지 않은 가족도 위험을 공유하므로, 같은 가족이 학습과 평가에 나뉘어 들어가는지는 데이터로 확인할 수 없다.\"\n  },\n  {\n    \"target\": \"features.cr_rise.made_by\",\n    \"kind\": \"가정\",\n    \"problem\": \"made_by가 'leakcheck.features'로 되어 있고 출처를 대조할 기준이 없다. derive.of에 적힌 대로 cr_last − cr_min_adm(둘 다 tp까지 보고된 값이고 jaffe 보정 후)으로 다시 계산해 쓴다고 가정한다.\"\n  }\n]\n"
+}
