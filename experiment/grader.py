@@ -1,13 +1,14 @@
-"""채점기 (5단계에 고정, `experiment/scoring_rules.md`를 코드로 옮긴 것).
+"""채점기 v2 (5단계에 고정, `experiment/scoring_rules.md`를 코드로 옮긴 것).
 
-보고서 → (지목 항목, 문제 종류) 목록 추출 → 정답표와 대조 → 탐지 · 미탐지 · 오경보.
+제출 파일 `findings.json` → (지목 칸, kind, 문제 종류) 목록 → 정답표와 대조 → 탐지 · 중립 · 오경보.
 판정은 모두 규칙 기반이다. LLM은 쓰지 않는다 (CLAUDE.md 절대 규칙 7).
+v1 채점기(보고서 끝 ```findings 블록, 문장으로 점검 불가 판정)는 v1 저장소에 기록으로 남아 있다.
 
-맹검: 채점 단계(`grade_*`)는 보고서 id · 변형 파일 · 본문만 받는다. 조건(가/나) 표시는
+맹검: 채점 단계(`grade_*`)는 보고서 id · 변형 파일 · 제출 파일 내용만 받는다. 조건(가/나) 표시는
 채점이 끝난 뒤 `summarize`에서만 붙인다. 조건 칸이 섞인 기록은 채점하지 않고 멈춘다.
 
 사용 (7단계):
-    python -m experiment.grader grade runs/reports --checker runs/checker --out results/grades.json
+    python -m experiment.grader grade runs/findings --checker runs/checker --out results/grades.json
     python -m experiment.grader summarize results/grades.json runs/conditions.json --out results/summary.json
 암호는 tools.seal과 같은 방식(환경 변수 SEAL_PASSWORD 또는 터미널 입력)으로만 받는다.
 """
@@ -16,7 +17,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import math
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -26,16 +26,40 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 VARIANT_DIR = ROOT / "designs" / "variants"
 ANSWER_KEY = ROOT / "sealed" / "answer_key.enc"
-INJECTION_LOG = ROOT / "docs" / "injection_log.md"
+VARIANT_LOG = ROOT / "docs" / "variants_v2.md"
 
-KINDS = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q7"]   # 채점하는 문제 종류 (Q6는 기록만이라 채점하지 않음)
+FINDING_KINDS = ("문제", "가정", "점검 불가")   # 제출 파일의 kind 칸 (지시문과 같음)
+QS = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q7"]       # 보조 분석의 문제 종류 (Q6는 기록만)
 BOOTSTRAP_N = 10_000
-BOOTSTRAP_SEED = 20261003
+BOOTSTRAP_SEED = 20261006
 CONDITION_FIELDS = {"condition", "arm", "조건", "skill"}
 
-# ---------------------------------------------------------------- 문제 종류 핵심어 사전
+# 실행 규칙 (docs/success_criteria_v2.md에 잠금. 6단계 실행기가 이 값을 쓴다)
+MAX_TURNS = 60          # 실행당 턴 수 상한, 두 조건 같음
+MAX_TURNS_RETRY = 5     # 형식 재제출 요청 1회의 턴 수 상한
+FORMAT_RETRIES = 1      # 형식 검사 실패(파일 없음 포함) 때 재제출 요청 횟수
+
+# 채점하지 않는 최상위 칸: 지목해도 탐지 가능하지만 오경보로 세지 않는다 (scoring_rules.md 2절)
+NOT_GRADED_HEADS = {"attempts", "design_id", "design_type", "notes"}
+
+# 참고값용 칸 (판정에는 쓰지 않음). docs/known_issues_v2.md K1·K5, 4a 검수 지적·점검기 출력으로 확정.
+K_CELLS = {
+    "K1": {"bases": ["readmit_b"], "cells": ["features.n_clinic_365d"]},
+    "K5": {"bases": ["readmit_a", "readmit_b", "readmit_c", "readmit_d"], "cells": ["cohort.rows_per_unit"]},
+}
+# 깨끗한 설계서에서 점검기가 "가정"을 내는 칸 (tests/test_grader.py가 점검기 출력과 같은지 확인한다)
+_ALL_ASSUMPTION = ["split.key", "model.tuning.cv_key"]
+_FIXED_ASSUMPTION = _ALL_ASSUMPTION + ["cohort.rows_per_unit", "outcome.ascertainment.scope.sites"]
+ASSUMPTION_CELLS = {**{b: _ALL_ASSUMPTION for b in ("aki_a", "aki_b", "aki_c", "aki_d")},
+                    **{b: _FIXED_ASSUMPTION for b in ("readmit_a", "readmit_b", "readmit_c", "readmit_d")}}
+# 정답 칸이 깨끗한 설계서의 가정 칸·정당한 지적 목록 칸과 같은 공개 사례 (H1a 참고값에서 뺀다)
+ASSUMPTION_OVERLAP_CASES = ("E05", "E06", "E07", "E18")
+# 4b에서 서술을 고친 후보 (뽑혔으면 H2a·H2b를 뺀 값과 함께 보고)
+NARRATIVE_FIXED_CASES = ("C18", "C27", "C30")
+
+# ---------------------------------------------------------------- 문제 종류 핵심어 사전 (보조 분석 전용)
 # 문제 설명(problem)을 소문자로 바꾼 뒤 부분 문자열로 찾는다. 한 설명이 여러 종류에 걸릴 수 있다.
-# 점검기 표현과 일반 표현을 한국어·영어로 함께 넣었다. 실험 전에 고정하며 결과를 본 뒤 바꾸지 않는다.
+# 보조 분석(항목 + 종류)에만 쓰며 판정에는 쓰지 않는다. 검증 세트 (A) 개발 절반으로만 보강한다.
 
 KEYWORDS: dict[str, list[str]] = {
     "Q1": [  # 가용 시점
@@ -120,51 +144,34 @@ KEYWORDS: dict[str, list[str]] = {
         "measurement frequency", "testing frequency", "monitoring intensity", "measured more often",
         "tested more often", "differential measurement", "differential testing", "informative observation",
     ],
-    "Q6": [  # 다중 시도 (인식만 하고 채점하지 않음)
+    "Q6": [  # 다중 시도 (기록만)
         "다중 시도", "다중 비교", "다중 검정", "시도 횟수", "multiple testing", "multiple comparison",
         "number of attempts", "p-hacking", "forking paths",
     ],
 }
 
-UNABLE = [  # 점검 불가 표현: 문제 종류 핵심어보다 먼저 본다
-    "점검 불가", "확인 불가", "판정 불가", "규칙표에 없", "규칙이 없어", "규칙이 없다", "출처 불명",
-    "cannot be checked", "could not be checked", "could not check", "unable to check", "not checkable",
-    "no rule for", "unknown provenance",
-]
-
 _LABEL = re.compile(r"(?<![a-z0-9])q([1-7])(?![0-9])")
 _RANGE = re.compile(r"(?<![a-z0-9])q([1-7])\s*[~\-–]\s*q([1-7])(?![0-9])")
 
 
-@dataclass
-class Kind:
-    status: str                       # "kinds" | "unknown"(종류 불명) | "unable"(점검 불가) | "q6"
-    qs: frozenset = frozenset()
-
-
-def classify(problem: str, item: str | None = None) -> Kind:
-    """문제 설명 → 문제 종류. item이 포함·제외 기준이면 시점 문제(Q1)를 선택 시점(Q5)으로도 본다."""
+def classify(problem: str, path: str | None = None) -> frozenset:
+    """문제 설명 → 문제 종류 집합 (보조 분석 전용). 빈 집합이면 종류 불명.
+    칸이 포함·제외 기준이면 시점 문제(Q1)를 선택 시점(Q5)으로도 본다. Q6는 기록만 하므로 결과에서 뺀다."""
     t = problem.lower().replace("tₚ", "tp").replace("t_p", "tp")
-    if any(u in t for u in UNABLE):
-        return Kind("unable")
     qs = {f"Q{m}" for m in _LABEL.findall(t)}
     for a, b in _RANGE.findall(t):
         qs |= {f"Q{i}" for i in range(int(a), int(b) + 1)}
     qs |= {q for q, words in KEYWORDS.items() if any(w in t for w in words)}
-    if item and item.startswith("cohort.") and "Q1" in qs:
+    if path and path.startswith("cohort.") and "Q1" in qs:
         qs.add("Q5")
-    if qs == {"Q6"}:
-        return Kind("q6")
     qs.discard("Q6")
-    return Kind("kinds", frozenset(qs)) if qs else Kind("unknown")
+    return frozenset(qs)
 
 
-# ---------------------------------------------------------------- 설계서 항목
+# ---------------------------------------------------------------- 설계서 경로
 
 LIST_SECTIONS = {"features": "features", "inclusion": "cohort.inclusion",
                  "exclusion": "cohort.exclusion", "preprocessing": "preprocessing"}
-FIXED_ITEMS = ["split", "outcome", "tp", "cohort.subgroups", "cohort.index_time"]
-NOT_GRADED = {"model", "attempts"}   # 지목해도 오경보로 세지 않는 항목 (model.family 등, Q6 시도 기록)
 
 
 def _names(design: dict) -> dict[str, list[str]]:
@@ -175,12 +182,6 @@ def _names(design: dict) -> dict[str, list[str]]:
             "preprocessing": [p["name"] for p in design.get("preprocessing", [])]}
 
 
-def universe(design: dict) -> list[str]:
-    """채점 대상 항목 전체 (H2 무작위 기대치의 모집단)."""
-    n = _names(design)
-    return ([f"{LIST_SECTIONS[s]}.{x}" for s in LIST_SECTIONS for x in n[s]] + FIXED_ITEMS)
-
-
 def _parts(s: str) -> list[str]:
     s = s.strip().strip("`'\" ")
     s = re.sub(r"\[\s*(?:name\s*=\s*)?['\"]?([^\]'\"]+?)['\"]?\s*\]", r".\1", s)
@@ -188,40 +189,59 @@ def _parts(s: str) -> list[str]:
     return [p.strip() for p in s.split(".") if p.strip()]
 
 
-def _canon_parts(p: list[str], design: dict) -> str | None:
-    if not p:
+def _walk(obj, parts: list[str]) -> list[str]:
+    """obj 안에서 실제로 있는 가장 깊은 앞부분 (이름이 있는 목록은 name으로 찾는다)."""
+    done = []
+    for p in parts:
+        if isinstance(obj, dict) and p in obj:
+            obj = obj[p]
+        elif isinstance(obj, list) and (hit := [x for x in obj if isinstance(x, dict) and x.get("name") == p]):
+            obj = hit[0]
+        else:
+            break
+        done.append(p)
+    return done
+
+
+def _list_item(section: str, rest: list[str], design: dict) -> str | None:
+    """목록 칸(features 등): 이름이 없으면 묶음, 없는 이름이면 None, 있으면 그 항목 + 있는 하위 칸."""
+    names = _names(design)[section]
+    base = LIST_SECTIONS[section]
+    if not rest:
+        return base
+    if rest[0] not in names:
         return None
-    n = _names(design)
-    head, rest = p[0], p[1:]
+    items = design.get(section, []) if section in ("features", "preprocessing") else design["cohort"][section]
+    item = next(x for x in items if x.get("name") == rest[0])
+    return ".".join([base, rest[0]] + _walk(item, rest[1:]))
+
+
+def canon(parts: list[str], design: dict) -> str | None:
+    """점 경로 조각 → 설계서의 정규 경로. 설계서에 없는 경로면 None (scoring_rules.md 2절)."""
+    if not parts:
+        return None
+    head, rest = parts[0], parts[1:]
     if head == "cohort":
         if not rest:
+            return "cohort"
+        if rest[0] in ("inclusion", "exclusion"):
+            return _list_item(rest[0], rest[1:], design)
+        if rest[0] not in design.get("cohort", {}):
             return None
-        head, rest = rest[0], rest[1:]
-        if head in ("subgroups", "index_time"):
-            return f"cohort.{head}"
-        if head not in ("inclusion", "exclusion"):
-            return None
+        return ".".join(["cohort"] + _walk(design["cohort"], rest))
     if head in LIST_SECTIONS:
-        return f"{LIST_SECTIONS[head]}.{rest[0]}" if rest and rest[0] in n[head] else None
-    if head in ("split", "split_unit", "cv_key"):
-        return "split"
-    if head == "model":
-        return "split" if rest and rest[0] == "tuning" else "model"
-    if head in ("outcome", "ascertainment"):
-        if head == "ascertainment":
-            rest = ["ascertainment"]
-        if rest and rest[0] == design.get("outcome", {}).get("name"):
-            rest = rest[1:]
-        return ".".join(["outcome"] + rest)
-    if head == "tp":
-        return ".".join(["tp"] + rest)
-    if head in ("subgroups", "index_time"):
-        return f"cohort.{head}"
-    if head == "attempts":
-        return "attempts"
-    hits = [s for s in LIST_SECTIONS if head in n[s]]
+        return _list_item(head, rest, design)
+    if head == "ascertainment":
+        head, rest = "outcome", ["ascertainment"] + rest
+    if head == "cv_key":
+        head, rest = "model", ["tuning", "cv_key"] + rest
+    if head == "outcome" and rest and rest[0] == design.get("outcome", {}).get("name"):
+        rest = rest[1:]
+    if head in design:
+        return ".".join([head] + _walk(design[head], rest))
+    hits = [s for s, ns in _names(design).items() if head in ns]
     if len(hits) == 1:
-        return f"{LIST_SECTIONS[hits[0]]}.{head}"
+        return _list_item(hits[0], [head] + rest, design)
     return None
 
 
@@ -229,94 +249,134 @@ _TOKEN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:(?:\.|:)[A-Za-z0-9_]+|\[[^\]]*\])
 
 
 def resolve(target: str, design: dict) -> str | None:
-    """보고서의 target 문자열 → 설계서 항목(정규형). 정할 수 없으면 None(대상 불명)."""
-    whole = _canon_parts(_parts(target), design)
+    """제출의 target 문자열 → 설계서 정규 경로. 하나로 정할 수 없으면 None(대상 불명)."""
+    whole = canon(_parts(target), design)
     if whole is not None:
         return whole
     toks = _TOKEN.findall(target)
     qualified = [t for t in toks if re.search(r"[.:\[]", t)]
     for group in (qualified, toks):   # 점 경로로 적은 것을 먼저 본다
-        found = {c for tok in group if (c := _canon_parts(_parts(tok), design)) is not None}
+        found = {c for tok in group if (c := canon(_parts(tok), design)) is not None}
         if found:
             return found.pop() if len(found) == 1 else None
     return None
 
 
-def _prefix(a: str, b: str) -> bool:
-    return a == b or a.startswith(b + ".") or b.startswith(a + ".")
-
-
-def key_target(t: str, design: dict) -> str:
-    """정답표의 targets 칸(inject.targets_of 형식) → 정규형. 'cohort'·'model'은 묶음 그대로 둔다."""
+def key_path(t: str, design: dict) -> str:
+    """정답표·목록의 칸(inject.targets_of 표기, [name=] 표기) → 정규 경로. 'cohort'·'model'은 묶음 그대로."""
     p = _parts(t)
-    if p == ["cohort"] or p == ["model"]:
+    if p in (["cohort"], ["model"]):
         return p[0]
-    return _canon_parts(p, design) or ".".join(p)
+    return canon(p, design) or ".".join(p)
 
 
-def matches(item: str, key: str) -> bool:
-    """보고서 항목이 정답표 항목을 가리키는가 (scoring_rules.md 2절 동의어 표)."""
-    if key == "cohort":
-        return item.startswith("cohort.")
-    if key == "model":
-        return item in ("split", "model")
-    if key.split(".")[0] in ("outcome", "tp"):
-        # 결과 확인 방식이 정답이면 그 층을 정하는 하위 집단 설정도 같은 항목으로 본다
-        if item == "cohort.subgroups" and (key + ".").startswith("outcome.ascertainment."):
-            return True
-        return _prefix(item, key)
-    return item == key
+def is_bundle(path: str, design: dict) -> bool:
+    """최상위 묶음 전체 (features, cohort, outcome, model, split, tp 등 dict·list인 최상위 칸, cohort.inclusion·exclusion).
+    split_unit처럼 값 하나인 최상위 칸은 묶음이 아니다."""
+    p = path.split(".")
+    if len(p) == 1:
+        return isinstance(design.get(p[0]), (dict, list)) or p[0] == "cohort"
+    return p[0] == "cohort" and len(p) == 2 and p[1] in ("inclusion", "exclusion")
 
 
-def top_item(item: str) -> str:
-    """오경보 중복 제거·H2 모집단 비교용 최상위 항목 (outcome.*, tp.* → outcome, tp)."""
-    head = item.split(".")[0]
-    return head if head in ("outcome", "tp") else item
+def item_of(path: str) -> str:
+    """오경보 중복 제거 단위: 목록 항목(features.이름 등) 또는 최상위 칸 아래 첫 칸(outcome.window 등)."""
+    p = path.split(".")
+    if p[0] == "cohort" and len(p) >= 3 and p[1] in ("inclusion", "exclusion"):
+        return ".".join(p[:3])
+    return ".".join(p[:2])
 
 
-def graded_item(item: str) -> bool:
-    return item not in NOT_GRADED
+def graded(path: str) -> bool:
+    return path.split(".")[0] not in NOT_GRADED_HEADS
 
 
-# ---------------------------------------------------------------- 보고서 목록 추출
-
-_BLOCK = re.compile(r"```findings[^\n]*\n(.*?)```", re.S)
-
-
-@dataclass
-class Entry:
-    target: str
-    problem: str
-    item: str | None = None
-    kind: Kind = field(default_factory=lambda: Kind("unknown"))
+def _within(a: str, b: str) -> bool:
+    return a == b or a.startswith(b + ".")
 
 
-def parse_findings(text: str) -> tuple[list[dict], str | None, int]:
-    """보고서 본문의 마지막 ```findings 블록 → (항목 목록, 형식 오류, 형식이 틀린 항목 수)."""
-    blocks = _BLOCK.findall(text)
-    if not blocks:
-        return [], "목록 없음", 0
+def _split_member(f: str) -> bool:
+    return _within(f, "split") or f == "split_unit" or _within(f, "model.tuning.cv_key")
+
+
+def matches(f: str, t: str, design: dict, strict: bool = False) -> bool:
+    """지적 경로 f가 정답·목록 칸 t를 가리키는가 (scoring_rules.md 2절).
+    - 같거나 더 좁으면(f가 t 안) 일치.
+    - 더 넓으면(t가 f 안) 관대판만 일치, 단 f가 최상위 묶음 전체이면 불인정. 엄격판은 불인정.
+    - 분할 묶음: 칸이 `split` 전체이면 split.*, split_unit, model.tuning.cv_key 지적이 일치.
+    - 하위 집단 예외: 칸이 outcome.ascertainment(또는 그 하위)이면 cohort.subgroups 지적도 일치."""
+    if _within(f, t):
+        return True
+    if t == "split" and _split_member(f):
+        return True
+    if _within(t, "outcome.ascertainment") and _within(f, "cohort.subgroups"):
+        return True
+    return (not strict) and _within(t, f) and not is_bundle(f, design)
+
+
+# ---------------------------------------------------------------- 제출 파일
+
+def validate_findings(text: str | None) -> list[str]:
+    """형식 검사. 빈 목록이면 통과. 실패면 재제출 요청 1회 대상 (파일 없음도 실패)."""
+    if text is None:
+        return ["파일 없음"]
     try:
-        data = json.loads(blocks[-1])
-    except json.JSONDecodeError:
+        data = json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        return ["JSON 오류"]
+    if not isinstance(data, list):
+        return ["목록 아님"]
+    bad = []
+    for i, x in enumerate(data):
+        if not isinstance(x, dict):
+            bad.append(f"{i}: 객체 아님")
+            continue
+        tg = x.get("target")
+        if not (isinstance(tg, str) and tg.strip()) and not (isinstance(tg, list) and tg and all(isinstance(s, str) and s.strip() for s in tg)):
+            bad.append(f"{i}: target")
+        if x.get("kind") not in FINDING_KINDS:
+            bad.append(f"{i}: kind")
+        if not isinstance(x.get("problem"), str):
+            bad.append(f"{i}: problem")
+    return bad
+
+
+def parse_findings(text: str | None) -> tuple[list[dict], str | None, int]:
+    """제출 파일 내용 → (지적 목록, 형식 오류, 버린 항목 수).
+    파일 없음·JSON 오류·목록 아님이면 지적 0개. 칸이 틀린 항목은 버리고 수만 센다. target이 목록이면 따로 지적."""
+    if text is None:
+        return [], "파일 없음", 0
+    try:
+        data = json.loads(text)
+    except (json.JSONDecodeError, TypeError):
         return [], "JSON 오류", 0
     if not isinstance(data, list):
         return [], "목록 아님", 0
     out, bad = [], 0
-    for x in data:
-        if not isinstance(x, dict) or not isinstance(x.get("problem"), str):
+    for i, x in enumerate(data):
+        if validate_findings(json.dumps([x], ensure_ascii=False)):
             bad += 1
             continue
-        tg = x.get("target")
-        tgs = [tg] if isinstance(tg, str) else tg if isinstance(tg, list) else None
-        if not tgs or not all(isinstance(s, str) for s in tgs):
-            bad += 1
-            continue
-        out += [{"target": s, "problem": x["problem"]} for s in tgs]
+        tgs = [x["target"]] if isinstance(x["target"], str) else x["target"]
+        out += [{"target": s, "kind": x["kind"], "problem": x["problem"]} for s in tgs]
     return out, None, bad
 
 
 # ---------------------------------------------------------------- 채점
+
+@dataclass
+class Entry:
+    target: str
+    kind: str                     # 문제 | 가정 | 점검 불가
+    problem: str
+    path: str | None = None
+    qs: frozenset = frozenset()
+
+
+COUNT_KEYS = ("n_problem", "n_assumption", "n_unable", "n_unresolved", "n_too_broad", "n_not_graded",
+              "n_support", "n_justified", "n_justified_strict", "n_unknown_kind",
+              "n_assumption_cell_problem", "n_defect_cell_assumption", "n_defect_cell_unable")
+
 
 @dataclass
 class Grade:
@@ -326,13 +386,12 @@ class Grade:
     format_error: str | None = None
     n_entries: int = 0
     n_malformed: int = 0
-    n_unable: int = 0                            # 점검 불가 지적 (탐지도 오경보도 아님)
-    n_unknown_kind: int = 0                      # 종류 불명 지적 (주 분석은 항목으로 판정, 보조 분석 미탐지)
-    n_unresolved: int = 0                        # 대상 불명 지적 (설계서 항목으로 정할 수 없음)
-    n_q6: int = 0                                # 다중 시도 지적 (채점하지 않음)
+    counts: dict = field(default_factory=lambda: dict.fromkeys(COUNT_KEYS, 0))
     defects: list[dict] = field(default_factory=list)
-    false_alarms: list[str] = field(default_factory=list)
-    flagged_items: list[str] = field(default_factory=list)  # 지목한 채점 대상 항목 (최상위, 중복 없음)
+    false_alarms: list[str] = field(default_factory=list)          # 관대판, 항목 단위 중복 없음
+    false_alarms_strict: list[str] = field(default_factory=list)   # 엄격판 (넓게 적은 지적은 목록·정답 불인정)
+    false_alarms_no_k: list[str] = field(default_factory=list)     # K1·K5 칸 오경보를 뺀 참고값
+    legit_flagged: list[str] = field(default_factory=list)         # 오경보 중 legit_changes 칸
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -344,72 +403,139 @@ def _check_blind(rec: dict) -> None:
         raise ValueError(f"채점 입력에 조건 칸 {sorted(bad)}이 있다. 조건은 채점 뒤에만 붙인다.")
 
 
+def _accept_keys(d: dict, design: dict, strict: bool) -> list[str]:
+    ks = [key_path(t, design) for t in d["accept_targets"]]
+    if strict and len(ks) > 1:   # 엄격판: 다른 칸이 있으면 묶음 전체(cohort·model) 칸은 뺀다
+        ks = [k for k in ks if k not in ("cohort", "model")] or ks
+    return ks
+
+
+def _any(f: str, keys: list[str], design: dict, strict: bool = False) -> bool:
+    return any(matches(f, k, design, strict) for k in keys)
+
+
 def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Grade:
-    keys = [(d, [key_target(t, design) for t in d["targets"]]) for d in key_entry["defects"]]
-    pointing = []
+    base = key_entry.get("base")
+    defects = key_entry["defects"]
+    acc = [_accept_keys(d, design, False) for d in defects]
+    acc_s = [_accept_keys(d, design, True) for d in defects]
+    sup = [key_path(t, design) for d in defects for t in d.get("support_targets", [])]
+    just = [key_path(c, design) for j in key_entry.get("justified", []) for c in j["cells"]]
+    legit = [key_path(t, design) for lc in key_entry.get("legit_changes", []) for t in lc["targets"]]
+    kcells = [c for k in K_CELLS.values() if base in k["bases"] for c in k["cells"]]
+    assume = ASSUMPTION_CELLS.get(base, [])
+    c = g.counts
+    hit = [dict(pri=[], sec=[], pri_s=[], sec_s=[], pri_j=[]) for _ in defects]
+    fa, fa_s, fa_k, lg = [], [], [], []
+
+    def add(lst, f):
+        if item_of(f) not in lst:
+            lst.append(item_of(f))
+
     for e in entries:
-        if e.kind.status == "unable":
-            g.n_unable += 1
-        elif e.kind.status == "q6":
-            g.n_q6 += 1
-        elif e.item is None:
-            g.n_unresolved += 1
+        f = e.path
+        if e.kind == "가정":
+            c["n_assumption"] += 1
+        elif e.kind == "점검 불가":
+            c["n_unable"] += 1
         else:
-            if e.kind.status == "unknown":
-                g.n_unknown_kind += 1
-            pointing.append(e)
-    for d, kt in keys:
-        hit = [e for e in pointing if any(matches(e.item, k) for k in kt)]
-        qs = set().union(*(e.kind.qs for e in hit)) if hit else set()
-        g.defects.append({"id": d["id"], "question": d["question"], "holdout": d["holdout"],
-                          "adjusted": bool(d.get("adjustment")), "targets": kt,
-                          "primary": bool(hit), "secondary": d["question"] in qs,
-                          "extra_kinds": sorted(qs - {d["question"]})})
-    fa, flagged = [], []
-    for e in pointing:
-        if not graded_item(e.item):
+            c["n_problem"] += 1
+        if f is None:
+            c["n_unresolved"] += 1
             continue
-        if top_item(e.item) not in flagged:
-            flagged.append(top_item(e.item))
-        if not any(matches(e.item, k) for _, kt in keys for k in kt) and e.item not in fa:
-            fa.append(e.item)
-    g.false_alarms, g.flagged_items = fa, flagged
+        on_defect = [i for i in range(len(defects)) if _any(f, acc[i], design)]
+        if e.kind != "문제":
+            if on_defect:
+                c["n_defect_cell_assumption" if e.kind == "가정" else "n_defect_cell_unable"] += 1
+            continue
+        if not e.qs:
+            c["n_unknown_kind"] += 1
+        if _any(f, assume, design):
+            c["n_assumption_cell_problem"] += 1
+        in_just, in_just_s = _any(f, just, design), _any(f, just, design, True)
+        for i, d in enumerate(defects):
+            sec_ok = bool(e.qs & set(d["accept_questions"]))
+            if i in on_defect:
+                hit[i]["pri"].append(True)
+                hit[i]["sec"].append(sec_ok)
+                if not in_just:
+                    hit[i]["pri_j"].append(True)
+            if _any(f, acc_s[i], design, True):
+                hit[i]["pri_s"].append(True)
+                hit[i]["sec_s"].append(sec_ok)
+        # 관대판 분류 (우선순위: 결함 > support > 목록 > 묶음 > 채점 안 함 > legit·그 밖 = 오경보)
+        if on_defect:
+            pass
+        elif _any(f, sup, design):
+            c["n_support"] += 1
+        elif in_just:
+            c["n_justified"] += 1
+        elif is_bundle(f, design):
+            c["n_too_broad"] += 1
+        elif not graded(f):
+            c["n_not_graded"] += 1
+        else:
+            add(fa, f)
+            if _any(f, legit, design):
+                add(lg, f)
+            if not _any(f, kcells, design):
+                add(fa_k, f)
+        # 엄격판 분류 (넓게 적은 지적은 정답·목록·support에 맞지 않음)
+        if any(_any(f, a, design, True) for a in acc_s) or _any(f, sup, design, True):
+            pass
+        elif in_just_s:
+            c["n_justified_strict"] += 1
+        elif is_bundle(f, design) or not graded(f):
+            pass
+        else:
+            add(fa_s, f)
+    for i, d in enumerate(defects):
+        h = hit[i]
+        g.defects.append({"id": d["id"], "question": d["question"], "holdout": d["holdout"],
+                          "primary": bool(h["pri"]), "secondary": any(h["sec"]),
+                          "primary_strict": bool(h["pri_s"]), "secondary_strict": any(h["sec_s"]),
+                          "primary_justified_first": bool(h["pri_j"])})
+    g.false_alarms, g.false_alarms_strict, g.false_alarms_no_k, g.legit_flagged = fa, fa_s, fa_k, lg
     return g
 
 
 def grade_report(rec: dict, design: dict, key_entry: dict) -> Grade:
-    """에이전트 보고서 1개. rec = {"report_id", "variant", "text"} (조건 칸 없음)."""
+    """에이전트 제출 1개. rec = {"report_id", "variant", "findings": 파일 내용 문자열 또는 None(파일 없음)}."""
     _check_blind(rec)
-    raw, err, bad = parse_findings(rec["text"])
+    raw, err, bad = parse_findings(rec.get("findings"))
     g = Grade(rec["report_id"], rec["variant"], "report", err, len(raw), bad)
     entries = []
     for x in raw:
-        item = resolve(x["target"], design)
-        entries.append(Entry(x["target"], x["problem"], item, classify(x["problem"], item)))
+        p = resolve(x["target"], design)
+        entries.append(Entry(x["target"], x["kind"], x["problem"], p, classify(x["problem"], p)))
     return _score(g, entries, design, key_entry)
 
 
 def grade_checker(rec: dict, design: dict, key_entry: dict) -> Grade:
-    """(가) 조건의 점검기 출력(JSON) 1개. rec = {"report_id", "variant", "exit_code", "checker": Report.to_dict() 또는 None}.
-    점검기만으로 본 탐지율(2차 지표)에 쓴다. 문제 종류는 점검기의 question 칸을 그대로 쓴다."""
+    """(가) 조건의 점검기 출력(JSON) 1개 → 점검기만으로 본 탐지율(2차 지표).
+    rec = {"report_id", "variant", "exit_code", "checker": 점검기 --json 출력 또는 None}.
+    차단·경고 → 문제(종류는 question 칸), 가정 → 가정, 점검 불가·출처 불명·확인 불가 → 점검 불가."""
     _check_blind(rec)
     g = Grade(rec["report_id"], rec["variant"], "checker")
     out = rec.get("checker")
     if rec.get("exit_code") == 2 or out is None:
-        g.format_error, g.n_unable = "점검 불가(종료 코드 2)", 1
+        g.format_error = "점검 불가(종료 코드 2)"
         return _score(g, [], design, key_entry)
     entries = []
-    for f in out["findings"]:
-        if f["verdict"] not in ("차단", "경고"):
-            continue
-        q, reason = f["question"], f["reason"]
-        if q not in KINDS + ["Q6"] or reason.startswith("출처 불명") or "확인 불가" in reason:
-            kind = Kind("unable")
-        elif q == "Q6":
-            kind = Kind("q6")
+    for f in list(out.get("findings", [])) + list(out.get("assumptions", [])):
+        v, q, reason = f["verdict"], f.get("question", ""), f.get("reason", "")
+        if v == "가정":
+            kind = "가정"
+        elif v == "점검 불가" or q not in QS + ["Q6"] or reason.startswith("출처 불명") or "확인 불가" in reason:
+            kind = "점검 불가" if v in ("차단", "경고", "점검 불가") else None
+        elif v in ("차단", "경고"):
+            kind = "문제"
         else:
-            kind = Kind("kinds", frozenset({q}))
-        entries.append(Entry(f["target"], reason, resolve(f["target"], design), kind))
+            kind = None
+        if kind is None:
+            continue
+        entries.append(Entry(f["target"], kind, reason, resolve(f["target"], design),
+                             frozenset({q}) if q in QS else frozenset()))
     g.n_entries = len(entries)
     return _score(g, entries, design, key_entry)
 
@@ -426,13 +552,13 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
 
 
-def injection_log_hashes(path: Path = INJECTION_LOG) -> dict[str, str]:
-    rows = re.findall(r"^\| designs/variants/(design_\w+\.json) \| `([0-9a-f]{64})` \|", path.read_text(encoding="utf-8"), re.M)
+def injection_log_hashes(path: Path = VARIANT_LOG) -> dict[str, str]:
+    rows = re.findall(r"^\| (?:designs/variants/)?`?(design_\w+\.json)`? \| `([0-9a-f]{64})` \|", path.read_text(encoding="utf-8"), re.M)
     return dict(rows)
 
 
 def verify_variants(key_variants: dict, variant_dir: Path = VARIANT_DIR, log: dict[str, str] | None = None) -> list[str]:
-    """변형 파일 SHA-256을 정답표·주입 기록과 대조. 어긋난 항목 목록(빈 목록이면 일치)."""
+    """변형 파일 SHA-256을 정답표·변형 목록(docs/variants_v2.md)과 대조. 어긋난 항목 목록(빈 목록이면 일치)."""
     log = injection_log_hashes() if log is None else log
     bad = []
     files = {p.name for p in variant_dir.glob("design_*.json")}
@@ -445,7 +571,7 @@ def verify_variants(key_variants: dict, variant_dir: Path = VARIANT_DIR, log: di
         if h != entry["sha256"]:
             bad.append(f"{fname}: 정답표 해시와 다름")
         if log.get(fname) != h:
-            bad.append(f"{fname}: injection_log.md 해시와 다름")
+            bad.append(f"{fname}: 변형 목록 해시와 다름")
     return bad
 
 
@@ -455,7 +581,7 @@ def load_design(fname: str, variant_dir: Path = VARIANT_DIR) -> dict:
 
 def grade_all(reports: list[dict], key_variants: dict, checker: list[dict] = (),
               designs: dict[str, dict] | None = None) -> list[dict]:
-    """맹검 채점. 보고서·점검기 기록 → Grade 사전 목록 (조건 없음)."""
+    """맹검 채점. 제출·점검기 기록 → Grade 사전 목록 (조건 없음)."""
     designs = designs if designs is not None else {}
     out = []
     for rec, fn in [(r, grade_report) for r in reports] + [(c, grade_checker) for c in checker]:
@@ -466,7 +592,7 @@ def grade_all(reports: list[dict], key_variants: dict, checker: list[dict] = (),
     return out
 
 
-# ---------------------------------------------------------------- 요약 · H1 · H2
+# ---------------------------------------------------------------- 요약 · 가설
 
 def _rate(xs: list[bool]) -> float | None:
     return sum(xs) / len(xs) if xs else None
@@ -477,92 +603,81 @@ def _placements(grades: list[dict], keep=lambda d: True) -> list[dict]:
             for g in grades for d in g["defects"] if keep(d)]
 
 
+MEASURES = ("primary", "secondary", "primary_strict", "secondary_strict", "primary_justified_first")
+
+
 def detection(grades: list[dict], keep=lambda d: True) -> dict:
+    """배치-실행 단위 탐지율 (배치 × 실행을 모두 합쳐 셈)."""
     p = _placements(grades, keep)
-    by_q = {q: {"n": len(x), "primary": _rate([d["primary"] for d in x]), "secondary": _rate([d["secondary"] for d in x])}
-            for q in KINDS if (x := [d for d in p if d["question"] == q])}
-    return {"n": len(p), "primary": _rate([d["primary"] for d in p]),
-            "secondary": _rate([d["secondary"] for d in p]), "by_question": by_q}
+    out = {"n": len(p)} | {m: _rate([d[m] for d in p]) for m in MEASURES}
+    out["by_question"] = {q: {"n": len(x), "primary": _rate([d["primary"] for d in x]),
+                              "secondary": _rate([d["secondary"] for d in x])}
+                          for q in QS if (x := [d for d in p if d["question"] == q])}
+    return out
+
+
+FA_FIELDS = ("false_alarms", "false_alarms_strict", "false_alarms_no_k")
 
 
 def false_alarms(grades: list[dict], key_variants: dict) -> dict:
     out = {}
     for label, clean in (("clean", True), ("defect", False)):
         gs = [g for g in grades if (not key_variants[g["variant"]]["defects"]) == clean]
-        n = [len(g["false_alarms"]) for g in gs]
-        out[label] = {"reports": len(gs), "total": sum(n), "mean_per_report": (sum(n) / len(n)) if n else None}
+        out[label] = {"reports": len(gs)}
+        for f in FA_FIELDS:
+            n = [len(g[f]) for g in gs]
+            out[label][f] = {"total": sum(n), "mean_per_report": (sum(n) / len(n)) if n else None}
+        out[label]["legit_total"] = sum(len(g["legit_flagged"]) for g in gs)
     return out
 
 
-def bootstrap_diff(ga: list[dict], gb: list[dict], measure: str = "primary",
-                   n: int = BOOTSTRAP_N, seed: int = BOOTSTRAP_SEED) -> dict:
-    """탐지율 차이 (가 − 나), 결함 변형 단위 짝지은 부트스트랩 백분위 95% CI."""
-    variants = sorted({g["variant"] for g in ga + gb if g["defects"]})
-
-    def counts(gs):
-        det = np.array([sum(d[measure] for g in gs if g["variant"] == v for d in g["defects"]) for v in variants], float)
-        tot = np.array([sum(len(g["defects"]) for g in gs if g["variant"] == v) for v in variants], float)
-        return det, tot
-
-    (da, ta), (db, tb) = counts(ga), counts(gb)
-    if not variants or ta.sum() == 0 or tb.sum() == 0:
-        return {"diff": None, "ci95": None, "n_variants": len(variants)}
-    est = da.sum() / ta.sum() - db.sum() / tb.sum()
-    rng = np.random.default_rng(seed)
-    idx = rng.integers(0, len(variants), size=(n, len(variants)))
-    sa, sta, sb, stb = da[idx].sum(1), ta[idx].sum(1), db[idx].sum(1), tb[idx].sum(1)
-    ok = (sta > 0) & (stb > 0)
-    diffs = sa[ok] / sta[ok] - sb[ok] / stb[ok]
+def _boot(units: list, fa, fb, n: int = BOOTSTRAP_N, seed: int = BOOTSTRAP_SEED) -> dict:
+    """묶음(변형) 단위 짝지은 부트스트랩. fa·fb(unit) → (분자, 분모). 통계량 = Σ분자/Σ분모 (가) − (나)."""
+    if not units:
+        return {"diff": None, "ci95": None, "n_units": 0}
+    na, da = map(np.array, zip(*[fa(u) for u in units]))
+    nb, db = map(np.array, zip(*[fb(u) for u in units]))
+    na, da, nb, db = (x.astype(float) for x in (na, da, nb, db))
+    if da.sum() == 0 or db.sum() == 0:
+        return {"diff": None, "ci95": None, "n_units": len(units)}
+    est = na.sum() / da.sum() - nb.sum() / db.sum()
+    idx = np.random.default_rng(seed).integers(0, len(units), size=(n, len(units)))
+    sa, sda, sb, sdb = na[idx].sum(1), da[idx].sum(1), nb[idx].sum(1), db[idx].sum(1)
+    ok = (sda > 0) & (sdb > 0)
+    diffs = sa[ok] / sda[ok] - sb[ok] / sdb[ok]
     lo, hi = np.percentile(diffs, [2.5, 97.5])
-    return {"diff": float(est), "ci95": [float(lo), float(hi)], "n_variants": len(variants),
+    return {"diff": float(est), "ci95": [float(lo), float(hi)], "n_units": len(units),
             "n_boot": int(ok.sum()), "seed": seed}
 
 
-def random_hit_prob(n_items: int, k_match: int, m_flags: int) -> tuple[float, float]:
-    """m개 항목을 무작위로 골라(비복원) 각각에 종류 6개 중 하나를 무작위로 붙였을 때
-    k개 정답 항목 중 하나라도 맞힐 확률 → (주 분석: 항목만, 보조 분석: 항목+종류)."""
-    m = min(m_flags, n_items)
-    if m == 0 or k_match == 0:
-        return 0.0, 0.0
-    total = math.comb(n_items, m)
-    item_only = 1 - math.comb(n_items - k_match, m) / total
-    item_kind = sum(math.comb(k_match, j) * math.comb(n_items - k_match, m - j) / total * (1 - (5 / 6) ** j)
-              for j in range(1, min(k_match, m) + 1))
-    return item_only, item_kind
+def boot_detection_diff(ga: list[dict], gb: list[dict], measure: str = "primary", keep=lambda d: True) -> dict:
+    """탐지율 차이 (가 − 나). 단위 = keep에 맞는 배치가 있는 결함 변형. 변형 안 배치·반복은 합쳐 센다."""
+    units = sorted({g["variant"] for g in ga + gb if any(keep(d) for d in g["defects"])})
+
+    def f(gs):
+        return lambda v: (sum(d[measure] for g in gs if g["variant"] == v for d in g["defects"] if keep(d)),
+                          sum(1 for g in gs if g["variant"] == v for d in g["defects"] if keep(d)))
+    return _boot(units, f(ga), f(gb))
 
 
-def _poisson_binomial_sf(ps: list[float], k: int) -> float:
-    dist = np.zeros(len(ps) + 1)
-    dist[0] = 1.0
-    for p in ps:
-        dist[1:] = dist[1:] * (1 - p) + dist[:-1] * p
-        dist[0] *= (1 - p)
-    return float(dist[k:].sum())
+def boot_fa_diff(ga: list[dict], gb: list[dict], key_variants: dict, fa_field: str = "false_alarms") -> dict:
+    """깨끗한 변형에서 보고서당 오경보 차이 (가 − 나). 단위 = 깨끗한 변형, 분모 = 보고서 수."""
+    units = sorted({g["variant"] for g in ga + gb if not key_variants[g["variant"]]["defects"]})
+
+    def f(gs):
+        return lambda v: (sum(len(g[fa_field]) for g in gs if g["variant"] == v),
+                          sum(1 for g in gs if g["variant"] == v))
+    return _boot(units, f(ga), f(gb))
 
 
-def h2(grades: list[dict], designs: dict[str, dict], keep=lambda d: d["holdout"]) -> dict:
-    """보류 사례 탐지율 vs 같은 수의 지적을 무작위 배치했을 때의 기대 탐지율 (보고서별 지적 수 그대로)."""
-    rows = []
-    for g in grades:
-        design = designs[g["variant"]]
-        uni = universe(design)
-        m = len([i for i in g["flagged_items"] if i in uni])
-        for d in g["defects"]:
-            if not keep(d):
-                continue
-            k = sum(any(matches(u, t) for t in d["targets"]) for u in uni)
-            pri, sec = random_hit_prob(len(uni), k, m)
-            rows.append({"primary": d["primary"], "secondary": d["secondary"], "p_pri": pri, "p_sec": sec})
-    if not rows:
-        return {"n": 0}
-    out = {"n": len(rows)}
-    for meas, pk in (("primary", "p_pri"), ("secondary", "p_sec")):
-        obs = sum(r[meas] for r in rows)
-        exp = sum(r[pk] for r in rows) / len(rows)
-        out[meas] = {"observed": obs / len(rows), "expected_random": exp,
-                     "met": obs / len(rows) > exp,
-                     "p_one_sided": _poisson_binomial_sf([r[pk] for r in rows], obs)}
-    return out
+def boot_public_minus_holdout(gs: list[dict], measure: str = "primary", keep=lambda d: True) -> dict:
+    """한 조건 안의 공개 − 보류 탐지율 (H2b). 단위 = 결함 변형 (공개·보류가 섞인 변형은 함께 뽑힌다)."""
+    units = sorted({g["variant"] for g in gs if any(keep(d) for d in g["defects"])})
+    pub = lambda v: (sum(d[measure] for g in gs if g["variant"] == v for d in g["defects"] if keep(d) and not d["holdout"]),
+                     sum(1 for g in gs if g["variant"] == v for d in g["defects"] if keep(d) and not d["holdout"]))
+    hol = lambda v: (sum(d[measure] for g in gs if g["variant"] == v for d in g["defects"] if keep(d) and d["holdout"]),
+                     sum(1 for g in gs if g["variant"] == v for d in g["defects"] if keep(d) and d["holdout"]))
+    return _boot(units, pub, hol)
 
 
 def stability(grades: list[dict], measure: str = "primary") -> float | None:
@@ -574,53 +689,88 @@ def stability(grades: list[dict], measure: str = "primary") -> float | None:
     return _rate([len(set(v)) == 1 for v in multi])
 
 
-def _counts(gs: list[dict]) -> dict:
-    return {k: sum(g[k] for g in gs) for k in ("n_unknown_kind", "n_unable", "n_unresolved", "n_q6", "n_malformed")} | {
-        "format_errors": sum(g["format_error"] is not None for g in gs),
-        "extra_kinds_on_defects": sum(len(d["extra_kinds"]) > 0 for g in gs for d in g["defects"])}
+def _counts(gs: list[dict], meta: dict[str, dict]) -> dict:
+    out = {k: sum(g["counts"][k] for g in gs) for k in COUNT_KEYS}
+    out["n_malformed"] = sum(g["n_malformed"] for g in gs)
+    out["format_errors"] = {e: sum(g["format_error"] == e for g in gs) for e in ("파일 없음", "JSON 오류", "목록 아님")}
+    out["empty_list"] = sum(g["format_error"] is None and g["n_entries"] == 0 and g["n_malformed"] == 0 for g in gs)
+    out["format_retries"] = sum(meta.get(g["report_id"], {}).get("format_retries", 0) for g in gs)
+    out["turn_capped"] = sum(bool(meta.get(g["report_id"], {}).get("turn_capped")) for g in gs)
+    return out
+
+
+def _hyp(ga: list[dict], gb: list[dict], key_variants: dict, keep=lambda d: True, measure: str = "primary") -> dict:
+    """H1a·H1b·H1c·H2a 판정과 H2b 기술 (docs/success_criteria_v2.md). keep으로 배치를 거른 참고값에도 같은 함수를 쓴다."""
+    h1a = boot_detection_diff(ga, gb, measure, keep)
+    clean_a = [g for g in ga if not key_variants[g["variant"]]["defects"]]
+    fa_mean = (sum(len(g["false_alarms"]) for g in clean_a) / len(clean_a)) if clean_a else None
+    h1c = boot_fa_diff(ga, gb, key_variants)
+    hold = lambda d: keep(d) and d["holdout"]
+    h2a = boot_detection_diff(ga, gb, measure, hold)
+    return {
+        "H1a": {**h1a, "met": h1a["ci95"] is not None and h1a["ci95"][0] > 0},
+        "H1b": {"fa_clean_mean_ga": fa_mean, "reports": len(clean_a), "met": fa_mean is not None and fa_mean <= 1},
+        "H1c": {**h1c, "met": h1c["ci95"] is not None and h1c["ci95"][1] < 0},
+        "H2a": {**h2a, "met": h2a["ci95"] is not None and h2a["ci95"][0] > 0},
+        "H2b": {"가": boot_public_minus_holdout(ga, measure, keep), "나": boot_public_minus_holdout(gb, measure, keep),
+                "note": "기술만 (기준 없음)"},
+    }
 
 
 def summarize(grades: list[dict], conditions: dict[str, dict], key_variants: dict,
-              designs: dict[str, dict] | None = None) -> dict:
-    """채점 결과에 조건을 붙여 지표·H1·H2를 계산한다 (docs/success_criteria.md)."""
-    designs = designs if designs is not None else {}
-    for v in key_variants:
-        if v not in designs:
-            designs[v] = load_design(v)
+              near_zero: tuple = ()) -> dict:
+    """채점 결과에 조건을 붙여 지표·가설을 계산한다 (docs/success_criteria_v2.md, docs/analysis_plan_v2.md).
+    conditions[report_id] = {"condition": 가|나, "rep", "turn_capped", "format_retries"} (조건 파일).
+    near_zero = 수치 차이가 0에 가까운 배치 [(변형, 사례 id)] (7단계에 봉인 기록에서 확인해 넣는다)."""
     reps = [g for g in grades if g["source"] == "report"]
     chk = [g for g in grades if g["source"] == "checker"]
     by = {c: [g for g in reps if conditions[g["report_id"]]["condition"] == c] for c in ("가", "나")}
-    unadj = lambda d: d["holdout"] and not d["adjusted"]
-    out: dict = {"conditions": {}}
+    out: dict = {"conditions": {}, "n_reps": sorted({conditions[g["report_id"]].get("rep") for g in reps}, key=str)}
     for c, gs in by.items():
         out["conditions"][c] = {
             "reports": len(gs),
             "detection": {"all": detection(gs), "public": detection(gs, lambda d: not d["holdout"]),
-                          "holdout": detection(gs, lambda d: d["holdout"]),
-                          "holdout_unadjusted": detection(gs, unadj)},
+                          "holdout": detection(gs, lambda d: d["holdout"])},
             "false_alarms": false_alarms(gs, key_variants),
-            "counts": _counts(gs),
+            "counts": _counts(gs, conditions),
             "stability": {"primary": stability(gs, "primary"), "secondary": stability(gs, "secondary")},
         }
     ck = [g for g in chk if conditions[g["report_id"]]["condition"] == "가"]
     out["checker_only"] = {"runs": len(ck), "detection": detection(ck),
                            "holdout": detection(ck, lambda d: d["holdout"]),
-                           "false_alarms": false_alarms(ck, key_variants), "counts": _counts(ck)}
-    fa_clean = out["conditions"]["가"]["false_alarms"]["clean"]["mean_per_report"]
-    h1 = {}
-    for meas in ("primary", "secondary"):
-        b = bootstrap_diff(by["가"], by["나"], meas)
-        h1[meas] = {**b, "fa_clean_mean_ga": fa_clean,
-                    "met": b["ci95"] is not None and b["ci95"][0] > 0 and fa_clean is not None and fa_clean <= 1}
-    out["H1"] = h1
-    out["H2"] = {"all_holdout": {"가": h2(by["가"], designs), "나": h2(by["나"], designs)},
-                 "unadjusted_holdout": {"가": h2(by["가"], designs, unadj), "나": h2(by["나"], designs, unadj)}}
-    disagree = [name for name, a, b in [
-        ("H1", h1["primary"]["met"], h1["secondary"]["met"]),
-        ("H2", out["H2"]["all_holdout"]["가"].get("primary", {}).get("met"),
-         out["H2"]["all_holdout"]["가"].get("secondary", {}).get("met"))] if a != b]
-    out["primary_secondary_disagree"] = disagree
+                           "false_alarms": false_alarms(ck, key_variants), "counts": _counts(ck, {})}
+    ga, gb = by["가"], by["나"]
+    out["hypotheses"] = _hyp(ga, gb, key_variants)                       # 판정 (주 분석)
+    out["secondary"] = _hyp(ga, gb, key_variants, measure="secondary")  # 판정에 쓰지 않음
+    nz = {tuple(x) for x in near_zero}
+    drawn_fixed = sorted({d["id"] for g in reps for d in g["defects"] if d["id"] in NARRATIVE_FIXED_CASES})
+    capped = {rid for rid, m in conditions.items() if m.get("turn_capped")}
+    nocap = lambda gs: [g for g in gs if g["report_id"] not in capped]
+    ref = {
+        "strict_breadth": _hyp(ga, gb, key_variants, measure="primary_strict"),
+        "justified_first": _hyp(ga, gb, key_variants, measure="primary_justified_first"),
+        "without_assumption_overlap_cases": _hyp(ga, gb, key_variants, lambda d: d["id"] not in ASSUMPTION_OVERLAP_CASES),
+        "without_near_zero": None,
+        "without_narrative_fixed": (_hyp(ga, gb, key_variants, lambda d: d["id"] not in NARRATIVE_FIXED_CASES)
+                                    if drawn_fixed else None),
+        "narrative_fixed_drawn": drawn_fixed,
+        "without_turn_capped": _hyp(nocap(ga), nocap(gb), key_variants) if capped else None,
+        "fa_strict": {"H1b": _fa_mean(ga, key_variants, "false_alarms_strict"),
+                      "H1c": boot_fa_diff(ga, gb, key_variants, "false_alarms_strict")},
+        "fa_without_k1_k5": {"H1b": _fa_mean(ga, key_variants, "false_alarms_no_k"),
+                             "H1c": boot_fa_diff(ga, gb, key_variants, "false_alarms_no_k")},
+    }
+    if nz:
+        keep_nz = {(g["variant"], d["id"]) for g in reps for d in g["defects"]} - nz
+        ref["without_near_zero"] = _hyp(*[[{**g, "defects": [d for d in g["defects"] if (g["variant"], d["id"]) in keep_nz]}
+                                            for g in x] for x in (ga, gb)], key_variants)
+    out["reference"] = ref
     return out
+
+
+def _fa_mean(gs: list[dict], key_variants: dict, fa_field: str) -> float | None:
+    clean = [g for g in gs if not key_variants[g["variant"]]["defects"]]
+    return (sum(len(g[fa_field]) for g in clean) / len(clean)) if clean else None
 
 
 # ---------------------------------------------------------------- 명령행
@@ -636,9 +786,10 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("reports", type=Path)
     g.add_argument("--checker", type=Path)
     g.add_argument("--out", type=Path, required=True)
-    s = sub.add_parser("summarize", help="채점 결과 + 조건 → 지표·H1·H2")
+    s = sub.add_parser("summarize", help="채점 결과 + 조건 → 지표·가설")
     s.add_argument("grades", type=Path)
     s.add_argument("conditions", type=Path)
+    s.add_argument("--near-zero", type=Path, help="수치 차이 0에 가까운 배치 [[변형, 사례 id], ...] (7단계)")
     s.add_argument("--out", type=Path, required=True)
     a = ap.parse_args(argv)
 
@@ -653,7 +804,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         grades = json.loads(a.grades.read_text(encoding="utf-8"))
         conds = json.loads(a.conditions.read_text(encoding="utf-8"))
-        summary = summarize(grades, conds, key["variants"])
+        nz = json.loads(a.near_zero.read_text(encoding="utf-8")) if a.near_zero else ()
+        summary = summarize(grades, conds, key["variants"], near_zero=nz)
         a.out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return 0
 
