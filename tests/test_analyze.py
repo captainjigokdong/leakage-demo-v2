@@ -60,11 +60,12 @@ def test_overview_row_and_invoked_split():
                     reason="실행 기록 없음 (v1 기록은 v1 저장소에만 보존)")
 def test_real_run_files_without_key():
     """실제 실행 기록의 구조만 확인 (정답표 불필요): 첫 시도 = 조건표 행 수, 모든 행에 checker_invoked.
-    v2 본 실행 기록 기준으로 6단계에서 다시 본다 (빈칸 행 수는 v1 숫자)."""
+    빈칸 행 수는 실행 기록(meta)의 상태로 따로 센 값과 같아야 한다 (폐기·재실행 소진 = 빈칸, 6단계 사용자 승인)."""
     conds = json.loads((an.RUNS / "conditions.json").read_text(encoding="utf-8"))
     sets = an.report_sets(conds)
     assert len(sets["first"]) == len(conds) == len(sets["blank"])
-    assert len(an.blank_rows(conds, sets["main"])) == 1
+    status = {rid: json.loads((an.RUNS / "meta" / f"{rid}.json").read_text(encoding="utf-8"))["status"] for rid in conds}
+    assert len(an.blank_rows(conds, sets["main"])) == sum(s in ("discarded", "failed") for s in status.values())
     flags = an.invoked_flags(conds)
     assert set(flags) == set(conds)
     assert all(flags[r]["adopted"] is None for r in an.blank_rows(conds, sets["main"]))
