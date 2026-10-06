@@ -25,6 +25,12 @@ S = "python3 .claude/skills/leakage-check/scripts/run_check.py d.json --data dat
     f"{S} > /dev/null && echo ok || echo fail",
     "mkdir -p out && ls && pwd",
     "grep -n leakage .claude/skills/leakage-check/SKILL.md",
+    "cut -d, -f1 data/a.csv | sort | uniq -c | head",
+    "zcat data/a.csv.gz | head -1 | tr ',' '\\n'",
+    "python3 - <<'EOF'\nimport pandas as pd\nprint(pd.read_csv('data/a.csv.gz').shape)\nEOF",
+    'python3 <<"PY"\nprint(1)\nPY',
+    "LEAKCHECK_HOME=/x python3 - <<EOF\nprint(1)\nEOF",
+    "echo $?",
 ])
 def test_allowed(cmd):
     assert hook.allowed(cmd), cmd
@@ -34,7 +40,11 @@ def test_allowed(cmd):
     "rm -rf data", "cd ws; rm x", "curl http://x", "wget x", "chmod 777 x", "chown a x", "cp a b", "mv a b",
     f"{S}; rm out.txt", "python3 x.py & sleep 1", "echo $(rm -rf /)", "echo `id`", "(cd /; ls)",
     "find / -name x", "xargs rm", "bash -c 'ls'", "sh x.sh", "env python3 x.py",
-    f"{S} > out.txt", "echo x >> log", "python3 - <<'EOF'\nprint(1)\nEOF",
+    f"{S} > out.txt", "echo x >> log",
+    "python3 - <<'EOF'\nprint(1)\nEOF\nrm -rf x\nEOF",          # 태그 뒤에 숨긴 명령
+    "python3 - <<'EOF'\nprint(1)\nEOF\n| head",
+    "python3 - <<EOF\nprint('$(id)')\nEOF",                      # 따옴표 없는 태그: 본문 치환
+    "cat <<'EOF'\nx\nEOF", "bash <<'EOF'\nls\nEOF", "echo $(ls)", "sort x > out.txt",
     "for f in *; do rm $f; done", "ls; sudo ls", "", "echo 'unclosed",
 ])
 def test_not_allowed(cmd):

@@ -7,6 +7,8 @@ Bash 명령을 ;, &&, ||, |, 줄바꿈, 반복문(for/do/done) 단위로 나눠 
 
 판단하기 어려운 형태는 허용하지 않고 기존 규칙에 맡긴다:
 명령 치환($(...), 백틱), 하위 셸·묶음((...), {...}), 백그라운드(&), /dev/null이 아닌 파일로 출력 돌리기(> 파일).
+여러 줄 입력(heredoc)은 `python3 - <<'EOF' … EOF`처럼 python에 코드를 넘기는 형태 하나만 허용한다 (6단계 결정 5).
+본문은 python 코드이므로 셸로 해석하지 않는다. 본문 속 경로는 실행기의 오염 검사가 본다.
 파일 삭제·네트워크·권한 변경 명령은 목록에 없다. 금지 경로 접근은 실행기의 오염 검사가 잡는다.
 """
 from __future__ import annotations
@@ -17,9 +19,13 @@ import shlex
 import sys
 
 ALLOWED = frozenset({"python", "python3", "cd", "ls", "cat", "head", "tail", "wc", "echo", "sed", "grep",
-                     "zcat", "mkdir", "pwd", "export", "for", "do", "done"})
+                     "zcat", "mkdir", "pwd", "export", "for", "do", "done",
+                     "cut", "sort", "uniq", "tr"})
 SEPARATORS = {";", "&&", "||", "|", ";;", "\n"}
 ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+# 앞에 변수만 붙을 수 있는 python 여러 줄 입력. 따옴표 없는 태그는 본문에서 셸 치환이 일어나므로 $( 와 백틱을 막는다
+HEREDOC = re.compile(r"^\s*(?:[A-Za-z_][A-Za-z0-9_]*=[^\s;|&<>`$()]*\s+)*python3?\s+(?:-\s*)?<<\s*(['\"]?)(\w+)\1[ \t]*\n"
+                     r"(?P<body>.*?)\n\2[ \t]*\n?$", re.S)
 
 
 def _tokens(cmd: str) -> list[str] | None:
@@ -33,6 +39,12 @@ def _tokens(cmd: str) -> list[str] | None:
 
 
 def allowed(cmd: str) -> bool:
+    m = HEREDOC.match(cmd)
+    if m:
+        body, tag = m.group("body"), m.group(2)
+        if any(line.rstrip(" \t") == tag for line in body.split("\n")):     # 태그 줄 뒤에 다른 명령을 숨긴 형태
+            return False
+        return bool(m.group(1)) or not ("$" in body or "`" in body)
     if not cmd.strip() or "$(" in cmd or "`" in cmd or "<<" in cmd:
         return False
     toks = _tokens(cmd)
