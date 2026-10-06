@@ -37,7 +37,7 @@ def _step(d: dict, name: str) -> dict:
 def common_dynamic(d: dict) -> dict:
     d = copy.deepcopy(d)
     # R2·B25: 질문과 결과(AKI 또는 원내 사망)를 맞춘다. R4: 결과는 퇴원 전 원내 사건으로 정의한다.
-    d["question"] = ("성인 입원 중 매일(입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 "
+    d["question"] = ("성인 입원 중 매일(입원 기록마다 입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 "
                      "급성 신손상(AKI)이 생기거나 원내에서 사망할지 예측한다.")
     o = d["outcome"]
     o["description"] = (
@@ -278,6 +278,7 @@ def round1_fixes(t: str, d: dict) -> None:
                                          "이전 크레아티닌이다", "method")
         # 작은 명시: 제외 기준 kdigo_aki의 비교 규칙
         ex = next(x for x in d["cohort"]["exclusion"] if x["name"] == "aki_known_by_tp")
+        ex.pop("episode", None)   # R2g①: 결과와 같은 범위 (이번 입원 기록 값끼리만 비교)
         _append_desc(ex, "판정 규칙은 결과와 같다 (각 값을 먼저 채취한 같은 측정법의 값과 비교, 48시간 +0.3 mg/dL 또는 "
                          "7일 1.5배). tp까지 보고된 값만 쓴다")
     else:

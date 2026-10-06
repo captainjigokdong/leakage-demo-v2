@@ -293,10 +293,23 @@ def d4_outcome_flips(ctx, rows) -> dict:
     return out
 
 
+DATA_START = pd.Timestamp("2150-01-01")
+
+
+def left_truncation(d: dict, rows) -> dict:
+    """왼쪽 절단 (2회차 새 지적): 학습 행 중 tp까지의 관찰 기간(연구 시작 2150-01-01부터)이 365일 미만인 비율."""
+    lab = splitting.assign(rows, d["split"]).to_numpy()
+    short = ((rows["tp"] - DATA_START) < pd.Timedelta(days=365)).to_numpy()
+    tr = lab == "train"
+    return {"train_rows": int(tr.sum()), "short_365d": int((tr & short).sum()),
+            "fraction": round(float((tr & short).sum() / tr.sum()), 4)}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--star", action="store_true", help="★ 항목 근거만")
+    ap.add_argument("--lefttrunc", action="store_true", help="학습 행 중 이력 365일 미만 비율")
     ap.add_argument("--d4", action="store_true", help="결과 판정에 jaffe 보정을 할 때 바뀌는 행 수 (동적만)")
     args = ap.parse_args(argv)
     tables = load_tables(DATA)
@@ -309,6 +322,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.d4:
             if d["design_type"] == "dynamic":
                 print(p.stem, json.dumps(d4_outcome_flips(ctx, rows), ensure_ascii=False), flush=True)
+            continue
+        if args.lefttrunc:
+            print(p.stem, json.dumps(left_truncation(d, rows), ensure_ascii=False), flush=True)
             continue
         if args.star:
             if d["design_id"] in STAR:

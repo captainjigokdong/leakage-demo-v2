@@ -1,7 +1,7 @@
 {
   "design_id": "aki_d",
   "design_type": "dynamic",
-  "question": "성인 입원 중 매일(입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 급성 신손상(AKI)이 생기거나 원내에서 사망할지 예측한다.",
+  "question": "성인 입원 중 매일(입원 기록마다 입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 급성 신손상(AKI)이 생기거나 원내에서 사망할지 예측한다.",
   "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단은 신뢰구간과 함께 보고한다. split.test_fraction은 묶음 수의 비율이다. outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다.",
   "tp": {
     "anchor": "admit",
@@ -215,8 +215,7 @@
         },
         "agg": "kdigo_aki",
         "op": "==",
-        "value": true,
-        "episode": "index_episode"
+        "value": true
       },
       {
         "name": "dialysis_by_tp",
