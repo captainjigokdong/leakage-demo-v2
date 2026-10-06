@@ -362,6 +362,8 @@
 
 **시험 실행 기록**
 - 1번째 (`experiment/pilot/run1`): 불통과 — 529 서버 과부하, (나) 행 (`known_issues_v2.md` K9). (가) 제출물은 쓰지 않고 열지 않음.
+- 2번째 (`experiment/pilot/run2`): **통과** (8/8, `experiment/pilot/run2/pilot_check.json`). 고친 것 없음.
+- 통과 시점 해시: `experiment/run.py` `68f373066f287718b18dc6f1431abc0dec1cc091ce0748d67c45128e47a7fb19`, `experiment/bash_allow_hook.py` `5f4020d4759cdef19c7c6e7ff439d3e6c2fc0fa9f9cec3b1734ff61d4b29251c`
 
 **할 일** (`v2_plan.md` 6, 7절, 시행착오 2, 3, 8, 14)
 - [ ] (4a에서 정함, 2026-10-05 사용자 결정) **변형끼리, 또는 변형과 깨끗한 설계서를 비교하지 않는다. 정답표와 봉인 파일을 열지 않는다.** (비교하면 심은 결함, 특히 보류 사례가 드러난다)
@@ -382,7 +384,7 @@
 - [ ] (4b에서 넘김) `experiment/run.py`의 일정을 v2(변형 30 × 조건 2 × 반복 2 = 120)로 바꾸고 `test_run.py::test_schedule_balanced_and_deterministic`를 건너뜀이 아니라 통과시킨다 (고치기 전 사용자 승인)
 - [ ] (5단계에서 넘김) `experiment/run.py`를 v2 제출 형식에 맞춘다: `findings.json` 수거(기록 `{"report_id", "variant", "findings": 내용 또는 None}`), 형식 검사(`grader.validate_findings`, 파일 없음 포함) 실패 때 재제출 요청 1회(`grader.FORMAT_RETRIES`, 턴 상한 `grader.MAX_TURNS_RETRY` = 5), 실행당 턴 상한 `grader.MAX_TURNS` = 60(두 조건 같음), 조건 파일에 `turn_capped`·`format_retries` 기록, 지시문 `prompt.render(설계서, "data")`와 `prompt.agent_docs()`의 문서 2개를 두 조건 작업 폴더에 같은 이름으로 둠, init 기록의 스킬 목록 저장. 지금 `run.py`는 v1 보고서 블록 형식이다 (`docs/success_criteria_v2.md` 3절)
 - [ ] (5단계에서 넘김) 실행은 반복 단위로: 1회차 60 → 2회차 60. 1회차만 하면 60회로 분석한다 (`docs/analysis_plan_v2.md` 2절)
-- [ ] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
+- [x] 시험 실행 (조건별 1회) → 8개 모두 충족해야 본 실행 시작. (2번째에 통과) **통과 기준은 실행 전에 이 문서에 적고 바꾸지 않는다.**
 - [ ] 본 실행 120회 (변형 30 × 조건 2 × 반복 2)
 - [ ] 본 실행 뒤: `test_analyze.py::test_real_run_files_without_key`가 건너뜀이 아니라 통과인지 확인 (0단계 표)
 
