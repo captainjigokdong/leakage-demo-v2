@@ -1,12 +1,12 @@
 {
- "status": "확정 — 4b 봉인 확인 뒤 다시 잠금 (4b 봉인 확인 조건에 따라 수정, 칸 20·설계서 4)",
+ "status": "확정 — 4b 봉인 확인 뒤 다시 잠금 (4b 봉인 확인 조건에 따라 수정, 칸 24·설계서 4)",
  "date": "2026-10-06",
  "locked": {
   "docs/justified_findings_v2.json": "3bdfbbbbb0cc2bae0818ad91f77c16e11deb88d79fa47a3dddf872624e8be940",
-  "designs/clean_v2/aki_a.json": "eab6921f11883cf909dfdcd08e48b7cc08e33ee37c65aa7c336f3535785cdfa4",
-  "designs/clean_v2/aki_b.json": "016d6b2e1caee5ce9b4a7c08525d21c2ad1b48bede89529c1bd7dcb05ad99a55",
-  "designs/clean_v2/aki_c.json": "af2d942f0b8a8126145779be46632b6db42f7120100deb8e5a6296b3c4713b41",
-  "designs/clean_v2/aki_d.json": "05ba3cb402ad39ba3da1cc1549f1fc2a884625ddff7120878623d87001cac7f3",
+  "designs/clean_v2/aki_a.json": "3498480e3e5a98020a48446d154d31bfb42d3ee43a2c24d8b90fb8515d84a683",
+  "designs/clean_v2/aki_b.json": "5b46288449c7a0a8410f1a33788e8d7503a3d0e762ddb808c5387a7af63dd2af",
+  "designs/clean_v2/aki_c.json": "b03661a2058e420500b0670c1049ab0c8ef6409a0219b06ff2458df92cd47a9e",
+  "designs/clean_v2/aki_d.json": "3dc1c7b371f0028a70f540552eb985dec77f602c29a209ee9a3ce0b8f97c7185",
   "designs/clean_v2/readmit_a.json": "022c6d7e604e37ab2a46dceefd733fd389a09780e5ee829b4d13c8cd6bd2b2e1",
   "designs/clean_v2/readmit_b.json": "23dadcc77ce98082f15bbeef09efd9e4247a25bb3b2f03951d9e500695e98961",
   "designs/clean_v2/readmit_c.json": "a7d5ad66670f660723779aa44e654b554e9e207e61e3016b2188059bdc809d6a",
@@ -23,7 +23,7 @@
   "designs/clean_v2/readmit_c.json": "a7d5ad66670f660723779aa44e654b554e9e207e61e3016b2188059bdc809d6a",
   "designs/clean_v2/readmit_d.json": "1e829c867106b69e86089b5eb6481fde4ca032031e7c1d2ac10c583d62f75248"
  },
- "exclusions_4b_sha256": "7eadd825e396a1c94b5d4988c61b3fe2ee9db307922377c933edecdd2cef9f08",
+ "exclusions_4b_sha256": "dd2c71ff7b659d8bdbc33715219098b35ac957d376bb838bb56599c8c69324b3",
  "fixed_for_4b": {
   "designs/build_v2.py": "55bba87676c78f4904e15a437d9644c2721088c5aea575694bc09529abd172de",
   "designs/answer_key_v2.py": "1d8a04d0b9b304aa873d678233978af93b795501617fd44f4882b8002e99e2fa"

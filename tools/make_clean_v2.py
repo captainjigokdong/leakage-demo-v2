@@ -352,10 +352,11 @@ def text_cleanup(t: str, d: dict) -> None:
 
 
 def sealcheck_fixes(t: str, d: dict) -> None:
-    """4b 봉인 확인 조건에 따라 수정 (칸 20·설계서 4, 이유는 봉인 기록에만)."""
+    """4b 봉인 확인 조건에 따라 수정 (칸 24·설계서 4, 이유는 봉인 기록에만)."""
     if t != "dynamic":
         return
     d["cohort"]["subgroups"] = d["cohort"]["subgroups"] + ["admit_weekday"]
+    d["evaluation"]["subgroups"] = d["evaluation"]["subgroups"] + ["admit_weekday"]
     asc = d["outcome"]["ascertainment"]
     asc["by_stratum"] = asc["by_stratum"] + ["admit_weekday"]
     asc["method"] = asc["method"].replace("KDIGO의 기준값은 정의상 이전 크레아티닌이다", "기준값은 outcome.reference 칸이 정한다")

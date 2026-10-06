@@ -35,12 +35,12 @@ PROVISIONAL_4A = {
     "designs/clean_v2/readmit_c.json": "a7d5ad66670f660723779aa44e654b554e9e207e61e3016b2188059bdc809d6a",
     "designs/clean_v2/readmit_d.json": "1e829c867106b69e86089b5eb6481fde4ca032031e7c1d2ac10c583d62f75248",
 }
-EXCLUSIONS_4B_SHA256 = "7eadd825e396a1c94b5d4988c61b3fe2ee9db307922377c933edecdd2cef9f08"
+EXCLUSIONS_4B_SHA256 = "dd2c71ff7b659d8bdbc33715219098b35ac957d376bb838bb56599c8c69324b3"
 
 
 def main() -> int:
     lock = {
-        "status": "확정 — 4b 봉인 확인 뒤 다시 잠금 (4b 봉인 확인 조건에 따라 수정, 칸 20·설계서 4)",
+        "status": "확정 — 4b 봉인 확인 뒤 다시 잠금 (4b 봉인 확인 조건에 따라 수정, 칸 24·설계서 4)",
         "date": "2026-10-06",
         "locked": {r: sha(r) for r in PROVISIONAL},
         "provisional_4a": PROVISIONAL_4A,

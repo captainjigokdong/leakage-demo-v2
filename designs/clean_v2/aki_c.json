@@ -773,7 +773,8 @@
     ],
     "test_set_uses": 1,
     "subgroups": [
-      "unit_at_tp"
+      "unit_at_tp",
+      "admit_weekday"
     ],
     "calibration_reported": true
   },

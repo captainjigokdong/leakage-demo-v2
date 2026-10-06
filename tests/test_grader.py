@@ -453,15 +453,16 @@ def test_universe_on_real_variants():
 # ---------------------------------------------------------------- 변형 해시 대조
 
 def test_verify_variants(tmp_path):
-    log = gr.injection_log_hashes()
-    assert len(log) == 20
+    """잠금 기준: v2 변형 목록 docs/variants_v2.md (4b 사용자 결정 ㉢. grader.py는 5단계 잠금 대상이라 바꾸지 않는다)."""
+    log = gr.injection_log_hashes(ROOT / "docs" / "variants_v2.md")
+    assert len(log) == 30
     fake_key = {f: {"sha256": h} for f, h in log.items()}
-    assert gr.verify_variants(fake_key) == []
+    assert gr.verify_variants(fake_key, log=log) == []
     for f in log:
         (tmp_path / f).write_text((gr.VARIANT_DIR / f).read_text(encoding="utf-8"), encoding="utf-8")
     first = sorted(log)[0]
     (tmp_path / first).write_text("{}\n", encoding="utf-8")
-    bad = gr.verify_variants(fake_key, tmp_path)
+    bad = gr.verify_variants(fake_key, tmp_path, log=log)
     assert len(bad) == 2 and all(first in b for b in bad)
 
 
