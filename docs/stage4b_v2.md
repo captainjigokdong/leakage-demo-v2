@@ -68,7 +68,7 @@
 
 - 배치: `place` (시드 `PLACE_SEED` 그대로), `check_layout` 문제 0. 동적 11 / 고정 11, 결함 1개짜리 14 + 2개짜리 8, 바탕마다 결함 변형 2~3, E16 단독, 2개짜리 안 보류 6 (기대 6.4 ± 1), 깨끗한 변형 8 = 깨끗한 설계서 8개 각 1번.
 - 변형 30개 `designs/variants/` (v1 20개를 바꿈). 파일 이름 `design_` + 16진 4자리 (맹검 값은 새로 만들어 정답표에만), 항목 순서 섞기(특징, 포함·제외 기준). 목록과 해시 `docs/variants_v2.md`.
-- 정답표 `sealed/answer_key.enc` (형식 `docs/answer_key_format_v2.md`, `validate_key` 통과). 보류 사례의 `support_targets`·`accept_questions`는 기본값.
+- 정답표 `sealed/answer_key.enc` (형식 `docs/answer_key_format_v2.md`, `validate_key` 통과). 보류 사례의 `support_targets`·`accept_questions`는 기본값 (㉣ 사용자 결정, 기본값과 다르게 정한 사례 없음).
 - 점검기 실행: 깨끗한 변형 8개만 (기대 집합과 같음). 결함 변형에는 0회.
 - 배치된 조합만 수치 차이를 다시 셈 (설계서대로 고른 코호트, 동적 25,774·고정 6,514행. 분할은 2c 근사 그대로): 30조합, "0에 가까움"(≤ 10 또는 전제의 1% 이하) 2. 배치는 바꾸지 않았다. 사례별 숫자는 봉인 기록에만.
 

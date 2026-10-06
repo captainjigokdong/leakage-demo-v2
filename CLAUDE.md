@@ -24,7 +24,7 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
 
 ## 현재 단계
 
-**4단계 4b 완료** (2026-10-06) — 봉인 확인 뒤 동적 깨끗한 설계서 수정·다시 잠금(`docs/lock_4a_v2.json` 확정), 배치 제외 목록(봉인, 해시 잠금), 추첨·배치, v2 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 기록 `docs/stage4b_v2.md`. 남은 결정: 보류 사례 정답 칸(㉣, 사용자와 직접). 다음은 **5단계(기준)** 이고 새 세션에서 한다. 시작 전에 **4b PR이 main에 병합됐는지** 확인한다. 5·6단계는 **변형끼리 또는 변형과 깨끗한 설계서를 비교하지 않고, 정답표와 봉인 파일을 열지 않는다.** `leakcheck/`, `skill_src/`, `designs/schema.json`은 계속 동결 (버그는 `docs/known_issues_v2.md`).
+**4단계 4b 완료** (2026-10-06) — 봉인 확인 뒤 동적 깨끗한 설계서 수정·다시 잠금(`docs/lock_4a_v2.json` 확정), 배치 제외 목록(봉인, 해시 잠금), 추첨·배치, v2 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 기록 `docs/stage4b_v2.md`. 보류 사례 정답 칸은 기본값(㉣). 다음은 **5단계(기준)** 이고 새 세션에서 한다. 시작 전에 **4b PR이 main에 병합됐는지** 확인한다. 5·6단계는 **변형끼리 또는 변형과 깨끗한 설계서를 비교하지 않고, 정답표와 봉인 파일을 열지 않는다.** `leakcheck/`, `skill_src/`, `designs/schema.json`은 계속 동결 (버그는 `docs/known_issues_v2.md`).
 
 ## 절대 규칙
 

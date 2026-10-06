@@ -276,13 +276,13 @@
 - [x] 배치 (4a 스크립트·시드), 변형 30개 생성 (결함 22 + 깨끗한 8), 정답표 봉인 (`sealed/answer_key.enc`, 봉인 파일 표에 더함). 결함 변형에는 점검기를 돌리지 않는다
 - [x] (2c에서 넘김) 48개 주입 시험(`tests/test_injectability_v2.py`)을 깨끗한 설계서 8개로 다시 통과시킨다. 암호가 필요한 시험이 통과해야 한다
   - (승인 D, 2026-10-06 사용자 지시) 바탕을 깨끗한 설계서로 바꿨을 때 실패하는 조합이 있으면 **패치를 고치지 않고 멈춰** 조합의 수만 [검토자용]으로 보고한다
-- [ ] 정답표의 보류 사례 `support_targets`·`accept_questions`를 기본값과 다르게 정하는 경우 근거와 함께 사용자 승인 (지금 정답표는 기본값. 사용자와 직접 정한다 ㉣)
+- [x] 정답표의 보류 사례 `support_targets`·`accept_questions`를 기본값과 다르게 정하는 경우 근거와 함께 사용자 승인 → **기본값과 다르게 정한 사례 없음** (㉣, 2026-10-06 사용자 결정. 정답표 그대로)
 - [x] `test_inject.py::test_clean_variants_pass_checker`, `test_inject.py::test_committed_variants`가 건너뜀이 아니라 통과인지 확인 (0단계·3단계 표). `test_clean_variants_pass_checker`는 깨끗한 변형마다 남는 점검기 판정이 그 바탕의 기대 집합(`tests/test_inject.py`의 `EXPECTED_CLEAN_PROBLEMS`)과 정확히 같은지로 확인한다 (새로 생겨도 사라져도 실패, 승인 D). v1 변형 생성 시험(`test_inject.py`의 v1 경로)을 어떻게 할지 정한다 (고치기 전 승인)
 - [x] 잠금 기준을 v2 것으로 바꾼다. 바꾸기 전에 사용자 승인 (0단계 잠금 시험 표: `test_grader.py::test_verify_variants`)
 
 **4b 완료 기준**: 변형·목록 해시 커밋, 정답표는 `*.enc`만
 
-**4b 결과 (2026-10-06)**: 기록 `docs/stage4b_v2.md` (번호·개수·해시만, 내용은 `sealed/stage4b_record.enc`). 봉인 확인에서 멈춤 조건에 걸려 동적 깨끗한 설계서 4개를 2회 고치고(칸 24) 다시 잠갔다(`docs/lock_4a_v2.json` 확정). 서술 수정 3사례, 배치 제외 목록 23조합(해시 잠금). 추첨 12개(질문마다 2, 넘어감 4: 제외 목록 4), 배치 동적 11/고정 11, 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 결함 변형에는 점검기를 돌리지 않았다. v1 생성 경로 시험은 기록용으로 두고 v2 생성 시험(`tests/test_make_variants_v2.py`)을 더했다(㉡). 변형 해시 잠금은 `docs/variants_v2.md`로(㉢). 남은 것: 보류 사례 정답 칸을 기본값과 다르게 할지(㉣). 동결 폴더 변경 없음.
+**4b 결과 (2026-10-06)**: 기록 `docs/stage4b_v2.md` (번호·개수·해시만, 내용은 `sealed/stage4b_record.enc`). 봉인 확인에서 멈춤 조건에 걸려 동적 깨끗한 설계서 4개를 2회 고치고(칸 24) 다시 잠갔다(`docs/lock_4a_v2.json` 확정). 서술 수정 3사례, 배치 제외 목록 23조합(해시 잠금). 추첨 12개(질문마다 2, 넘어감 4: 제외 목록 4), 배치 동적 11/고정 11, 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 결함 변형에는 점검기를 돌리지 않았다. v1 생성 경로 시험은 기록용으로 두고 v2 생성 시험(`tests/test_make_variants_v2.py`)을 더했다(㉡). 변형 해시 잠금은 `docs/variants_v2.md`로(㉢). 보류 사례 정답 칸은 모두 기본값(㉣, 사용자 결정). 동결 폴더 변경 없음.
 
 ---
 
