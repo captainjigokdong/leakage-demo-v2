@@ -395,6 +395,19 @@ def test_discard_when_content_read(tmp_path, events):
     rd = run.prepare_run(tmp_path, "abc-t1", run.variants()[0], "나")
     hits = run.audit(events, rd, "나")["discard"]
     assert hits and {h["class"] for h in hits} == {"①"}, hits
+    assert all(h["basis"] in (run.CERTAIN, run.CONSERVATIVE) for h in hits)
+
+
+@pytest.mark.parametrize("events,basis", [
+    (use("Read", {"file_path": f"{R}/CLAUDE.md"}), "확실한 읽음"),
+    (bash(f"cat {R}/CLAUDE.md"), "확실한 읽음"),
+    (bash(f"python3 -c \"print(open('{R}/CLAUDE.md').read())\""), "확실한 읽음"),
+    (bash(f"python3 -c \"from pathlib import Path; print(Path('{R}/CLAUDE.md').read_text())\""), "확실한 읽음"),
+    (bash(f"python3 -c \"p = '{R}/CLAUDE.md'; print(p)\""), "보수적 판정"),          # 변수로 넘김: 여는지 모름
+])
+def test_discard_basis_recorded(tmp_path, events, basis):
+    rd = run.prepare_run(tmp_path, "abc-t1", run.variants()[0], "나")
+    assert [h["basis"] for h in run.audit(events, rd, "나")["discard"]] == [basis]
 
 
 @pytest.mark.parametrize("events", [
@@ -735,6 +748,7 @@ def test_discard_report_and_first_attempts(tmp_path):
                 launcher_from([(1, b"", "[]"), (0, stream([]))]), tmp_path / "runs")
     rep = run.discard_report(out)["묶음1/나"]
     assert rep["discards"] == 1 and rep["①"] == 1 and rep["calls"][0]["class"] == "①"
+    assert rep["확실한 읽음"] == 1 and rep["보수적 판정"] == 0 and rep["calls"][0]["basis"] == "확실한 읽음"
     n = run.export_first_attempts(out, tmp_path / "first")
     assert n == {"from_discarded": 2, "from_reports": 1, "missing": 0}
     rec = json.loads((tmp_path / "first" / "abc123def456.json").read_text())
