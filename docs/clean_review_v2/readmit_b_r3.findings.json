@@ -1,0 +1,32 @@
+[
+  {
+    "target": "features.n_clinic_365d",
+    "kind": "문제",
+    "problem": "[점검기 경고] Q4 결과 출처. 근거: 규칙 D.proxies(2층: 퇴원 뒤 추적 외래는 재입원 전에만 열린다) · 값: 특징 outpatient_visits 필터 없음, 범위 patient_history. 설계서 outcome.proxies에 적힌 대리 기록(outpatient_visits visit_type=follow_up)을 필터 없이 센다. 데이터 확인: follow_up 방문은 모두 직전 퇴원 5~27일 뒤에 있고(4,410건), 특징 창은 tp에서 끝나므로 인덱스 퇴원 뒤의 추적 외래는 들어가지 않는다. 들어가는 것은 이전 입원의 추적 외래(tp 전에 알려진 정보)뿐이다. 다만 follow_up 유무는 이전 퇴원의 30일 재입원 여부와 관련된다(재입원 없음 65.8% vs 있음 48.1%). 또한 설계서 proxies의 근거('재입원 전에만 열린다')는 데이터와 다르다(재입원 시작 뒤에 열린 follow_up 322건). 수정안: 사람이 확인해 tp 전 방문만 세는 현 정의를 승인하거나, 보수적으로 filter {visit_type: [routine]}를 더해 정기 외래만 센다(창 끝 tp는 그대로 둔다)."
+  },
+  {
+    "target": "cohort.rows_per_unit",
+    "kind": "문제",
+    "problem": "[추가 의심, Q5 선택 시점·Q4 결과 출처] 설계서는 에피소드마다 마지막 입원만 쓰고(rows_per_unit: episode/last), 그래서 같은 에피소드 안에서 이어진 입원을 재입원으로 세지 않는다고 적었다(outcome.description). 그런데 점검기의 데이터 단계와 결정 카드는 이 선택을 적용하지 않은 것으로 보인다. 카드의 예측 행은 6,706행(결과율 16.7%, 양성 1,122건, transfer 943행·결과율 29.1%)이다. 내 확인 스크립트로 같은 포함·제외를 적용하면 에피소드 마지막 입원은 6,514행(결과율 14.5%, 양성 942건, transfer 751행·결과율 12.5%)이다. 차이 192행은 모두 2-기록 에피소드(220개)의 첫 기록(discharge_status=transfer)이다. 이 행들은 1시간 안에 이어지는 같은 에피소드 입원이 결과로 잡혀 93.8%가 양성이 된다. 그 결과 discharge_status=transfer와 결과가 거의 정해지는 관계가 생긴다. 수정안: 모델링 파이프라인에서 cohort.rows_per_unit(episode_id별 admit_time 마지막 입원)을 제외 기준보다 먼저 확실히 적용한다. 그 뒤 예측 행 6,514, 결과율 약 14.5%를 확인한 다음 결정 카드를 다시 승인받는다. 설계서는 그대로 둔다."
+  },
+  {
+    "target": "split.key",
+    "kind": "가정",
+    "problem": "[점검기 가정] Q2 독립 단위 · 3층 가정 A.family_missing. family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(person_id)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다. (데이터: patients.family_id 결측 80.4%. 등록 번호가 둘인 사람 111명은 모두 family_id가 서로 같아 같은 사람이 두 묶음으로 갈리는 일은 없다.)"
+  },
+  {
+    "target": "model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "[점검기 가정] Q2 독립 단위 · 3층 가정 A.family_missing. family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(person_id)로 묶는다. 기록되지 않은 가족은 교차검증 폴드 사이에 나뉠 수 있다."
+  },
+  {
+    "target": "cohort.rows_per_unit",
+    "kind": "가정",
+    "problem": "[점검기 가정] Q5 선택 시점 · 3층 가정 A.episode_last (조정: EPISODE_GAP_MAX_H). 에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없음을 알아야 한다. 퇴원 때 안다고 본다 (형식에 다른 올바른 표현이 없음)."
+  },
+  {
+    "target": "outcome.ascertainment.scope.sites",
+    "kind": "가정",
+    "problem": "[점검기 가정] Q7 결과 확인 균질성 · 3층 가정 A.outside_sites. A·B 밖 병원의 사건은 데이터에 없다. 결과 확인 범위 밖에서 생긴 결과(특히 전원 퇴원 뒤 다른 병원 재입원)는 보이지 않으며 lost_to_followup=count_as_negative로 음성 처리된다."
+  }
+]

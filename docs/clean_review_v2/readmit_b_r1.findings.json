@@ -1,0 +1,52 @@
+[
+  {
+    "target": "features.n_discharge_meds",
+    "kind": "문제",
+    "problem": "episode=index_episode로 세면 두 입원 에피소드(인덱스 190행)에서 앞 입원(전원 퇴원)의 퇴원약까지 더해진다. 앞 입원 220건 중 124건에 퇴원약이 있고, 이 에피소드의 평균이 인덱스 입원만 세면 1.63인데 합치면 3.05다. 5종 이상(최대 8) 44행은 모두 이 에피소드에서 나온다. 결국 '퇴원 때 처방 수'가 아니라 '에피소드가 둘로 나뉘었는지'를 담게 된다. 미래 정보가 새는 것은 아니다. 마지막 퇴원(인덱스 입원)의 퇴원약만 세는 것을 권한다."
+  },
+  {
+    "target": "features.prior_dx_group",
+    "kind": "문제",
+    "problem": "주진단 코드를 원래 값 그대로 범주로 쓰므로 ICD-9와 ICD-10(2155-10-01 전환) 코드가 같은 병이어도 다른 범주가 된다(예: 401.9와 I10, 428.0과 I50.9). 범주 26개 중 절반은 사용 시점에는 나오지 않는 ICD-9 코드다. prior_dx_ckd/chf는 두 체계를 모두 적었고 크레아티닌 측정법 변화는 따로 평가하지만, 이 특징에는 아무 처리가 없다. ICD-9→ICD-10 대응표(또는 질환군)로 묶는 것을 권한다. 결측 70.3%(이전 입원 없음)는 '없음' 범주로 다루었다."
+  },
+  {
+    "target": "features (history_key=patient_id: n_prior_adm, prior_dx_ckd, prior_dx_chf, problem_ckd_active, n_clinic_365d, prior_dx_group)",
+    "kind": "가정",
+    "problem": "결과는 person_id로 모으지만 과거력 특징은 등록 번호(patient_id)로 모은다. 등록 번호가 두 개인 111명은 옛 번호의 과거력이 빠진다. person_links는 추출 때 만들어지는 연결이라 예측 시점에는 쓸 수 없으므로, 설계대로 patient_id를 쓰는 것이 맞다고 보고 그대로 두었다."
+  },
+  {
+    "target": "features (scope=index_admission: cr_last, hgb_min, sbp_last, los_h, unit, site, service)",
+    "kind": "가정",
+    "problem": "두 입원으로 된 에피소드 220개에서는 마지막 입원 값만 쓴다. 앞 입원의 검사는 빠지고, los_h는 마지막 입원의 재원 시간이며, unit/site/service는 마지막 입원의 값이다(두 입원의 site가 다른 경우 96, service 124, unit 77). icu_any, n_discharge_meds, dialysis_ordered에 쓰인 episode=index_episode의 창 시작 'admit'은 에피소드의 첫 입원 시각으로 해석했다."
+  },
+  {
+    "target": "features.prior_dx_ckd, features.prior_dx_chf, features.prior_dx_group",
+    "kind": "가정",
+    "problem": "scope=prior_admissions에 에피소드 제외 규칙이 없다. 그래서 인덱스 에피소드의 앞 입원도 tp 전에 코딩이 끝났다면 포함했다(220건 중 45건). n_prior_adm은 인덱스 에피소드를 빼므로 둘의 정의가 다르다. tp에 알 수 있는 정보라 누설은 아니다."
+  },
+  {
+    "target": "features.n_clinic_365d / outcome.proxies(outpatient_visits follow_up)",
+    "kind": "가정",
+    "problem": "proxies에는 추적 외래를 특징으로 쓰지 않는다고 적혀 있지만 n_clinic_365d는 방문 유형을 가리지 않는다. 창 안 방문 1254건 중 903건이 follow_up이다. 이 방문은 모두 tp 전, 즉 이전 퇴원 뒤의 방문이다(인덱스 입원 중이거나 tp 뒤인 방문은 0건). 그래서 proxies 규칙은 tp 뒤의 추적 외래를 막는 것으로 해석하고 설계대로 모두 셌다."
+  },
+  {
+    "target": "features.cr_last, features.sbp_last (agg=last)",
+    "kind": "가정",
+    "problem": "'last'의 정렬 기준이 적혀 있지 않다. 창(report_time 또는 entered_time ≤ tp) 안의 행 가운데 실제 관찰 시각(collect_time 또는 charted_time)이 가장 늦은 행을 골랐다."
+  },
+  {
+    "target": "split.test_fraction, model.tuning",
+    "kind": "가정",
+    "problem": "test_fraction 0.3은 그룹 수의 비율로 적용했다(GroupShuffleSplit, seed 20261040). 결과는 평가 1950행(29.9%)이고 분할 사이에 겹치는 person_id는 없다. 조율용 group_kfold의 폴드 수는 설계에 없으므로 학습 단계에서 정해야 한다(제안: 5)."
+  },
+  {
+    "target": "split.key (family_id)",
+    "kind": "점검 불가",
+    "problem": "family_id는 80.4%가 비어 있다. 설명서에 따르면 가족의 절반만 기록되고, 기록되지 않은 가족도 위험을 공유한다. 이런 가족은 person_id로만 묶이므로 학습과 평가에 나뉘어 들어갈 수 있다. 데이터로는 찾아낼 수 없다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup, outcome.ascertainment",
+    "kind": "점검 불가",
+    "problem": "A·B 밖 병원으로의 재입원은 음성으로 센다. 결과율은 자택 퇴원 0.147, 전원 퇴원 0.125, A 0.145, B 0.138이다. 전원 퇴원의 결과율이 더 낮은 것이 실제 차이인지 덜 찾아낸 것인지는 데이터로 가릴 수 없다."
+  }
+]

@@ -1,0 +1,783 @@
+{
+  "design_id": "aki_c",
+  "design_type": "dynamic",
+  "question": "성인 입원 중 매일(입원 기록마다 입원 24시간~7일), 앞으로 48시간 안에 퇴원 전 크레아티닌 KDIGO 기준 급성 신손상(AKI)이 생기거나 원내에서 사망할지 예측한다.",
+  "notes": "선택한 방법에 해당하지 않는 칸은 비워 두었다. 시간 순 분할: 기준 시각은 tp (입원 시각 + 24~168시간). 묶음(split.key, 결측이면 split.fallback_key)째로 움직인다. 묶음의 모든 행이 경계 시각(split.cutoff) 이전이면 학습, 뒤의 행이 있는 묶음은 학습에서 빼고 경계 시각 + 간격(split.gap) 뒤 행만 평가에 쓴다. 두 입원 기록으로 이어진 에피소드에서 특징의 범위는 각 특징의 episode 칸이 정한다. agg가 last·first인 특징의 순서는 각 특징의 time_column 기준이다. 평가 지표의 신뢰구간은 가족(없으면 사람) 단위 부트스트랩으로 구하고, 하위 집단은 신뢰구간과 함께 보고한다. outcome.planned·planned_by·match_key는 이 결과(입원 중 AKI·원내 사망)에는 쓰이지 않는다.",
+  "tp": {
+    "anchor": "admit",
+    "offsets_h": [
+      24,
+      48,
+      72,
+      96,
+      120,
+      144,
+      168
+    ]
+  },
+  "intended_use": {
+    "purpose": "prospective_deployment",
+    "deployment_start": "자료 추출 종료(2160-01-01) 뒤",
+    "setting": "A·B 병원의 성인 입원 환자 (ICU·병동)"
+  },
+  "data_source": {
+    "extraction_end": "2160-01-01 00:00:00",
+    "sites": [
+      "A",
+      "B"
+    ],
+    "study_period": {
+      "start": "2150-01-01",
+      "end": "2160-01-01"
+    },
+    "death_source": "in_hospital_only"
+  },
+  "outcome": {
+    "name": "aki_or_death_48h",
+    "description": "퇴원 전 원내 사건: 크레아티닌 KDIGO 기준 AKI 또는 원내 사망. AKI는 tp에 아직 보고되지 않았고 tp+48시간까지 채취된 크레아티닌으로 판정한다 (사건 시각은 채취 시각). 보고가 창 뒤여도 채취가 창 안이면 센다. KDIGO: 각 값을 그보다 먼저 채취한 같은 입원의 값과만 비교한다 (48시간 안 최솟값보다 0.3 mg/dL 이상 높음, 또는 7일 안 최솟값의 1.5배 이상). 측정법(method)이 다른 값끼리는 비교하지 않는다. 결과는 원내에서 확인되는 사건으로 정의한다: 창 안에 퇴원하면 퇴원 뒤는 결과 창에 들어가지 않고, 창 안에 크레아티닌 측정이 없으면 음성이다. 설계서 칸으로는 outcome.window (tp, tp+48h]가 채취 시각 창이고, tp 이전에 채취되어 tp에 아직 보고되지 않은 값은 outcome.pending_at_tp 칸이 다룬다. 판정은 측정법 보정을 하지 않은 값으로 한다. jaffe 값을 0.10 내려 보정하면 14행이 음성에서 양성으로 바뀐다. 결과 창 끝(tp+48h)이 자료 추출 종료 뒤인 행의 처리는 outcome.censoring.end_of_data 칸이 정한다",
+    "definition": "kdigo_creatinine",
+    "prespecified": true,
+    "definition_source": "KDIGO 2012 크레아티닌 기준 (소변량 기준은 쓰지 않음)",
+    "source": "labs",
+    "filter": {
+      "test": [
+        "creatinine"
+      ]
+    },
+    "scope": "index_admission",
+    "time_column": "collect_time",
+    "window": {
+      "start": "tp",
+      "end": "tp+48h"
+    },
+    "reference_window": {
+      "start": "tp-168h",
+      "end": "tp+48h"
+    },
+    "reference": {
+      "sources": [
+        {
+          "name": "inpatient_cr",
+          "source": "labs",
+          "column": "value",
+          "filter": {
+            "test": [
+              "creatinine"
+            ]
+          },
+          "scope": "index_admission",
+          "time_column": "collect_time",
+          "window": {
+            "start": "tp-168h",
+            "end": "tp+48h"
+          },
+          "agg": "min",
+          "description": "결과 창의 각 값보다 먼저 채취한 값만 쓴다"
+        }
+      ],
+      "agg": "결과 창의 각 값마다, 그 값보다 먼저 채취한 값 중 최솟값 (48시간·7일 두 기준). 나중 값은 기준값이 되지 않는다",
+      "compare_to": "prior_values_each"
+    },
+    "planned": "include",
+    "proxies": [
+      {
+        "source": "orders",
+        "filter": {
+          "order_type": [
+            "nephrology_consult",
+            "dialysis_order",
+            "renal_ultrasound"
+          ]
+        },
+        "basis": "AKI를 의심하거나 확인한 뒤 내는 오더"
+      },
+      {
+        "source": "procedures",
+        "filter": {
+          "code": [
+            "5A1D70Z"
+          ]
+        },
+        "basis": "투석 처치"
+      },
+      {
+        "source": "medications",
+        "filter": {
+          "drug": [
+            "loop_diuretic"
+          ]
+        },
+        "basis": "AKI 뒤 처방이 늘어난다"
+      },
+      {
+        "source": "diagnoses",
+        "filter": {
+          "icd_code": [
+            "N17",
+            "584"
+          ]
+        },
+        "basis": "AKI 진단 코드"
+      },
+      {
+        "source": "problem_list",
+        "filter": {
+          "icd_code": [
+            "N17"
+          ]
+        },
+        "basis": "AKI를 확인한 뒤 기록하는 문제 목록"
+      }
+    ],
+    "ascertainment": {
+      "method": "입원 중 채혈한 크레아티닌으로만 판정한다. 병동은 ICU보다 채혈이 드물어 결과가 덜 잡히므로 머문 병동별로 측정 빈도와 결과율을 따로 보고하고, 이를 한계로 적는다. 병동 채혈 빈도는 연구 기간 동안 늘어나므로(데이터 설명서), 층마다 측정 빈도와 결과율의 연도별 추이도 함께 보고한다. 결과 판정은 규칙 코드(KDIGO)로 하고 예측값을 보지 않는다. KDIGO의 기준값은 정의상 이전 크레아티닌이다. 창 안 퇴원 비율도 병동별로 보고한다",
+      "by_stratum": [
+        "unit_at_tp"
+      ],
+      "scope": {
+        "sites": [
+          "A",
+          "B"
+        ],
+        "settings": [
+          "inpatient"
+        ],
+        "sources": [
+          "labs",
+          "admissions"
+        ]
+      },
+      "min_followup": "tp (원내 사건으로 정의, outcome.description 참고)",
+      "blind_to_predictors": true
+    },
+    "history": [
+      {
+        "from": "2150-01-01",
+        "to": "2155-01-01",
+        "change": "크레아티닌 측정법이 jaffe에서 enzymatic으로 바뀜 (2155-01-01)",
+        "handled": "KDIGO 판정은 같은 입원 안에서 측정법이 같은 값끼리만 비교한다. 측정법이 섞이는 랜드마크는 전환 뒤 값만으로 기준값을 다시 잡는다."
+      }
+    ],
+    "censoring": {
+      "end_of_data": "exclude_incomplete",
+      "death": "composite_outcome",
+      "lost_to_followup": "count_as_negative"
+    },
+    "pending_at_tp": "count_as_outcome",
+    "match_key": "patient_id",
+    "planned_by": {
+      "source": "admission_info",
+      "filter": {
+        "admission_type": [
+          "elective"
+        ]
+      }
+    }
+  },
+  "cohort": {
+    "index_time": "tp",
+    "inclusion": [
+      {
+        "name": "adult",
+        "source": "patients",
+        "column": "age",
+        "agg": "value",
+        "op": ">=",
+        "value": 18,
+        "description": "patients.age는 그 등록 번호의 첫 입원 때 나이라 인덱스 입원 때 나이는 그 이상이다"
+      },
+      {
+        "name": "in_hospital_at_tp",
+        "description": "tp에 아직 입원 중 (퇴원 시각이 tp 뒤)",
+        "source": "admissions",
+        "column": "discharge_time",
+        "scope": "index_admission",
+        "agg": "value",
+        "op": ">",
+        "value": "tp"
+      }
+    ],
+    "exclusion": [
+      {
+        "name": "aki_known_by_tp",
+        "description": "tp까지 보고된 크레아티닌으로 이미 AKI. 판정 규칙은 결과와 같다 (각 값을 먼저 채취한 같은 측정법의 값과 비교, 48시간 +0.3 mg/dL 또는 7일 1.5배). tp까지 보고된 값만 쓴다",
+        "source": "labs",
+        "filter": {
+          "test": [
+            "creatinine"
+          ]
+        },
+        "scope": "index_admission",
+        "time_column": "report_time",
+        "window": {
+          "start": "admit",
+          "end": "tp"
+        },
+        "agg": "kdigo_aki",
+        "op": "==",
+        "value": true
+      },
+      {
+        "name": "dialysis_by_tp",
+        "description": "tp까지 투석 오더",
+        "source": "orders",
+        "filter": {
+          "order_type": [
+            "dialysis_order"
+          ]
+        },
+        "scope": "index_admission",
+        "time_column": "order_time",
+        "window": {
+          "start": "admit",
+          "end": "tp"
+        },
+        "agg": "any",
+        "op": "==",
+        "value": true,
+        "episode": "index_episode"
+      },
+      {
+        "name": "admit_near_extraction_end",
+        "description": "자료 추출 종료(2160-01-01) 30일(재원 기간 상한) 전 뒤에 시작한 입원. 종료 때 아직 입원 중인 입원은 데이터에 없어 이 기간의 입원은 짧게 끝난 것만 남는다. 입원 시각은 tp에 알려져 있다",
+        "source": "admissions",
+        "column": "admit_time",
+        "scope": "index_admission",
+        "agg": "value",
+        "op": ">",
+        "value": "2159-12-02 00:00:00"
+      }
+    ],
+    "subgroups": [
+      "unit_at_tp"
+    ],
+    "sampling": {
+      "method": "all",
+      "uses_outcome": false,
+      "applies_to": "both"
+    },
+    "rows_per_unit": {
+      "unit": "admission",
+      "choose": "all"
+    },
+    "deduplication": {
+      "key": [
+        "landmark_row_id"
+      ],
+      "when": "before_split"
+    }
+  },
+  "features": [
+    {
+      "name": "age",
+      "source": "patients",
+      "column": "age",
+      "scope": "patient",
+      "agg": "value",
+      "description": "patients.age는 그 등록 번호의 첫 입원 때 나이다. 인덱스 입원 때 나이 = age + (인덱스 입원 admit_time − 그 등록 번호의 첫 입원 admit_time) 연수. 데이터의 나이는 95에서 잘려 있다 (데이터 설명서 patients.age)",
+      "age_reference": "index_admission"
+    },
+    {
+      "name": "sex",
+      "source": "patients",
+      "column": "sex",
+      "scope": "patient",
+      "agg": "value"
+    },
+    {
+      "name": "unit_at_tp",
+      "description": "tp에 머문 병동",
+      "source": "transfers",
+      "column": "unit",
+      "scope": "index_admission",
+      "time_column": "in_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "episode": "index_episode"
+    },
+    {
+      "name": "service",
+      "source": "admission_info",
+      "column": "service",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "admission_type",
+      "source": "admission_info",
+      "column": "admission_type",
+      "scope": "index_admission",
+      "agg": "value"
+    },
+    {
+      "name": "cr_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "assessment": {
+        "by_stratum": [
+          "method"
+        ],
+        "method": "2155-01-01 전에 채취한 크레아티닌은 jaffe로 재어 0.10 mg/dL 높다 (데이터 설명서 labs.value). 특징을 만들 때 jaffe 값에서 0.10을 빼 enzymatic 눈금으로 맞춘 뒤 집계한다 (cr_method_align 단계)"
+      },
+      "episode": "index_episode",
+      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다"
+    },
+    {
+      "name": "cr_min_adm",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min",
+      "episode": "index_episode",
+      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다"
+    },
+    {
+      "name": "cr_max_48h",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "tp-48h",
+        "end": "tp"
+      },
+      "agg": "max",
+      "description": "jaffe 값은 0.10 mg/dL을 빼서 맞춘 값으로 집계한다",
+      "episode": "index_episode"
+    },
+    {
+      "name": "n_cr",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "count",
+      "assessment": {
+        "by_stratum": [
+          "unit_at_tp"
+        ],
+        "method": "ICU는 하루 1~2회, 병동은 2~3일에 1회 채혈"
+      },
+      "episode": "index_episode"
+    },
+    {
+      "name": "cr_rise",
+      "derive": {
+        "op": "difference",
+        "of": [
+          "cr_last",
+          "cr_min_adm"
+        ]
+      },
+      "made_by": "leakcheck.features"
+    },
+    {
+      "name": "bun_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "bun"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "episode": "index_episode"
+    },
+    {
+      "name": "k_last",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "potassium"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last",
+      "episode": "index_episode"
+    },
+    {
+      "name": "hgb_min",
+      "source": "labs",
+      "column": "value",
+      "filter": {
+        "test": [
+          "hemoglobin"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min",
+      "episode": "index_episode"
+    },
+    {
+      "name": "sbp_min_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "sbp"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "min",
+      "episode": "index_episode"
+    },
+    {
+      "name": "hr_max_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "heart_rate"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "max",
+      "episode": "index_episode"
+    },
+    {
+      "name": "temp_max_24h",
+      "source": "vitals",
+      "column": "value",
+      "filter": {
+        "item": [
+          "temperature"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "entered_time",
+      "window": {
+        "start": "tp-24h",
+        "end": "tp"
+      },
+      "agg": "max",
+      "episode": "index_episode"
+    },
+    {
+      "name": "nephrotoxic_by_tp",
+      "description": "tp까지 NSAID·vancomycin 처방",
+      "source": "medications",
+      "filter": {
+        "drug": [
+          "nsaid",
+          "vancomycin"
+        ],
+        "med_type": [
+          "inpatient"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "order_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "any",
+      "episode": "index_episode"
+    },
+    {
+      "name": "prior_dx_ckd",
+      "description": "이전 입원에서 tp까지 코딩이 끝난 CKD 진단 (N18, 585) 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다. 같은 에피소드의 앞 입원 진단도 tp 전에 코딩이 끝났으면 넣는다",
+      "source": "diagnoses",
+      "filter": {
+        "icd_code": [
+          "N18",
+          "585"
+        ]
+      },
+      "scope": "prior_admissions",
+      "time_column": "coded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "agg": "any",
+      "history_key": "patient_id"
+    },
+    {
+      "name": "problem_ckd_active",
+      "description": "tp 시점 문제 목록에 활성 CKD 항목이 있음 코드 필터는 앞부분 일치 (예: N18은 N18.3, N18.4 등). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다",
+      "source": "problem_list",
+      "filter": {
+        "icd_code": [
+          "N18"
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "scope": "patient_history",
+      "time_column": "recorded_time",
+      "window": {
+        "start": "-inf",
+        "end": "tp"
+      },
+      "as_of": "tp",
+      "agg": "any",
+      "history_key": "patient_id",
+      "version_order": "version_then_filter"
+    },
+    {
+      "name": "abx_by_tp",
+      "description": "tp까지 piperacillin-tazobactam 처방",
+      "source": "medications",
+      "filter": {
+        "drug": [
+          "piperacillin_tazobactam"
+        ],
+        "med_type": [
+          "inpatient"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "order_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "any",
+      "episode": "index_episode"
+    },
+    {
+      "name": "acei_by_tp",
+      "description": "tp까지 ACE 억제제 처방",
+      "source": "medications",
+      "filter": {
+        "drug": [
+          "ace_inhibitor"
+        ],
+        "med_type": [
+          "inpatient"
+        ]
+      },
+      "scope": "index_admission",
+      "time_column": "order_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "any",
+      "episode": "index_episode"
+    },
+    {
+      "name": "n_admissions_to_tp",
+      "source": "admissions",
+      "scope": "patient_history",
+      "time_column": "admit_time",
+      "window": {
+        "end": "tp"
+      },
+      "agg": "count",
+      "history_key": "patient_id",
+      "description": "같은 등록 번호에서 입원 시각이 tp 이전인 입원 수 (이번 입원 포함). 같은 사람의 다른 등록 번호를 잇는 person_id는 자료 추출 때 연결되어 tp에는 알 수 없다"
+    }
+  ],
+  "split_unit": "family",
+  "split": {
+    "key": "family_id",
+    "fallback_key": "person_id",
+    "method": "temporal",
+    "seed": 20261040,
+    "by_site": false,
+    "cutoff": "2157-01-01 00:00:00",
+    "gap": "48h"
+  },
+  "preprocessing": [
+    {
+      "name": "cr_method_align",
+      "kind": "transform",
+      "method": "jaffe 측정 크레아티닌 값에서 0.10 mg/dL을 뺀다",
+      "stateless": true,
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "cr_last",
+        "cr_min_adm",
+        "cr_max_48h"
+      ],
+      "description": "columns는 이 보정이 들어가는 특징이다. 보정은 그 특징을 만들 때 labs 값 단위로(집계 전에) 한다. 0.10은 데이터 설명서(labs.value)의 고정 차이다. 결과 판정에는 쓰지 않는다 (결과 서술 참고)"
+    },
+    {
+      "name": "median_impute",
+      "kind": "impute",
+      "method": "median",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "cr_last",
+        "cr_min_adm",
+        "cr_max_48h",
+        "cr_rise",
+        "bun_last",
+        "k_last",
+        "hgb_min",
+        "sbp_min_24h",
+        "hr_max_24h",
+        "temp_max_24h"
+      ]
+    },
+    {
+      "name": "one_hot",
+      "kind": "encode",
+      "method": "one_hot",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "sex",
+        "unit_at_tp",
+        "service",
+        "admission_type"
+      ]
+    },
+    {
+      "name": "standardize",
+      "kind": "scale",
+      "method": "z_score",
+      "stateless": false,
+      "fit_scope": "train_fold",
+      "applies_to": "train+test",
+      "before_split": false,
+      "uses_outcome": false,
+      "columns": [
+        "age",
+        "cr_last",
+        "cr_min_adm",
+        "cr_max_48h",
+        "n_cr",
+        "cr_rise",
+        "bun_last",
+        "k_last",
+        "hgb_min",
+        "sbp_min_24h",
+        "hr_max_24h",
+        "temp_max_24h",
+        "n_admissions_to_tp"
+      ],
+      "description": "나무 모형에는 결과가 같지만 같은 입력 흐름을 유지한다"
+    }
+  ],
+  "model": {
+    "family": "gradient_boosting (결정 나무)",
+    "tuning": {
+      "method": "group_kfold 5폴드 (묶음 열은 cv_key, 결측이면 fallback_key)",
+      "cv_key": "family_id",
+      "fit_scope": "train",
+      "fallback_key": "person_id"
+    },
+    "selection": {
+      "method": "나무 깊이·학습률·나무 수 격자 탐색",
+      "fit_scope": "train_fold",
+      "metric": "AUROC"
+    },
+    "early_stopping": {
+      "method": "사용하지 않음 (나무 수는 격자 탐색으로 정함)"
+    },
+    "threshold": {
+      "method": "학습 부분 교차검증 예측에서 민감도 0.8이 되는 값. 보정(calibration)한 확률에서 정한다",
+      "fit_scope": "train_fold",
+      "metric": "sensitivity"
+    },
+    "calibration": {
+      "method": "학습 부분 교차검증 예측으로 Platt 보정",
+      "fit_scope": "train_fold",
+      "metric": "calibration slope"
+    }
+  },
+  "analysis": {
+    "missing_data": {
+      "method": "impute",
+      "drop_rows_when": "never",
+      "outcome_missing": "not_applicable"
+    }
+  },
+  "evaluation": {
+    "data": "test",
+    "metrics": [
+      "AUROC",
+      "AUPRC",
+      "Brier",
+      "calibration slope"
+    ],
+    "test_set_uses": 1,
+    "subgroups": [
+      "unit_at_tp"
+    ],
+    "calibration_reported": true
+  },
+  "attempts": {
+    "n_designs_tried": 1,
+    "n_models_tried": 1,
+    "correction": "none"
+  }
+}

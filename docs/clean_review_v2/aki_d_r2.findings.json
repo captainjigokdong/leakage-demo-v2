@@ -1,0 +1,52 @@
+[
+  {
+    "target": "outcome.scope / outcome.reference.sources[0].scope / tp.anchor",
+    "kind": "문제",
+    "problem": "데이터에는 두 입원 기록이 1시간 이내 간격으로 이어진 에피소드가 220개 있다(앞 기록 discharge_status=transfer, 96개는 A→B 병원). 특징과 제외 기준(aki_known_by_tp, dialysis_by_tp)은 episode=index_episode인데, 결과·KDIGO 기준값은 scope=index_admission이고 tp는 각 기록의 admit에 고정된다. 그래서 (1) 앞 기록 랜드마크 346행은 결과 창이 원내 전원 시점에서 잘려 '퇴원'처럼 처리되고, 그중 6행은 에피소드를 따라가면 AKI 양성인데 음성으로 들어간다. (2) 뒤 기록의 랜드마크 725행은 뒤 기록 입원 시각부터 24~168시간으로 다시 잡혀 '입원 후 일수'의 의미가 달라지고, 결과 KDIGO 기준값에서 앞 기록 크레아티닌이 빠진다. 결과 범위·기준값·tp 기준점을 에피소드 단위로 할지, 아니면 다르게 정할지 결정이 필요하다."
+  },
+  {
+    "target": "evaluation.subgroups",
+    "kind": "문제",
+    "problem": "notes에는 하위 집단(특히 표본이 적은 B 병원)을 신뢰구간과 함께 보고한다고 되어 있지만 evaluation.subgroups·cohort.subgroups에는 unit_at_tp만 있고 site가 없다. split.by_site=false이고 site는 특징도 아니다. B 병원은 코호트 행 902개, 결과 양성 62개 정도로 적다(외부 전원 처리 전 기준 추정). site를 하위 집단에 넣어야 한다."
+  },
+  {
+    "target": "outcome.ascertainment.by_stratum",
+    "kind": "문제",
+    "problem": "ascertainment.method에는 측정 빈도와 결과율을 병동 × 연도별로도 보고한다고 되어 있지만 by_stratum에는 unit_at_tp만 있다. 데이터에서 병동 크레아티닌 채혈은 하루 0.58회(2150)에서 0.65회(2159)로 늘었다(ICU는 약 1.9회로 일정). 연도 층을 추가해야 한다."
+  },
+  {
+    "target": "preprocessing[cr_method_align].columns",
+    "kind": "문제",
+    "problem": "description은 '집계 전 값 단위로 적용'이라고 하지만 columns에는 집계된 특징(cr_last, cr_min_adm, cr_max_48h)이 있고 개수인 n_cr도 들어 있다. n_cr에서 0.10을 빼는 것은 의미가 없다(n_cr.description의 같은 문구도 마찬가지). 집계된 열에서는 어느 값이 jaffe였는지 알 수 없다. 원시 labs 값에 보정을 적용하고 n_cr은 빼는 것으로 해석해야 한다. 크레아티닌이 두 측정법으로 모두 재진 입원은 7개다."
+  },
+  {
+    "target": "features[cr_last].assessment.method",
+    "kind": "문제",
+    "problem": "문장이 '측정법 자체는 특징으로 '에서 끊겨 있다. 측정법(method, 사실상 2155-01-01 전후 표시)을 특징으로 넣는지 빼는지 알 수 없다. 특징 목록에는 없으므로 넣지 않는 것으로 볼 수 있지만 확인이 필요하다."
+  },
+  {
+    "target": "cohort.exclusion[aki_known_by_tp].episode",
+    "kind": "문제",
+    "problem": "description은 '판정 규칙은 결과와 같다'고 하지만 결과는 같은 입원 안에서만 비교하고, 이 제외 기준은 episode=index_episode다. 에피소드 뒤 기록에서는 앞 기록 값과 비교하는지, window.start=admit가 어느 기록의 입원 시각인지 정해져 있지 않다. 위 에피소드 문제와 함께 정해야 한다."
+  },
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "가정",
+    "problem": "count_as_outcome을 'tp 전에 채취되었지만 tp에 아직 보고되지 않은 크레아티닌도 결과 판정 대상에 넣어 KDIGO로 판정한다'로 해석한다. 값이 보류 중이라는 이유만으로 양성으로 치지 않는다. 이 해석에서 보류 값이 있는 행은 769개이고, 보류 값으로 양성이 되는 행은 32개다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup",
+    "kind": "가정",
+    "problem": "데이터에 없는 외부 기관 전원(discharge_status=transfer 중 연결 에피소드가 아닌 것)과 귀가로 결과 창이 잘리는 행은 설계대로 창 안에서 확인된 사건만 센다(count_as_negative). 외부 전원으로 창이 잘리는 행은 1,327개이고 귀가로 잘리는 행은 10,299개다. 전원 환자는 더 중증일 수 있어 결과가 덜 잡힐 수 있으므로, 창 안 퇴원 비율을 퇴원 형태(귀가/외부 전원)별로도 보고하는 것을 한계로 적는다."
+  },
+  {
+    "target": "features[prior_dx_ckd].description",
+    "kind": "문제",
+    "problem": "description이 n_prior_adm을 언급하지만 features에는 n_prior_adm이 없다. 빠진 특징인지 남은 문구인지 확인이 필요하다."
+  },
+  {
+    "target": "preprocessing[cr_method_align] (0.10 mg/dL) / features[age] / outcome.ascertainment",
+    "kind": "점검 불가",
+    "problem": "설계서가 근거로 드는 '데이터 설명서'가 작업 폴더에 없다. jaffe−enzymatic 고정 차이 0.10 mg/dL, patients.age가 등록 번호 첫 입원 때 나이라는 정의와 95 상한, 병동 채혈 빈도 증가 서술을 원문으로 확인할 수 없다. 데이터에서는 측정법 전환이 두 병원 모두 2155-01-01 기준으로 일치한다. 원시 평균 차이는 0.15 mg/dL이지만 환자 구성이 달라 고정 차이를 검증할 수는 없다. age는 95가 103명이고 18 미만은 없다. 연구 기간(2150) 전 입원은 데이터에 없으므로, '첫 입원' 기준 연령 환산이 데이터 안의 첫 입원과 맞는지도 확인할 수 없다."
+  }
+]

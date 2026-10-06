@@ -1,0 +1,47 @@
+[
+  {
+    "target": "features.cr_last / features.age / features.los_h / preprocessing.dx_code_map (데이터 설명서 인용)",
+    "kind": "점검 불가",
+    "problem": "설계서가 인용하는 데이터 설명서가 작업 폴더에 없어 원문과 대조할 수 없다. 대신 데이터로 확인했다: 크레아티닌 측정법은 채취 시각 2155-01-01을 기준으로 정확히 jaffe/enzymatic으로 나뉘고, 같은 사람의 jaffe−enzymatic 중앙값 차이는 평균 0.100(중앙값 0.105, 179명)이다. patients.age의 최댓값은 95(103명)이다. ICD-9 주진단 13종은 각각 같은 병의 ICD-10 코드와 1:1로 짝지어진다."
+  },
+  {
+    "target": "features.los_h",
+    "kind": "가정",
+    "problem": "admissions에 length_of_stay_h 열이 없다. 설계서 서술대로 (discharge_time − admit_time) 시간으로 계산했다."
+  },
+  {
+    "target": "features.age",
+    "kind": "가정",
+    "problem": "patients.age는 95에서 잘려 있는데, 인덱스 입원까지 지난 연수를 더하면 61행이 95를 넘는다. 설계서에 다시 자르라는 규칙이 없어 계산값을 그대로 두었다 (실제 나이는 그보다 많을 수도 있다). 같은 사람의 여러 등록 번호에서 추정한 출생 연도 차이는 2년 이하라, 'age = 첫 입원 때 나이'라는 설명과 맞는다."
+  },
+  {
+    "target": "features.prior_dx_group",
+    "kind": "가정",
+    "problem": "서술은 '가장 최근 이전 입원'이지만 정렬 열은 coded_time이다. 이전 주진단이 있는 1936행 가운데 38행은 두 기준으로 고른 입원이 다르다. 설계서에 정한 time_column(coded_time)을 따랐다. 4578행은 tp까지 코딩된 이전 주진단이 없어 값이 비어 있다. median_impute 대상이 아니므로 one_hot에서 '없음'을 별도 범주로 둔다고 가정했다."
+  },
+  {
+    "target": "preprocessing.dx_code_map",
+    "kind": "가정",
+    "problem": "대응표를 데이터에서 만들었다: 401.9→I10, 780.79→R53.83, 250.00→E11.9, 285.9→D64.9, 428.0→I50.9, 585.3→N18.3, 486→J18.9, 530.81→K21.9, 584.9→N17.9, 038.9→A41.9, 599.0→N39.0, 311→F32.9, 276.1→E87.1. 이전 주진단 특징에 쓰이는 ICD-9 코드는 모두 이 표에 들어 있다."
+  },
+  {
+    "target": "preprocessing.cr_method_align",
+    "kind": "가정",
+    "problem": "이 단계는 분할 뒤 cr_last 열에 거는 전처리로 적혀 있지만, 서술은 집계 전 값 단위로 적용하라고 한다. 측정법을 판정하는 기준으로 labs.method 열을 써서 특징을 만들 때 jaffe 값에서 0.10을 뺐다 (상태 없는 변환이라 분할 전후와 상관없다). 이렇게 하면 cr_last_over_hgb에도 보정된 값이 들어간다. features.cr_last.assessment.method 문장은 '측정법 자체는 특징으로 '에서 끊겨 있다. 측정법은 특징으로 넣지 않았다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup",
+    "kind": "가정",
+    "problem": "다른 병원으로 전원 퇴원한 751행은 다른 병원 입원이 보이지 않는데도, 사건이 보이지 않으면 음성으로 센다. 결과율은 전원 12.5%, 자택 14.7%이다. 설계서대로 퇴원처별로 따로 보고한다."
+  },
+  {
+    "target": "features.n_prior_adm / prior_dx_* / problem_ckd_active / n_clinic_365d",
+    "kind": "가정",
+    "problem": "자료는 2150-01-01부터 시작한다. 2150년에 퇴원한 인덱스 597행은 365일 이전 기록(그리고 -inf 창)이 잘려 있어 이전 이력 특징이 덜 세어질 수 있다. 설계대로 그대로 두었다."
+  },
+  {
+    "target": "features (history_key=patient_id) / outcome.match_key=person_id",
+    "kind": "가정",
+    "problem": "특징은 등록 번호(patient_id) 안의 이력만 보고, 결과는 person_id로 모든 등록 번호를 본다. 다른 등록 번호로만 확인되는 재입원이 45건 있다. tp에 알 수 있는 정보만 쓰려는 설계 의도와 맞으므로 그대로 따랐다."
+  }
+]

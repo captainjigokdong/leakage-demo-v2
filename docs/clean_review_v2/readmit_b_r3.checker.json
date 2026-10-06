@@ -1,0 +1,287 @@
+{
+  "design_id": "readmit_b",
+  "design_type": "fixed",
+  "rules_version": "2",
+  "data_checked": true,
+  "blocked": false,
+  "summary": {
+    "차단": 0,
+    "경고": 1,
+    "통과": 26,
+    "기록": 1,
+    "점검 불가": 0,
+    "가정": 4
+  },
+  "findings": [
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.age",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.patients.age",
+      "basis": "규칙 T.patients.age(1층: 설명서: 그 등록 번호의 첫 입원 시 알려진다) · 값: patients.age: 그 등록 번호의 첫 입원 시각 ≤ 인덱스 입원 시각 → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.sex",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.patients.sex",
+      "basis": "규칙 T.patients.sex(1층: 설명서: 그 등록 번호의 첫 입원 시 알려진다) · 값: patients.sex: 그 등록 번호의 첫 입원 시각 ≤ 인덱스 입원 시각 → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.unit",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admissions.unit",
+      "basis": "규칙 T.admissions.unit(1층: 설명서: 입원 시 알려진다) · 값: admissions.unit: 소속 입원의 입원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.icu_any",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.transfers.unit",
+      "basis": "규칙 T.transfers.unit(1층: 설명서: 병동 입실 시각(in_time)에 알려진다) · 값: transfers.unit: 창 끝 tp (in_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.los_h",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admissions.length_of_stay_h",
+      "basis": "규칙 T.admissions.length_of_stay_h(1층: 설명서: 퇴원 시 알려진다 (discharge_time)) · 값: admissions.length_of_stay_h: 소속 입원의 퇴원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.discharge_status",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admissions.discharge_status",
+      "basis": "규칙 T.admissions.discharge_status(1층: 설명서: 퇴원 시 알려진다 (discharge_time)) · 값: admissions.discharge_status: 소속 입원의 퇴원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.site",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admission_info.site",
+      "basis": "규칙 T.admission_info.site(1층: 설명서: 입원 시 알려진다) · 값: admission_info.site: 소속 입원의 입원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.service",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admission_info.service",
+      "basis": "규칙 T.admission_info.service(1층: 설명서: 입원 시 알려진다) · 값: admission_info.service: 소속 입원의 입원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.n_prior_adm",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admissions",
+      "basis": "규칙 T.admissions(1층: 설명서: 입원 시 알려진다) · 값: admissions.행: 소속 입원의 입원 시각(범위 prior_admissions) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.prior_dx_ckd",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.diagnoses",
+      "basis": "규칙 T.diagnoses(1층: 설명서: 진단 코드는 코딩 완료 시각(coded_time)에 알려진다. 퇴원 뒤 최대 90일) · 값: diagnoses.icd_code: 창 끝 tp (coded_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.prior_dx_chf",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.diagnoses",
+      "basis": "규칙 T.diagnoses(1층: 설명서: 진단 코드는 코딩 완료 시각(coded_time)에 알려진다. 퇴원 뒤 최대 90일) · 값: diagnoses.icd_code: 창 끝 tp (coded_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.problem_ckd_active",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.problem_list",
+      "basis": "규칙 T.problem_list(1층: 설명서: 문제 목록은 버전마다 기록 시각(recorded_time)에 알려진다) · 값: problem_list.icd_code: 창 끝 tp (recorded_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.cr_last",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.labs.value",
+      "basis": "규칙 T.labs.value(1층: 설명서: 검사 값은 보고 시각(report_time)에 알려진다. 채취→보고 지연 상한 6h) · 값: labs.value: 창 끝 tp (report_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.hgb_min",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.labs.value",
+      "basis": "규칙 T.labs.value(1층: 설명서: 검사 값은 보고 시각(report_time)에 알려진다. 채취→보고 지연 상한 6h) · 값: labs.value: 창 끝 tp (report_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.sbp_last",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.vitals.value",
+      "basis": "규칙 T.vitals.value(1층: 설명서: 활력징후는 전산 입력 시각(entered_time)에 알려진다. 관찰→입력 지연 상한 6h) · 값: vitals.value: 창 끝 tp (entered_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.n_discharge_meds",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.medications",
+      "basis": "규칙 T.medications(1층: 설명서: 처방 시각(order_time)에 알려진다) · 값: medications.drug: 창 끝 tp (order_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.dialysis_ordered",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.orders",
+      "basis": "규칙 T.orders(1층: 설명서: 오더 시각(order_time)에 알려진다) · 값: orders.order_type: 창 끝 tp (order_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.cr_last_over_hgb",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.labs.value",
+      "basis": "규칙 T.labs.value(1층: 설명서: 검사 값은 보고 시각(report_time)에 알려진다. 채취→보고 지연 상한 6h) · 값: 파생 특징: 재료 cr_last, hgb_min 중 가장 늦은 cr_last → labs.value: 창 끝 tp (report_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.n_clinic_365d",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.outpatient_visits",
+      "basis": "규칙 T.outpatient_visits(1층: 설명서: 방문 시각(visit_time)에 알려진다) · 값: outpatient_visits.visit_type: 창 끝 tp (visit_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q1",
+      "verdict": "통과",
+      "target": "features.prior_dx_group",
+      "reason": "특징의 확인 가능 시각 ≤ tp. 데이터: 0/6,706 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.diagnoses.icd_code",
+      "basis": "규칙 T.diagnoses.icd_code(1층: 설명서: 진단 코드는 코딩 완료 시각(coded_time)에 알려진다. 퇴원 뒤 최대 90일) · 값: diagnoses.icd_code: 창 끝 tp (coded_time 기준) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q4",
+      "verdict": "경고",
+      "target": "features.n_clinic_365d",
+      "reason": "결과(unplanned_readmit_or_death_30d)의 대리 기록 목록과 일치: outpatient_visits visit_type∈['follow_up']. 결과를 정하는 과정이 남긴 기록일 수 있어 사람이 확인.",
+      "rule": "D.proxies",
+      "basis": "규칙 D.proxies(2층: 퇴원 뒤 추적 외래는 재입원 전에만 열린다) · 값: 특징 outpatient_visits 필터 없음, 범위 patient_history",
+      "kind": "문제"
+    },
+    {
+      "question": "Q5",
+      "verdict": "통과",
+      "target": "cohort.inclusion.adult",
+      "reason": "[꼬리표: 정적] 포함·제외 기준의 확인 가능 시각 ≤ tp. 데이터: 0/7,724 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.patients.age",
+      "basis": "규칙 T.patients.age(1층: 설명서: 그 등록 번호의 첫 입원 시 알려진다) · 값: patients.age: 그 등록 번호의 첫 입원 시각 ≤ 인덱스 입원 시각 → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q5",
+      "verdict": "통과",
+      "target": "cohort.exclusion.died_in_hospital",
+      "reason": "[꼬리표: tp까지 알려짐] 포함·제외 기준의 확인 가능 시각 ≤ tp. 데이터: 0/7,724 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admissions.discharge_status",
+      "basis": "규칙 T.admissions.discharge_status(1층: 설명서: 퇴원 시 알려진다 (discharge_time)) · 값: admissions.discharge_status: 소속 입원의 퇴원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q5",
+      "verdict": "통과",
+      "target": "cohort.exclusion.followup_incomplete",
+      "reason": "[꼬리표: tp까지 알려짐] 포함·제외 기준의 확인 가능 시각 ≤ tp. 데이터: 0/7,724 예측 행에서 확인 가능 시각 > tp.",
+      "rule": "T.admissions.discharge_time",
+      "basis": "규칙 T.admissions.discharge_time(1층: 설명서: 퇴원 시 알려진다 (discharge_time)) · 값: admissions.discharge_time: 소속 입원의 퇴원 시각(범위 index_admission) → 확인 가능 시각 상한 tₚ"
+    },
+    {
+      "question": "Q6",
+      "verdict": "기록",
+      "target": "attempts",
+      "reason": "설계 1개, 모델 1개 시도, 보정: none.",
+      "rule": "",
+      "basis": ""
+    },
+    {
+      "question": "Q2",
+      "verdict": "통과",
+      "target": "설계 전체",
+      "reason": "분할 키 family_id(대체 person_id) ≥ 독립 단위 family ≥ 개체 단위 person",
+      "rule": "S.levels",
+      "basis": "규칙 S.levels · 값: 위반 없음"
+    },
+    {
+      "question": "Q3",
+      "verdict": "통과",
+      "target": "설계 전체",
+      "reason": "전처리 5단계와 모형 결정의 적합 범위 ⊆ 학습 부분, 평가는 평가 부분",
+      "rule": "F.fit_scope",
+      "basis": "규칙 F.fit_scope · 값: 위반 없음"
+    },
+    {
+      "question": "Q7",
+      "verdict": "통과",
+      "target": "설계 전체",
+      "reason": "결과 확인 강도가 층마다 같음 (또는 층별로 다룸, 또는 측정 의존 결과 아님), 확인 범위·이력·사망 출처",
+      "rule": "O.strata",
+      "basis": "규칙 O.strata · 값: 위반 없음"
+    }
+  ],
+  "assumptions": [
+    {
+      "question": "Q2",
+      "verdict": "가정",
+      "target": "split.key",
+      "reason": "family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(fallback_key)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다 (대체 키 person_id)",
+      "rule": "A.family_missing",
+      "basis": "3층 가정 A.family_missing · 형식으로 피할 수 없음",
+      "kind": "가정"
+    },
+    {
+      "question": "Q2",
+      "verdict": "가정",
+      "target": "model.tuning.cv_key",
+      "reason": "family_id가 비어 있는 행은 가족 관계를 모른다. 대체 키(fallback_key)로 묶는다. 기록되지 않은 가족은 학습·평가에 나뉠 수 있다 (대체 키 person_id)",
+      "rule": "A.family_missing",
+      "basis": "3층 가정 A.family_missing · 형식으로 피할 수 없음",
+      "kind": "가정"
+    },
+    {
+      "question": "Q5",
+      "verdict": "가정",
+      "target": "cohort.rows_per_unit",
+      "reason": "에피소드의 마지막 입원을 고르려면 퇴원 뒤 60분 안에 이어진 입원이 없음을 알아야 한다. 퇴원 때 안다고 본다 (형식에 다른 올바른 표현이 없음)",
+      "rule": "A.episode_last",
+      "basis": "3층 가정 A.episode_last · 조정: rules.EPISODE_GAP_MAX_H",
+      "kind": "가정"
+    },
+    {
+      "question": "Q7",
+      "verdict": "가정",
+      "target": "outcome.ascertainment.scope.sites",
+      "reason": "A·B 밖 병원의 사건은 데이터에 없다. 결과 확인 범위 밖에서 생긴 결과는 보이지 않는다",
+      "rule": "A.outside_sites",
+      "basis": "3층 가정 A.outside_sites · 형식으로 피할 수 없음",
+      "kind": "가정"
+    }
+  ],
+  "checked": {
+    "design_file": "design.json",
+    "design_path": "/srv/leakcleanreview/readmit_b_r3/ws/design.json",
+    "design_sha256": "23dadcc77ce98082f15bbeef09efd9e4247a25bb3b2f03951d9e500695e98961",
+    "data_folder": "/srv/leakcleanreview/readmit_b_r3/ws/data",
+    "time_utc": "2026-10-06T01:33:46+00:00"
+  }
+}

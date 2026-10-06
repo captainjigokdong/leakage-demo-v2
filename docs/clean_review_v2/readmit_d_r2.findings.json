@@ -1,0 +1,52 @@
+[
+  {
+    "target": "features.cr_last.assessment.method",
+    "kind": "문제",
+    "problem": "설명 문장이 '측정법 자체는 특징으로 '에서 끊겨 있어 측정법(method)을 특징으로 쓰는지 알 수 없다. 데이터에서 method는 채취일(2155-01-01 전 jaffe, 뒤 enzymatic)과 완전히 겹친다. 준비 단계에서는 측정법을 특징으로 쓰지 않는다고 가정했다(features 목록에도 없다)."
+  },
+  {
+    "target": "features.cr_last / preprocessing.cr_method_align / features.age / features.los_h (데이터 설명서 인용)",
+    "kind": "점검 불가",
+    "problem": "설계서가 근거로 드는 데이터 설명서(labs.value의 jaffe +0.10 mg/dL, patients.age의 95 상한, length_of_stay_h 파생 열)가 작업 폴더에 없다. 데이터로 간접 확인만 했다: A 병원 2154년과 2155년 크레아티닌 분위수 차이는 0.09~0.11로 0.10과 맞지만, B 병원은 표본이 적어 0.03~0.05 근처로 흔들려 확인할 수 없다. patients.age 최댓값은 95(103명)다."
+  },
+  {
+    "target": "features.los_h",
+    "kind": "가정",
+    "problem": "admissions에 length_of_stay_h 열이 없다. 설명대로 (discharge_time − admit_time) 시간을 인덱스 입원 기록 기준으로 계산했다. 두 기록으로 나뉜 에피소드(220개, 병원 간 96개)에서는 앞 입원 시간이 빠진다."
+  },
+  {
+    "target": "features.age",
+    "kind": "가정",
+    "problem": "patients.age가 95에서 잘려 있어(103명) 이 환자들의 나이는 실제보다 작게 잡히고, 첫 입원 뒤 연수를 더하면 95를 넘는 값이 생긴다. 나이는 age + (인덱스 admit_time − 같은 등록 번호의 첫 admit_time)/365.25로 계산하고 상한은 두지 않았다. 같은 사람의 여러 등록 번호 사이 나이 차이는 첫 입원 시각 차이와 맞았다(차이 −1.8~0년, 정수 내림 때문)."
+  },
+  {
+    "target": "outcome.lost_to_followup / outcome.ascertainment",
+    "kind": "가정",
+    "problem": "다른 병원으로 전원 퇴원한 경우(코호트 751건) 그 뒤 다른 병원 입원은 보이지 않는데 음성으로 센다. 결과율은 전원 12.5%, 자택 14.7%다. discharge_status가 예측 변수이기도 해서 모형이 결과 확인 차이를 배울 수 있다. 설계대로 퇴원처·병원별 결과율과 하위 집단 성능을 따로 보고해야 한다."
+  },
+  {
+    "target": "data_source.study_period.start / features.n_prior_adm / features.prior_dx_ckd / features.prior_dx_chf / features.problem_ckd_active",
+    "kind": "가정",
+    "problem": "자료가 2150-01-01부터 있어 초기 인덱스 퇴원의 과거력은 짧게 잡힌다(2150년 퇴원 597건은 365일 창이 다 차지 않는다). 과거력 특징이 연도에 따라 체계적으로 작아질 수 있다. 설계대로 쓰되 한계로 기록한다."
+  },
+  {
+    "target": "features (episode: index_episode 의 window.start = admit)",
+    "kind": "가정",
+    "problem": "두 기록으로 나뉜 에피소드에서 'admit'을 에피소드 첫 입원의 admit_time으로 해석했다(icu_any, cr_last, hgb_min, k_last, dialysis_ordered). n_discharge_meds는 설명대로 인덱스 입원 기록의 admit_time부터 센다."
+  },
+  {
+    "target": "features.unit",
+    "kind": "가정",
+    "problem": "'처음 배정된 병동'을 인덱스(마지막) 입원 기록의 admissions.unit으로 썼다. 첫 transfers.unit과 100% 일치한다. 나뉜 에피소드에서는 에피소드 첫 병동이 아니라 두 번째 기록의 첫 병동이다."
+  },
+  {
+    "target": "outcome.scope / outcome.match_key / outcome.window",
+    "kind": "가정",
+    "problem": "scope는 patient_history이지만 서술과 match_key에 따라 person_id로 묶은 모든 등록 번호의 입원·사망을 봤다. 창은 tp < 시각 ≤ tp+30일로 잡았다. 에피소드가 다른 입원 사이 간격은 모두 24시간보다 길어서 경계를 어떻게 잡아도 결과는 같다."
+  },
+  {
+    "target": "split.by_site / evaluation.subgroups(site)",
+    "kind": "가정",
+    "problem": "병원별 층화 없이 묶음을 나누면 B 병원 test는 74건(사건 11건)뿐이다. 하위 집단 추정치는 매우 불안정하므로 설계 notes대로 신뢰구간과 함께만 보고한다."
+  }
+]

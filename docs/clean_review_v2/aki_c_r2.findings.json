@@ -1,0 +1,47 @@
+[
+  {
+    "target": "outcome.scope / outcome.censoring.lost_to_followup (두 입원으로 이어진 에피소드)",
+    "kind": "문제",
+    "problem": "결과는 index_admission 안에서만 판정하고 창 안 '퇴원'은 음성으로 센다. 그런데 데이터의 에피소드 220개는 첫 입원이 discharge_status=transfer로 끝나고 1시간 안에 다음 입원(A→A 121, A→B 96, B→B 3)으로 이어진다. 환자는 원내(배치 대상인 A·B 병원)에 계속 있는데도 전원 뒤 결과가 결과 창에서 빠진다. 결과 창 안에 전원으로 다음 입원이 이어지는 랜드마크 행이 346개이고, 이 중 6행은 다음 입원에서 48시간 안에 KDIGO AKI가 생기는데도 음성으로 들어간다. 반대로 둘째 입원의 행 725개는 제외 기준(aki_known_by_tp, episode=index_episode)은 에피소드 전체 값을 쓰지만 결과의 기준값은 그 입원 값만 쓴다. 그래서 같은 행에서 두 판정의 기준값 범위가 다르다(에피소드 기준값으로는 AKI인 2행이 음성). 또 tp.anchor='admit'이 둘째 입원의 입원 시각인지 에피소드 시작 시각인지 정해져 있지 않다. 둘째 입원 시각을 기준으로 하면 314행이 에피소드 시작 뒤 7일을 넘고, 첫 입원의 행과 시간이 겹친다. 결과 범위를 episode로 할지, 에피소드를 한 단위로 볼지 정해야 한다."
+  },
+  {
+    "target": "evaluation.subgroups",
+    "kind": "문제",
+    "problem": "notes에는 '하위 집단(특히 표본이 적은 B 병원)은 신뢰구간과 함께 보고'라고 되어 있는데, evaluation.subgroups와 cohort.subgroups에는 unit_at_tp만 있고 site가 없다. 대략 계산하면 평가 기간(tp ≥ 2157-01-03)의 B 병원 행은 약 311행, 사건은 약 28건이다. site를 하위 집단에 넣을지 정해야 한다."
+  },
+  {
+    "target": "preprocessing[cr_method_align].columns / features[n_cr].description / features[cr_last].assessment.method",
+    "kind": "문제",
+    "problem": "명세가 서로 맞지 않거나 불완전하다. (1) 측정법 보정(값에서 0.10을 뺌)의 대상 열에 개수 특징 n_cr이 들어 있고, n_cr 설명에도 'jaffe 값은 0.10 빼서 집계'라고 적혀 있다. 개수에는 영향이 없지만 설계 의도가 불분명하다. (2) cr_last.assessment.method 문장이 '측정법 자체는 특징으로 '에서 끊겨 있어, 측정법(method)을 특징으로 쓰는지 알 수 없다. features 목록에는 없으므로 쓰지 않는다고 가정한다."
+  },
+  {
+    "target": "outcome.pending_at_tp",
+    "kind": "가정",
+    "problem": "tp 이전에 채취했지만 tp에 아직 보고되지 않은 크레아티닌으로 판정한 AKI를 양성으로 센다(count_as_outcome). 이렇게 되면 사건 시각(채취 시각)이 tp보다 앞서는 행이 생긴다. 대략 계산한 코호트에서 이런 경로로만 양성이 되는 행은 25행이다. 설계 의도대로 두되, 사건 시각이 tp 이전인 양성으로 따로 표시해 보고한다."
+  },
+  {
+    "target": "outcome.history / outcome.description (측정법 보정 없는 결과 판정)",
+    "kind": "가정",
+    "problem": "결과는 보정하지 않은 값으로 판정하므로 1.5배 기준의 민감도가 jaffe 시기와 enzymatic 시기에 다르다. jaffe를 0.10 보정하면 14행이 음성에서 양성으로 바뀐다(설계서 수치와 재현값이 같다). 학습 기간(2150~2156)에는 두 측정법 시기가 섞이고 평가 기간(2157~)은 enzymatic뿐이다. 그래서 학습과 평가의 결과 정의가 조금 다르다. 사전에 정한 정의를 따르되 한계로 적는다. 입원 중에 측정법이 바뀐 입원은 7건이다."
+  },
+  {
+    "target": "outcome.ascertainment (병동 채혈 빈도의 시간 변화)",
+    "kind": "가정",
+    "problem": "데이터에서 결과 창 안에 크레아티닌 측정이 없는 행의 비율은 병동에서 2150년 32%에서 2159년 22%로 줄었다(ICU는 16%에서 11%). 시간 순 분할에서는 평가 기간의 결과 확인율이 학습 기간보다 높다. 설계대로 병동 × 연도별 측정 빈도와 결과율을 보고하고, 보정은 하지 않는다."
+  },
+  {
+    "target": "data_source.study_period (2150-01-01 이전 이력 없음)",
+    "kind": "가정",
+    "problem": "자료가 2150-01-01부터 있어 이력 특징(n_admissions_to_tp, prior_dx_ckd, problem_ckd_active)이 초기 연도에 적게 잡힌다. 이전 입원이 있는 행의 비율은 2150년에 21%이고, 이후에는 31~38%다. 학습 기간에만 해당하는 왼쪽 절단(left truncation)으로 보고 한계로 적는다."
+  },
+  {
+    "target": "features[unit_at_tp].time_column (transfers.in_time)",
+    "kind": "가정",
+    "problem": "transfers에는 입력 시각 열이 없어 in_time에 실시간으로 기록된다고 가정한다. 이 가정이 틀리면 tp 직전의 병동 이동이 tp에는 알 수 없는 정보가 된다."
+  },
+  {
+    "target": "데이터 설명서 (labs.value 0.10 고정 차이, patients.age 95 절단, 병동 채혈 빈도, admission_info.service 기록 시점)",
+    "kind": "점검 불가",
+    "problem": "설계서가 여러 번 인용하는 데이터 설명서가 작업 폴더에 없다. jaffe가 0.10 mg/dL 높다는 값은 직접 확인할 수 없다. 데이터에서 jaffe 평균은 1.32, enzymatic 평균은 1.18로 약 0.15 차이가 나지만 시기가 달라 교란되어 있다. admission_info.service와 admission_type이 입원 때 정해지는지, 퇴원 때 확정되는지도 확인할 수 없다. 나이 95 절단(95세 103명)과 병동 채혈 빈도 증가는 데이터와 맞는다."
+  }
+]

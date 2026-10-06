@@ -1,0 +1,341 @@
+{
+ "status": "잠정 잠금 (4a 승인 C·D, 4b 첫 순서의 봉인 확인 뒤 확정)",
+ "date": "2026-10-06",
+ "note": "칸 경로는 designs/inject 경로 표기. cells_by_design이 있으면 설계서마다 칸이 다르다. 근거 숫자는 모두 tools/justified_v2_evidence.py로 깨끗한 설계서의 코호트에서 다시 센 값이다 (동적 25,774행, 고정은 rows_per_unit을 적용한 6,514행). 에이전트가 센 숫자는 쓰지 않는다. 목록에 없는 것: L7(D8, 승인 C에서 뺌), K1·K5(점검기 문제, 오경보로 셈). 목록에 있는 지적은 탐지도 오경보도 아니며 두 조건에 같게 적용한다. 결함 변형에서 같은 칸이 결함 대상이면 탐지가 우선한다",
+ "items": [
+  {
+   "id": "L1",
+   "from": "K2",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "data_source.death_source"
+   ],
+   "evidence": "결과를 원내 사건으로 정의했다. 연계 자료로 바꾸면 결과가 바뀌는 행 0 / 25,774, 결과 창 끝이 사망 연계 반영일(2159-07-01) 뒤인 행 1,277 (그 행들은 연계 자료로도 원외 사망을 놓친다)",
+   "question": "Q7",
+   "classification": "사실 아님에 가까움 — 지금 설계가 옳다",
+   "reason_not_fixed": "점검기 경고 K2 (형식 안에서 피할 수 없음). 고치면 결과 정의와 어긋난다",
+   "recount": "python -m tools.justified_v2_evidence --only L1",
+   "finding": "결과에 사망을 넣는데 원내 사망 기록만 쓴다. 창 안에 퇴원한 행은 원외 사망을 놓친다 (점검기 경고 O.death_source)"
+  },
+  {
+   "id": "L2",
+   "from": "D1b",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.scope",
+    "outcome.reference.sources[name=inpatient_cr].scope",
+    "cohort.exclusion[name=aki_known_by_tp]"
+   ],
+   "evidence": "형식의 결과·기준값·제외 기준에 에피소드 칸이 없다 (입원 기록 단위). 여러 기록 에피소드 219, 뒤 기록이 있는 기록의 랜드마크 710 중 결과 창 안에 기록이 끝나는 행 346, 뒤 기록 랜드마크 725 중 앞 기록에서 이미 AKI(tp까지 보고된 값)인 행 79. 제외 기준에 episode 칸을 넣어도 바뀐 행 0",
+   "question": "Q5, Q7",
+   "classification": "사실, 고칠 수 없음",
+   "reason_not_fixed": "형식(동결)에 결과의 에피소드 범위 칸이 없다",
+   "recount": "python -m tools.justified_v2_evidence --only L2",
+   "finding": "결과·기준값·제외 기준이 입원 기록 단위라 같은 에피소드의 이어진 기록을 보지 않는다"
+  },
+  {
+   "id": "L3",
+   "from": "D2 일부",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.pending_at_tp"
+   ],
+   "evidence": "tp 전 채취·tp 뒤 보고 값으로 KDIGO 양성인 행 32 / 25,774 (count_as_outcome)",
+   "question": "Q4",
+   "classification": "사실, 지금 설계가 옳다 (승인 A)",
+   "reason_not_fixed": "tp에 결과가 이미 일어났지만 아직 모르는 경우를 결과로 세는 것이 질문에 맞다",
+   "recount": "python -m tools.justified_v2_evidence --only L3",
+   "finding": "tp 전에 채취했지만 tp 뒤에 보고된 크레아티닌을 결과로 센다"
+  },
+  {
+   "id": "L4",
+   "from": "D4",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d"
+   ],
+   "cells": [
+    "outcome.history"
+   ],
+   "evidence": "결과 판정은 측정법 보정 없는 원값 (같은 측정법끼리 비교). jaffe 값을 0.10 내리면 음성→양성 14행, 양성→음성 0행 / 25,774",
+   "question": "Q7",
+   "classification": "사실, 고칠 수 없음",
+   "reason_not_fixed": "형식에 결과 보정 칸이 없고 점검기는 method를 쓰지 않는다 (승인 C: 원값)",
+   "recount": "python -m tools.justified_v2_evidence --only L4",
+   "finding": "측정법(jaffe→enzymatic) 변경을 결과 판정에서 보정하지 않는다"
+  },
+  {
+   "id": "L5",
+   "from": "D5",
+   "designs": [
+    "aki_a",
+    "aki_c",
+    "readmit_a",
+    "readmit_c"
+   ],
+   "cells": [
+    "split.method"
+   ],
+   "evidence": "시간 순 분할의 간격·묶음 제외로 학습·평가 어디에도 쓰지 않는 행: aki_a 2,143 / 25,774, aki_c 2,249 / 25,774, readmit_a 543 / 6,514, readmit_c 566 / 6,514",
+   "question": "Q2",
+   "classification": "사실, 지금 설계가 옳다",
+   "reason_not_fixed": "간격을 두지 않으면 학습·평가가 같은 묶음을 나눈다 (3단계 D5)",
+   "recount": "python -m tools.justified_v2_evidence --only L5",
+   "finding": "시간 순 분할에서 학습·평가 어디에도 쓰지 않는 행이 생긴다"
+  },
+  {
+   "id": "L6",
+   "from": "D6",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells_by_design": {
+    "aki_a": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "aki_b": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "aki_c": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key",
+     "features[name=n_admissions_to_tp].history_key"
+    ],
+    "aki_d": [
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "readmit_a": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ],
+    "readmit_b": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key",
+     "features[name=n_clinic_365d].history_key",
+     "features[name=prior_dx_group].history_key"
+    ],
+    "readmit_c": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key",
+     "features[name=prior_cr_last].history_key"
+    ],
+    "readmit_d": [
+     "features[name=n_prior_adm].history_key",
+     "features[name=prior_dx_ckd].history_key",
+     "features[name=prior_dx_chf].history_key",
+     "features[name=problem_ckd_active].history_key"
+    ]
+   },
+   "evidence": "등록 번호가 둘 이상인 사람 111 / 5,000 (person_links). 그 사람들의 행: 동적 962 / 25,774, 고정 242 / 6,514. 이력은 등록 번호(patient_id)로만 묶여 다른 등록 번호의 이력을 놓친다",
+   "question": "Q1",
+   "classification": "사실, 고칠 수 없음",
+   "reason_not_fixed": "person_id는 자료 추출 때 연결되어 tp에는 알 수 없다 (person_id로 바꾸면 Q1 차단)",
+   "recount": "python -m tools.justified_v2_evidence --only L6",
+   "finding": "이력 특징을 등록 번호로만 묶어 같은 사람의 다른 등록 번호 이력을 놓친다"
+  },
+  {
+   "id": "L8",
+   "from": "C2",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells": [
+    "split.key",
+    "model.tuning.cv_key"
+   ],
+   "evidence": "family_id 결측 4,108 / 5,111 등록 번호 (80.4%). 코호트 행: 동적 20,811 / 25,774, 고정 5,265 / 6,514",
+   "question": "Q2",
+   "classification": "사실, 고칠 수 없음",
+   "reason_not_fixed": "기록되지 않은 가족은 데이터로 알 수 없다 (점검기 가정 A.family_missing)",
+   "recount": "python -m tools.justified_v2_evidence --only L8",
+   "finding": "family_id 결측이 많아 기록되지 않은 가족이 학습·평가에 나뉠 수 있다"
+  },
+  {
+   "id": "L9",
+   "from": "C4",
+   "designs": [
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells": [
+    "outcome.ascertainment.scope.sites"
+   ],
+   "evidence": "A·B 밖 병원 재입원은 데이터에 없다 (extract_info.sites_covered = A;B, 설명서). 전원 퇴원 751 / 6,514",
+   "question": "Q7",
+   "classification": "사실, 고칠 수 없음",
+   "reason_not_fixed": "데이터에 없는 병원은 볼 수 없다 (점검기 가정 A.outside_sites). 확인 방식에 퇴원처·병원별 보고를 적었다",
+   "recount": "python -m tools.justified_v2_evidence --only L9",
+   "finding": "A·B 밖 병원 재입원은 확인되지 않는다 (특히 전원 퇴원)"
+  },
+  {
+   "id": "L10",
+   "from": "왼쪽 절단",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells_by_design": {
+    "aki_a": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "aki_b": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "aki_c": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window",
+     "features[name=n_admissions_to_tp].window"
+    ],
+    "aki_d": [
+     "features[name=prior_dx_ckd].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "readmit_a": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window"
+    ],
+    "readmit_b": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window",
+     "features[name=n_clinic_365d].window",
+     "features[name=prior_dx_group].window"
+    ],
+    "readmit_c": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window",
+     "features[name=prior_cr_last].window"
+    ],
+    "readmit_d": [
+     "features[name=n_prior_adm].window",
+     "features[name=prior_dx_ckd].window",
+     "features[name=prior_dx_chf].window",
+     "features[name=problem_ckd_active].window"
+    ]
+   },
+   "evidence": "학습 행 중 tp까지의 관찰 기간(2150-01-01부터)이 365일 미만: aki_a 1,872 / 16,862 (11.1%), aki_b·aki_d 1,510 / 18,083 (8.4%), aki_c 1,864 / 15,333 (12.2%), readmit_a 544 / 4,533 (12.0%), readmit_b·readmit_d 408 / 4,553 (9.0%), readmit_c 535 / 4,149 (12.9%)",
+   "question": "기타 (이력 특징의 관찰 기간)",
+   "classification": "사실, 고칠 수 없음",
+   "reason_not_fixed": "연구 시작 전 이력은 데이터에 없다",
+   "recount": "python -m tools.justified_v2_evidence --only L10",
+   "finding": "연구 시작 직후 행은 이력 창이 짧다 (왼쪽 절단)"
+  },
+  {
+   "id": "L11",
+   "from": "검수 확인 실행 readmit_c ① (last의 순서)",
+   "question": "기타 (누수 아님, 값 선택 방식)",
+   "classification": "사실, 고칠 수 없음",
+   "designs": [
+    "aki_a",
+    "aki_b",
+    "aki_c",
+    "aki_d",
+    "readmit_a",
+    "readmit_b",
+    "readmit_c",
+    "readmit_d"
+   ],
+   "cells_by_design": {
+    "aki_a": [
+     "features[name=cr_last].time_column",
+     "features[name=bun_last].time_column",
+     "features[name=k_last].time_column"
+    ],
+    "aki_b": [
+     "features[name=cr_last].time_column",
+     "features[name=bun_last].time_column",
+     "features[name=k_last].time_column"
+    ],
+    "aki_c": [
+     "features[name=cr_last].time_column",
+     "features[name=bun_last].time_column",
+     "features[name=k_last].time_column"
+    ],
+    "aki_d": [
+     "features[name=cr_last].time_column",
+     "features[name=bun_last].time_column",
+     "features[name=k_last].time_column"
+    ],
+    "readmit_a": [
+     "features[name=cr_last].time_column",
+     "features[name=sbp_last].time_column"
+    ],
+    "readmit_b": [
+     "features[name=cr_last].time_column",
+     "features[name=sbp_last].time_column"
+    ],
+    "readmit_c": [
+     "features[name=cr_last].time_column",
+     "features[name=sbp_last].time_column",
+     "features[name=prior_cr_last].time_column"
+    ],
+    "readmit_d": [
+     "features[name=cr_last].time_column",
+     "features[name=sbp_last].time_column",
+     "features[name=k_last].time_column"
+    ]
+   },
+   "evidence": "last 집계는 time_column(보고·입력 시각) 순 마지막 값을 쓴다. 잰 시각(채취·측정 시각) 순 마지막 값과 다른 행: cr_last 6, bun_last 9, k_last 8 (동적, / 25,774), cr_last 6, sbp_last 37, prior_cr_last 5, readmit_d k_last 5 (고정, / 6,514). 다른 행이 0인 특징(k_last_6h, hgb_last)은 넣지 않았다",
+   "reason_not_fixed": "형식에 last의 순서 칸이 없고 순서는 time_column을 따른다. time_column을 잰 시각으로 바꾸면 tp 뒤에 보고된 값이 들어온다 (E02와 같은 칸)",
+   "note": "대상 칸 features[name=cr_last].time_column은 공개 E02의 정답 칸과 같다",
+   "recount": "python -m tools.justified_v2_evidence --only L11",
+   "finding": "last가 보고·입력 시각 순이라 가장 늦게 잰 값과 다를 수 있다"
+  }
+ ],
+ "explanation": "설명: docs/clean_review_v2.md (승인 B·C 절, 승인 C 결정, 근거 숫자 다시 셈)"
+}

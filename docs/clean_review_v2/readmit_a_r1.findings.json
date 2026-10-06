@@ -1,0 +1,47 @@
+[
+  {
+    "target": "split (method=temporal, cutoff=2157-01-01, gap=30d, key=family_id/person_id)",
+    "kind": "문제",
+    "problem": "묶음에 2157-01-01 뒤 행이 하나라도 있으면 그 묶음 전체를 학습에서 뺀다. 2157-01-01 뒤 행은 대개 재입원 자체이므로, 경계 직전 퇴원 중 30일 안 재입원(양성)이 있는 행이 선택적으로 빠진다. 실측: 경계 전 60일 안 퇴원 118행 중 양성은 50%만 학습에 남고 음성은 74%가 남아, 남은 행의 결과율이 10.8%로 같은 기간 전체(15.3%)보다 낮다. 학습 표본 선택이 tp 뒤 정보(미래 입원)와 결과에 따라 정해진다. 규모는 작지만(학습 4,533행, 제외 543행) 결과 의존 선택이다. 묶음을 첫 인덱스 시각(또는 학습 기간 안 행만)으로 배정하고 경계 뒤 행만 버리는 방식으로 바꾸는 것을 제안한다."
+  },
+  {
+    "target": "features.cr_last (assessment.method), features.cr_last_over_hgb",
+    "kind": "문제",
+    "problem": "학습 부분의 마지막 크레아티닌은 73%(3,302/4,533)가 jaffe(약 +0.10 mg/dL)이고 평가 부분과 사용 시점은 100% enzymatic이다. 알려진 고정 편향을 보정하지 않고 섞어 쓰면 학습과 사용의 분포가 체계적으로 어긋나고, cr_last_over_hgb에도 그대로 옮겨간다. 또 설계의 'method별 평가'는 평가 부분에 jaffe가 없어 할 수 없다. jaffe 값에서 0.10을 빼서 맞추는 것을 제안한다."
+  },
+  {
+    "target": "features.n_discharge_meds (episode=index_episode)",
+    "kind": "문제",
+    "problem": "에피소드 전체에서 퇴원약을 세므로, 두 입원으로 나뉜 에피소드(코호트 190행)에서는 앞 입원(전원 퇴원)의 퇴원약까지 더해진다. 실측 190개 중 107개의 앞 입원에 퇴원약이 있다. 이번 퇴원의 퇴원약 수라는 뜻과 맞지 않고 나뉜 에피소드에서만 값이 부풀려진다. 인덱스 입원(마지막 입원)의 퇴원약만 세는 것을 제안한다."
+  },
+  {
+    "target": "features.prior_dx_ckd, features.prior_dx_chf (scope=prior_admissions)",
+    "kind": "가정",
+    "problem": "인덱스 입원 진단은 tp 전에 코딩된 것이 없다(0건)는 것을 확인했다. 두 입원 에피소드의 앞 입원 진단은 39건이 tp 전에 코딩되어 있는데, prior_admissions에 같은 에피소드 앞 입원을 넣을지 설계에 없다. coded_time ≤ tp이면 사용 시점에 볼 수 있으므로 넣는다고 가정한다. ICD-9 대응 코드는 585.3, 428.0으로 앞부분 일치 필터에 걸린다."
+  },
+  {
+    "target": "features.unit, features.los_h, features.cr_last, features.hgb_min, features.sbp_last (scope=index_admission)",
+    "kind": "가정",
+    "problem": "두 입원 에피소드에서는 인덱스 입원이 마지막 입원이라 unit은 에피소드 첫 병동이 아니라 마지막 입원의 첫 병동이고, los_h와 검사 창(admit~tp)도 마지막 입원만 덮는다. icu_any·n_discharge_meds·dialysis_ordered만 에피소드 전체를 본다. 설계대로 마지막 입원 기준으로 계산한다고 가정한다."
+  },
+  {
+    "target": "features (history_key=patient_id) / outcome.match_key=person_id",
+    "kind": "가정",
+    "problem": "person_id 연결은 자료 추출 때 한 번에 이루어지므로 tp에는 알 수 없다. 특징은 등록 번호(patient_id) 기준, 결과는 사람(person_id) 기준으로 두는 설계가 맞다고 본다. 새 등록 번호로 재입원한 경우가 45건 있어 결과는 반드시 person_id로 묶어야 한다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup=count_as_negative, outcome.ascertainment",
+    "kind": "점검 불가",
+    "problem": "A·B 밖 병원 재입원은 자료에 없어 음성으로 센다. 그 규모는 이 데이터로 확인할 수 없다. 퇴원처·병원별 결과율(자택 A 14.7%, 전원 A 12.6%, 자택 B 14.1%, 전원 B 11.5%)만 보고할 수 있다. 전원 퇴원의 결과율이 더 낮은 것은 외부 재입원이 누락된 탓일 수 있다."
+  },
+  {
+    "target": "split.key=family_id (fallback person_id)",
+    "kind": "점검 불가",
+    "problem": "가족 연결은 약 절반만 기록되어 있고(family_id 80% 결측), 기록되지 않은 가족도 위험을 공유한다. 기록되지 않은 가족 구성원이 학습과 평가에 나뉘어 들어가는지는 확인할 수 없다. 시간 순 분할이라 영향은 제한적일 것으로 본다."
+  },
+  {
+    "target": "cohort.exclusion.followup_incomplete (2158-12-01)",
+    "kind": "가정",
+    "problem": "점검 결과 문제 없음. 원외 사망 기록 지연은 실측 14~179일이고 연계 반영일은 2159-07-01이다. 2158-12-01 이전 퇴원이면 30일 창 안 사망이 모두 반영된다. 이 경계로 인덱스 행이 7,344행에서 6,514행이 된다. 결과율은 14.5%(재입원 13.9%, 사망 0.9%)다."
+  }
+]

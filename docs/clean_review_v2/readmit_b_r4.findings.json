@@ -1,0 +1,57 @@
+[
+  {
+    "target": "features.los_h",
+    "kind": "가정",
+    "problem": "admissions 표에 length_of_stay_h 열이 없다 (열: admission_id, patient_id, admit_time, discharge_time, discharge_status, unit). 설계 설명에 따라 인덱스 입원 기록의 (discharge_time − admit_time) 시간으로 직접 만든다고 가정한다."
+  },
+  {
+    "target": "preprocessing.dx_code_map",
+    "kind": "점검 불가",
+    "problem": "ICD-9→ICD-10 대응표의 출처로 적힌 데이터 설명서(diagnoses.code_system)가 작업 폴더에 없다. 대응표를 확인할 수 없어 prior_dx_group의 범주를 그대로 재현할 수 없다. 데이터에서는 2155-10-01 무렵 코딩된 진단부터 ICD10이 쓰이고, seq=1 코드는 ICD9 13종, ICD10 14종이다. 대응표를 받아야 진행할 수 있다."
+  },
+  {
+    "target": "preprocessing.cr_method_align / features.cr_last",
+    "kind": "가정",
+    "problem": "0.10 mg/dL 차이의 근거인 데이터 설명서(labs.value)가 없어서 문서로는 확인하지 못했다. 데이터에서 method=jaffe는 정확히 2155-01-01 전 채취분(14,545건)이고, 그 뒤는 모두 enzymatic(16,661건)이다. 연도별 중앙값은 jaffe 1.10~1.14, enzymatic 0.96~1.01로 약 0.1 높아 설계와 들어맞는다. 보정은 method 열 기준으로 집계 전에 한다."
+  },
+  {
+    "target": "features.age",
+    "kind": "가정",
+    "problem": "데이터 설명서가 없어 95 상한 절단은 문서로 확인하지 못했다. 데이터에는 age=95가 103명 있고 최댓값도 95다. 인덱스 시점 나이는 age + (인덱스 admit_time − 그 등록 번호 첫 admit_time) 연수로 계산한다. 절단된 95에서 시작하는 행 가운데 61개는 계산값이 95를 넘는데, 실제 나이보다 작게 잡힌 값이다. 나이를 95로 다시 자를지는 정하지 않았으므로 계산값을 그대로 둔다고 가정한다."
+  },
+  {
+    "target": "features.icu_any (window.start=admit, episode=index_episode)",
+    "kind": "가정",
+    "problem": "두 입원 기록으로 이어진 에피소드(220개, 이 중 96개는 A↔B 병원 간)에서 'admit'이 무엇인지 설계에 적혀 있지 않다. episode=index_episode에 맞춰 에피소드의 첫 입원 admit_time으로 본다고 가정한다. cr_last·hgb_min·sbp_last·dialysis_ordered도 같게 처리한다. n_discharge_meds는 설명대로 인덱스 입원 기록만 본다."
+  },
+  {
+    "target": "features.cr_last_over_hgb (made_by: leakcheck.features)",
+    "kind": "가정",
+    "problem": "작업 환경에 leakcheck.features 도구가 없다. 대체(median_impute) 전의 cr_last(보정값)/hgb_min으로 직접 계산하고, 둘 중 하나라도 결측이면 결측으로 둔 뒤 대체한다고 가정한다."
+  },
+  {
+    "target": "features.n_prior_adm, features.n_clinic_365d, prior_dx_* (data_source.study_period.start)",
+    "kind": "가정",
+    "problem": "자료가 2150-01-01에 시작한다. 그래서 코호트 6,514행 중 2151-01-01 전 퇴원 597행은 365일 이력 창이 잘려 있고, -inf 창 특징도 그 전 이력을 보지 못한다. 이 행들의 이력 특징은 0이나 '없음'으로 기울 수 있다. 행을 빼지 않고 설계대로 둔다고 가정한다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup / outcome.ascertainment",
+    "kind": "가정",
+    "problem": "코호트 가운데 외부로 전원 퇴원한 행이 751개다 (에피소드의 마지막 기록이 transfer인 경우). 다른 병원 입원은 보이지 않아 음성으로 세어지므로 결과가 덜 잡힌다. 진단용 결과율은 A 자택 14.7%, A 전원 12.6%, B 자택 14.1%, B 전원 11.5%다. 설계가 by_stratum 보고로 이 점을 밝히고 있으므로 그대로 진행한다고 가정한다."
+  },
+  {
+    "target": "evaluation.subgroups (site)",
+    "kind": "가정",
+    "problem": "B 병원은 코호트 225행(219개 묶음), 결과 31건뿐이다. 묶음 기준으로 30%를 시험셋에 넣으면 B 사건은 10건 안팎이라 하위 집단 신뢰구간이 매우 넓다. 설계 notes에 적힌 대로 신뢰구간과 함께 보고하고, by_site=false를 유지한다."
+  },
+  {
+    "target": "cohort.exclusion.followup_incomplete",
+    "kind": "가정",
+    "problem": "데이터로 확인했다. 사망 연계(registry_link)의 death_recorded_time 최대는 2159-07-01이고, 원외 사망의 기록 지연은 최대 179.7일이다. 2158-12-01까지 퇴원한 행은 30일 창(~2158-12-31) 안의 사망이 지연 180일 이하로 모두 2159-07-01 전에 반영되므로 기준이 맞다. 남은 코호트의 창 안 사망 57건 중 연계 반영일 뒤에 기록된 것은 없다. 이 점검은 death_recorded_time이 실제 연계 반영 시점을 나타낸다는 가정에 기댄다."
+  },
+  {
+    "target": "split.key / model.tuning.cv_key",
+    "kind": "가정",
+    "problem": "데이터로 확인했다. family_id는 같은 person_id의 여러 등록 번호(111명)에서 모두 같거나 모두 결측이다. family_id가 없으면 person_id로 대신 묶는 방식에서 한 사람이 두 묶음으로 갈라지는 경우는 0건이다. 이 데이터에서는 학습·시험 간 사람 중복이 생기지 않는다고 본다."
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "target": "outcome.scope / outcome.reference.sources[0].scope / tp.anchor (cohort.exclusion·features의 episode와 불일치)",
+    "kind": "문제",
+    "problem": "병원·진료과 이동으로 입원 기록 두 건으로 나뉜 에피소드(220개, 앞 입원은 모두 transfer로 끝나고 0~60분 뒤 같은 등록 번호로 이어짐)를 설계가 일관되게 다루지 않는다. 제외 기준과 cr_last·cr_min_adm·n_cr은 index_episode를 쓰지만, 결과(AKI 판정과 기준값)는 index_admission만 쓰고 tp는 각 입원 기록의 admit에서 다시 센다. 그 결과 (1) 앞 입원의 tp에서 창 안에 '퇴원'(실제로는 이어진 입원으로 이동)하면 이어진 입원에서 생긴 AKI가 빠진다: 데이터에서 4개 행이 이 때문에 음성으로 표시된다. (2) 이어진 입원의 첫 값은 앞 입원 값을 기준값으로 쓰지 못한다: 에피소드 기준으로만 잡히는 AKI 값 3건. (3) 이어진 입원 727개 랜드마크 행은 실제 재원 시간과 다른 '입원 후 24시간~7일'에 놓인다. 결과·tp·특징의 단위를 에피소드로 통일하기를 권한다 (tp는 에피소드 첫 admit 기준, 결과 창은 에피소드 끝까지)."
+  },
+  {
+    "target": "features[cr_max_48h] (episode 누락)",
+    "kind": "문제",
+    "problem": "다른 크레아티닌 특징(cr_last, cr_min_adm, n_cr)은 episode=index_episode인데 cr_max_48h에는 episode 지정이 없다. 이어진 입원의 tp=24h 랜드마크 220개 행은 tp-48h 창이 앞 입원까지 걸치는데, 같은 에피소드의 앞 입원 값을 볼지 말지가 다른 특징과 다르게 처리된다. episode=index_episode로 맞추기를 권한다 (bun_last·k_last·hgb_min도 같은 문제)."
+  },
+  {
+    "target": "features[prior_dx_ckd].history_key",
+    "kind": "문제",
+    "problem": "이전 입원 이력을 patient_id로 찾는다. 111명이 등록 번호를 두 개 가지며, 새 번호로 바뀐 뒤의 입원은 옛 번호 아래의 CKD 진단을 보지 못한다. 데이터에서 person_id 기준이면 1,190행이 양성인데 patient_id 기준이면 1,138행으로 52행이 이력을 잃는다. history_key를 person_id(person_links)로 바꾸기를 권한다. problem_ckd_active도 patient_id 키인데, 현 데이터에서는 새 번호에 만성 문제가 다시 기록되어 차이가 없었으나 같은 이유로 person_id가 안전하다."
+  },
+  {
+    "target": "outcome.window.start / outcome.pending_at_tp",
+    "kind": "문제",
+    "problem": "outcome.window는 collect_time 기준 tp~tp+48h인데, description과 pending_at_tp=count_as_outcome은 'tp에 아직 보고되지 않은' 값, 즉 tp 전에 채취됐고 tp 뒤에 보고된 값의 AKI도 결과로 센다. 두 정의가 서로 다르다. 데이터에서 이런 보류 검사만으로 양성이 되는 행은 25개다. 이 경우 사건(채취)은 tp 전에 이미 일어났으므로 활력징후 등에 AKI 무렵 변화가 이미 들어 있을 수 있다. 어느 쪽인지 정하고, 보류 양성을 포함하면 따로 보고하기를 권한다. 준비 단계에서는 description대로 보류 검사를 포함한다고 가정했다."
+  },
+  {
+    "target": "cohort.exclusion[aki_known_by_tp].agg (kdigo_aki의 측정법 규칙)",
+    "kind": "가정",
+    "problem": "결과 판정은 측정법이 같은 값끼리만 비교한다고 정했지만 제외 기준의 kdigo_aki에는 이 규칙이 적혀 있지 않다. 결과와 같은 규칙(같은 입원·같은 측정법·먼저 채취한 값만, 48시간 +0.3 또는 7일 1.5배)을 쓴다고 가정했다. 측정법이 섞이는 입원은 7개, 랜드마크 36행이다."
+  },
+  {
+    "target": "features[cr_last, cr_min_adm, cr_rise].assessment",
+    "kind": "가정",
+    "problem": "측정법이 섞인 채로 쓰므로 2155-01-01 전환을 걸치는 입원(랜드마크 36행)에서는 cr_rise가 jaffe 차이(약 0.10 mg/dL)만큼 낮아질 수 있다. 수가 적어 설계대로 두되 한계로 적는다. 또 '사용 시점에는 enzymatic 하나뿐'이라는 근거는 intended_use(연구 전용, 배치 없음)와 맞지 않으므로, 측정법별 보고(by_stratum=method)로 대신 확인한다고 가정했다."
+  },
+  {
+    "target": "outcome.ascertainment.blind_to_predictors",
+    "kind": "문제",
+    "problem": "true로 적혀 있지만, 결과의 KDIGO 기준값은 tp 전 크레아티닌(최대 tp-168h)을 쓰고 이 값은 cr_min_adm·cr_last 등 예측변수와 같다. 또 측정 빈도(결과를 잡을 기회)는 예측변수인 unit_at_tp에 따라 다르다. 결과 판정이 예측변수와 독립이 아니므로 false로 보고 한계로 적어야 한다."
+  },
+  {
+    "target": "outcome.censoring.lost_to_followup / outcome.ascertainment",
+    "kind": "가정",
+    "problem": "창 안 측정이 없거나 창 안에 퇴원하면 음성이다. 데이터에서 병동 tp의 28.8%는 창 안 크레아티닌이 없고 51.1%는 창 안에 퇴원한다 (ICU는 6.6%, 33.0%). 다른 병원으로 전원 퇴원하면서 음성이 된 행이 1,330개다. 결과는 '원내에서 확인된 AKI'로 해석하고 병동별로 보고한다는 설계 의도대로 두며, 이를 실제 AKI 발생 예측으로 해석하지 않는다고 가정했다."
+  },
+  {
+    "target": "outcome.planned / outcome.planned_by / outcome.match_key",
+    "kind": "가정",
+    "problem": "planned=include, planned_by=admission_info.admission_type=elective는 재입원 결과에 쓰는 항목으로 보이며 입원 중 AKI·사망 결과에는 해당하지 않는다. 결과 계산에 쓰지 않는다고 가정했다. match_key=patient_id도 결과가 입원(에피소드) 안에서 정해지므로 쓰지 않는다."
+  },
+  {
+    "target": "outcome.censoring.end_of_data",
+    "kind": "가정",
+    "problem": "exclude_incomplete의 기준이 적혀 있지 않다. 결과 창 끝(tp+48h)에 최대 보고 지연 6시간을 더한 시각이 추출 종료(2160-01-01) 뒤인 행을 불완전으로 보고 제외한다고 가정했다 (2행). 또 퇴원이 종료 뒤인 입원은 데이터에 없어 마지막 몇 주의 긴 입원이 빠지는데, 무작위 분할이라 학습·평가에 같이 작용하므로 한계로만 적는다."
+  },
+  {
+    "target": "split.key (family_id, 없으면 person_id)",
+    "kind": "점검 불가",
+    "problem": "family_id는 가족의 절반만 기록되어 있다(랜드마크 행의 19.2%만 값이 있음). 기록되지 않은 가족 구성원도 위험을 공유하지만 데이터로 묶을 수 없어 학습·평가 사이에 섞일 수 있다. 등록 번호가 둘인 사람은 person_id로 묶여 있고 family_id가 같음을 확인했다 (불일치 0명)."
+  }
+]
