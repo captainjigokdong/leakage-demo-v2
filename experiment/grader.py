@@ -183,6 +183,47 @@ def classify(problem: str, path: str | None = None) -> frozenset:
 
 # ---------------------------------------------------------------- 설계서 경로
 
+SCHEMA = ROOT / "designs" / "schema.json"
+_SCHEMA: dict | None = None
+
+
+def _schema_has(parts: list[str]) -> bool:
+    """경로가 설계서 형식(designs/schema.json)에 있는 칸인가. 목록 칸에서는 조각 하나를 항목 이름으로 본다."""
+    global _SCHEMA
+    if _SCHEMA is None:
+        _SCHEMA = json.loads(SCHEMA.read_text(encoding="utf-8"))
+    defs = _SCHEMA.get("$defs", {})
+
+    def deref(n):
+        while isinstance(n, dict) and "$ref" in n:
+            n = defs[n["$ref"].split("/")[-1]]
+        return n
+
+    def walk(n, ps):
+        n = deref(n)
+        if not ps:
+            return True
+        alts = [deref(a) for k in ("anyOf", "oneOf", "allOf") for a in n.get(k, [])] if isinstance(n, dict) else []
+        if any(walk(a, ps) for a in alts):
+            return True
+        if not isinstance(n, dict):
+            return False
+        if ps[0] in n.get("properties", {}):
+            return walk(n["properties"][ps[0]], ps[1:])
+        if n.get("type") == "array" and "items" in n:
+            return walk(n["items"], ps[1:])
+        return False
+    return walk(_SCHEMA, parts)
+
+
+def _keep(prefix: list[str], done: list[str], rest: list[str], schema_prefix: list[str]) -> str:
+    """설계서에 있는 데까지(done) 읽은 뒤, 나머지가 형식에 있는 칸이면 그대로 두고(칸을 지운 패치) 아니면 자른다."""
+    full = schema_prefix + rest
+    if len(done) < len(rest) and _schema_has(full):
+        return ".".join(prefix + rest)
+    return ".".join(prefix + done)
+
+
 LIST_SECTIONS = {"features": "features", "inclusion": "cohort.inclusion",
                  "exclusion": "cohort.exclusion", "preprocessing": "preprocessing"}
 
@@ -226,7 +267,8 @@ def _list_item(section: str, rest: list[str], design: dict) -> str | None:
         return None
     items = design.get(section, []) if section in ("features", "preprocessing") else design["cohort"][section]
     item = next(x for x in items if x.get("name") == rest[0])
-    return ".".join([base, rest[0]] + _walk(item, rest[1:]))
+    sp = (["cohort", section] if section in ("inclusion", "exclusion") else [section]) + [rest[0]]
+    return _keep(base.split(".") + [rest[0]], _walk(item, rest[1:]), rest[1:], sp)
 
 
 def canon(parts: list[str], design: dict) -> str | None:
@@ -239,9 +281,9 @@ def canon(parts: list[str], design: dict) -> str | None:
             return "cohort"
         if rest[0] in ("inclusion", "exclusion"):
             return _list_item(rest[0], rest[1:], design)
-        if rest[0] not in design.get("cohort", {}):
+        if rest[0] not in design.get("cohort", {}) and not _schema_has(["cohort", rest[0]]):
             return None
-        return ".".join(["cohort"] + _walk(design["cohort"], rest))
+        return _keep(["cohort"], _walk(design.get("cohort", {}), rest), rest, ["cohort"])
     if head in LIST_SECTIONS:
         return _list_item(head, rest, design)
     if head == "ascertainment":
@@ -251,7 +293,7 @@ def canon(parts: list[str], design: dict) -> str | None:
     if head == "outcome" and rest and rest[0] == design.get("outcome", {}).get("name"):
         rest = rest[1:]
     if head in design:
-        return ".".join([head] + _walk(design[head], rest))
+        return _keep([head], _walk(design[head], rest), rest, [head])
     hits = [s for s, ns in _names(design).items() if head in ns]
     if len(hits) == 1:
         return _list_item(hits[0], [head] + rest, design)
@@ -280,7 +322,8 @@ def key_path(t: str, design: dict) -> str:
     p = _parts(t)
     if p in (["cohort"], ["model"]):
         return p[0]
-    return canon(p, design) or ".".join(p)
+    c = canon(p, design)
+    return c if c is not None else ".".join(p)
 
 
 def is_bundle(path: str, design: dict) -> bool:
@@ -486,7 +529,10 @@ def _score(g: Grade, entries: list[Entry], design: dict, key_entry: dict) -> Gra
             c["n_unknown_kind"] += 1
         if _any(f, assume, design):
             c["n_assumption_cell_problem"] += 1
-        in_just, in_just_s = _any(f, just, design), _any(f, just, design, True)
+        # K1·K5 칸 지적은 넓은 지적 경로로 목록에 흡수되지 않는다 (승인 C: 점검기 문제는 오경보로 센다)
+        on_k = _any(f, kcells, design, True)
+        in_just = any((r := match_route(f, k, design)) is not None and not (r == "broader" and on_k) for k in just)
+        in_just_s = _any(f, just, design, True)
         for i, d in enumerate(defects):
             sec_ok = bool(e.qs & set(d["accept_questions"]))
             if i in on_defect:

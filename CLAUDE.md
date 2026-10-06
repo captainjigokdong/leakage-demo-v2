@@ -24,7 +24,7 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
 
 ## 현재 단계
 
-**4단계 4b 완료** (2026-10-06) — 봉인 확인 뒤 동적 깨끗한 설계서 수정·다시 잠금(`docs/lock_4a_v2.json` 확정), 배치 제외 목록(봉인, 해시 잠금), 추첨·배치, v2 변형 30개(`designs/variants/`, 목록 `docs/variants_v2.md`), 정답표 `sealed/answer_key.enc`. 기록 `docs/stage4b_v2.md`. 보류 사례 정답 칸은 기본값(㉣). 다음은 **5단계(기준)** 이고 새 세션에서 한다. 시작 전에 **4b PR이 main에 병합됐는지** 확인한다. 5·6단계는 **변형끼리 또는 변형과 깨끗한 설계서를 비교하지 않고, 정답표와 봉인 파일을 열지 않는다.** `leakcheck/`, `skill_src/`, `designs/schema.json`은 계속 동결 (버그는 `docs/known_issues_v2.md`).
+**5단계 완료** (2026-10-06) — 기준 `docs/success_criteria_v2.md`, 채점 규칙 `experiment/scoring_rules.md`(v2), 채점기 v2, 분석 계획 `docs/analysis_plan_v2.md`, 지시문 v2(`findings.json`), 에이전트용 문서 `docs/agent/`, 검증 세트 (A) `tests/fixtures/validation_v1/`·(B) `tests/test_grader.py`. 잠금 파일 7개(해시는 기준 문서 4절). 다음은 **6단계(실행)** 이고 새 세션에서 한다. 시작 전에 **5단계 PR이 main에 병합됐는지**와 사용자가 `criteria-locked-v2` 태그를 만들었는지 확인한다. 6단계는 `experiment/run.py`를 v2 제출 형식·턴 상한에 맞추는 일부터 한다 (`docs/phases.md` 6단계). **변형끼리 또는 변형과 깨끗한 설계서를 비교하지 않고, 정답표와 봉인 파일을 열지 않는다.** `leakcheck/`, `skill_src/`, `designs/schema.json`은 계속 동결 (버그는 `docs/known_issues_v2.md`). 잠긴 채점 파일도 고치지 않는다.
 
 ## 절대 규칙
 
