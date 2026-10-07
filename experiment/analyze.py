@@ -118,6 +118,15 @@ def near_zero_from_record(rec, key_variants: dict) -> list[list[str]]:
         elif len(ids) == 1 and len(bs) == 1 and (next(iter(ids)), next(iter(bs))) in placed:
             i = next(iter(ids))
             out.add((placed[(i, next(iter(bs)))], i))
+        elif len(ids) == 1 and not vs and not bs:
+            # 대체 규칙 (7단계 채점 전 수정, 사용자 승인): 변형·바탕 이름이 없으면 정답표 결함 변형에
+            # 정확히 한 번 배치된 사례 id일 때만 그 배치로 맞춘다. 0번이거나 2번 이상이면 멈춘다.
+            i = next(iter(ids))
+            hits = [fname for fname, v in key_variants.items() if v.get("kind", "defect") == "defect"
+                    and any(d["id"] == i for d in v["defects"])]
+            if len(hits) != 1:
+                raise SystemExit(f"봉인 기록 조각의 사례 id가 정답표 결함 변형에 {len(hits)}번 배치됨 (기대 1). 멈춤.")
+            out.add((hits[0], i))
         else:
             bad += 1
     if len(out) != NEAR_ZERO_N or bad:

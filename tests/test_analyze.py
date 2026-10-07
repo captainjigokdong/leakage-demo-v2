@@ -198,6 +198,25 @@ def test_leak_check_catches_cells_and_variant_names():
     assert lc == {"answer_cells": 2, "variant_names": 1, "case_ids": 1}
 
 
+def test_near_zero_from_record_id_only_fallback():
+    """대체 규칙 (7단계 채점 전 수정, 사용자 승인): 변형·바탕 이름이 없는 조각은 사례 id가 결함 변형에 정확히 한 번 배치될 때만 맞춘다."""
+    _, _, key, _ = _fake_run()
+    an.NEAR_ZERO_N = 2
+    assert an.near_zero_from_record({"near_zero": ["E02 차이 작음", "E06 차이 작음"]}, key) == [["vA.json", "E02"], ["vB.json", "E06"]]
+    # 0번 배치
+    with pytest.raises(SystemExit):
+        an.near_zero_from_record({"near_zero": ["E02 차이 작음", "E09 차이 작음"]}, key)
+    # 2번 이상 배치
+    key2 = dict(key)
+    key2["vE.json"] = json.loads(json.dumps(key["vA.json"]))
+    with pytest.raises(SystemExit):
+        an.near_zero_from_record({"near_zero": ["E02 차이 작음", "E06 차이 작음"]}, key2)
+    # 깨끗한 변형의 배치는 세지 않는다 (kind != defect)
+    key3 = dict(key)
+    key3["vF.json"] = dict(json.loads(json.dumps(key["vA.json"])), kind="clean")
+    assert an.near_zero_from_record({"near_zero": ["E02 차이 작음", "E06 차이 작음"]}, key3) == [["vA.json", "E02"], ["vB.json", "E06"]]
+
+
 def test_near_zero_must_be_placed_defect():
     _, _, key, _ = _fake_run()
     an.check_near_zero_placed([["vA.json", "E02"], ["vB.json", "E06"]], key)
