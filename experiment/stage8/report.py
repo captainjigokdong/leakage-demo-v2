@@ -33,7 +33,7 @@ def order(t: str, names) -> list[str]:
 
 def plot(b: str, res: dict) -> Path:
     parts = list(res["summary"].items())
-    fig, axes = plt.subplots(1, len(parts), figsize=(6.2 * len(parts), 4.6), squeeze=False)
+    fig, axes = plt.subplots(1, len(parts), figsize=(6.6 * len(parts), 5.2), squeeze=False)
     for ax, (t, ds) in zip(axes[0], parts):
         names = [n for n in order(t, ds) if n != "fixed"]
         for j, (m, (lab, col)) in enumerate(MODELS.items()):
@@ -44,7 +44,7 @@ def plot(b: str, res: dict) -> Path:
                     continue
                 v = e["vs_fixed"]
                 ax.hlines(i + off, v["min"], v["max"], color=col, lw=2)
-                ax.plot(v["mean"], i + off, "o", color=col, ms=8, label=lab if i == 0 or n == names[-1] else None)
+                ax.plot(v["mean"], i + off, "o", color=col, ms=8, label=lab)
                 if "vs_ref" in e:
                     ax.plot(e["vs_ref"]["mean"], i + off, "o", mfc="white", mec=col, mew=2, ms=8)
         ax.axvline(0, color="#888888", lw=1)
@@ -55,7 +55,9 @@ def plot(b: str, res: dict) -> Path:
         ax.grid(axis="x", color="#e5e5e5")
         h, l = ax.get_legend_handles_labels()
         seen = dict(zip(l, h))
-        ax.legend(seen.values(), seen.keys(), loc="lower right", fontsize=8, frameon=False)
+        seen["vs train-only selection ref"] = ax.plot([], [], "o", mfc="white", mec="#555555", mew=2, ms=8)[0]
+        ax.legend(seen.values(), seen.keys(), loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=4, fontsize=8,
+                  frameon=False)
     fig.tight_layout()
     p = OUT / f"leakage_effect_{b}.png"
     fig.savefig(p, dpi=130)
@@ -106,6 +108,11 @@ def tables(b: str, res: dict) -> list[str]:
                      f"{'예' if x['cv_gen_is_group_folds'] and x.get('cv_gen_is_passed_object') else '아니요'} | {x['cv_split_calls']} | "
                      f"{x['seconds']} | {r['auroc']['tpot']:.3f} | `{pipe}` |")
         L.append("")
+    ks = {}
+    for r in res["runs"]:
+        if r["seed_step"] == 0 and r["design"] in ("F4", "F4ref", "D5", "D5ref", "D4+D5", "all"):
+            ks[f"{r['type']}/{r['design']}"] = r["n_columns"]
+    L += ["특징 선택 뒤 열 수 k (계획 3절 d): " + ", ".join(f"{k} {v}" for k, v in ks.items()), ""]
     fx = {r["type"]: r["patients_or_families_in_both"] for r in res["runs"] if r["design"] == "fixed"}
     L += [f"수정 설계에서 학습·시험 양쪽에 든 가족 수: " + ", ".join(f"{t} {v}" for t, v in fx.items()), ""]
     empty = {k: v["all_empty_columns"] for k, v in res["built"].items() if v["all_empty_columns"]}
@@ -118,7 +125,14 @@ def tables(b: str, res: dict) -> list[str]:
 def main() -> int:
     L = ["# 8단계 누수 효과 시연 결과", "",
          "계획 `docs/stage8_plan.md`. v2 판정(H1·H2)과 무관한 보조 분석이다. 합성 데이터라 AUROC 절대값에는 임상적 의미가 없고, "
-         "수정 설계(또는 참조 조건) 대비 차이로 읽는다. 생성: `python -m experiment.stage8.report`.", ""]
+         "수정 설계(또는 참조 조건) 대비 차이로 읽는다. 생성: `python -m experiment.stage8.report`.", "",
+         "- TPOT는 시드 1개(분할 시드 20261002)라 범위가 없고, 참조 조건에는 돌리지 않아 참조 대비 차이가 없다.",
+         "- \"모두\"의 참조 대비 차이는 F4 참조/D5 참조 기준이다. \"모두\"는 특징이 더 많아 k가 다르다 (각 절의 k 줄).", "",
+         "**v2 데이터에서 표현되지 않은 항목** (설계를 고치지 않고 기록)", "",
+         "- 보조 데이터의 고정 시점(30일 재입원) 설계: 1인당 입원 1회라 결과 양성 0 (194행). 실행하지 않음.",
+         "- 보조 데이터의 동적 설계 특징 `bun_last`, `k_last`, `hgb_min`: 보조 데이터에 bun·potassium·hemoglobin 검사가 없어 모든 행이 빈 열. "
+         "그대로 두고 0으로 채운 상수 열로 처리 (계획 3절 f).",
+         "- v1 동적 설계(안 B)에는 검사 t001~t500이 특징으로 들어가지 않는다. 그래서 \"변수 많은\" 조건은 8단계 시연용 설계(안 A)로만 생긴다.", ""]
     for b in ("main", "aux_A", "aux_B"):
         res = load(b)
         plot(b, res)

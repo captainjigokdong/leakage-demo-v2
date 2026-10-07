@@ -30,6 +30,8 @@ v1에서 가져온 기록 문서(`docs/holdout_log.md`, `injection_log.md`, `kno
 
 **7단계 채점 완료** (2026-10-07) — 채점 결과 `results/summary_*.json`·`overview.json`(`344d20c`), grades는 `sealed/grades_*.enc`(평문 SHA-256 `results/grades_sha256.json`), 보고서 `results/report.md`, 사후 분석 `experiment/posthoc_7*.py`. 판정: H1a 아니요, H1b 예, H1c 아니요, H2a 아니요, H2b 기술. `experiment/analyze.py`와 채점 결과는 고치지 않는다 (더 필요한 계산은 별도 "사후 분석" 파일). 다음은 **8단계(보조)** 이고 새 세션에서 한다. 시작 전에 7단계 PR이 main에 병합됐는지 확인한다.
 
+**8단계 보조 완료** (2026-10-07) — 누수 효과 시연. 계획 `docs/stage8_plan.md`, 결과 `results/stage8/`(표 `leakage_effect.md`), 실행 `python -m experiment.leakage_effect --bundle main|aux_A|aux_B`, 그림·표 `python -m experiment.stage8.report`. tpot 등 버전 `requirements-stage8-lock.txt`. 보조 데이터 안 A(`experiment/stage8/dynamic_aki_aux500.json`)는 v1 설계가 아닌 8단계 시연용 설계. 결과를 보고 조건·시드·특징·설정을 바꿔 다시 돌리지 않는다(바꾸면 별도 "사후 분석" 파일).
+
 ## 절대 규칙
 
 1. **봉인 파일을 열지 않는다.** `sealed/` 안의 파일(암호화된 후보 목록, 주입 코드, 맹검 정답표)은 읽지도, 복호화하지도, 내용을 추측하지도 않는다. 예외는 `docs/phases.md`가 명시한 단계에서 사용자가 암호를 직접 줄 때뿐이다.
