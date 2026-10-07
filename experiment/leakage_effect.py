@@ -281,7 +281,7 @@ def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool,
     split = splitting.assign(b["rows"], b["design"]["split"])
     train = (split == "train").to_numpy()
     Z, names = preprocess(b["X"], b["y"], train, b["design"]["preprocessing"])
-    level = splitting.effective_key_level(b["design"]["split"])
+    level = splitting.key_level(b["design"]["split"])
     crossing, n_groups = splitting.crossing(b["rows"], split, rules.split_level(BASE_SPLIT_KEY[t]))
     rec = {"type": t, "design": name, "seed_step": step, "split_seed": b["design"]["split"]["seed"],
            "split_level": level, "n_rows": int(len(b["y"])), "n_train": int(train.sum()), "n_test": int((~train).sum()),
@@ -291,7 +291,7 @@ def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool,
         m.fit(Z[train], b["y"][train])
         rec["auroc"][mname] = lk.auroc(lock, d, b["y"][~train], m.predict_proba(Z[~train])[:, 1])
     if use_tpot:
-        grp = splitting.group_values(b["rows"], rules.split_level(BASE_SPLIT_KEY[t])).to_numpy()[train]
+        grp = splitting.group_values(b["rows"], {"key": BASE_SPLIT_KEY[t]}).to_numpy()[train]
         folds = GroupFolds(grp, TPOT_FOLDS, b["design"]["split"]["seed"])
         tp = tpot_model(folds, b["design"]["split"]["seed"])
         t0 = time.time()
