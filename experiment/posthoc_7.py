@@ -43,9 +43,9 @@ def absorbed_split(grades: list[dict], conditions: dict, key_variants: dict) -> 
 
 def _count(gs: list[dict], keep) -> dict:
     p = [(g, d) for g in gs for d in g["defects"] if keep(g, d)]
-    split = lambda f: {"detected": sum(d["primary"] for g, d in p if f(d)), "n": sum(1 for g, d in p if f(d))}
-    return {"all": split(lambda d: True), "public": split(lambda d: not d["holdout"]),
-            "holdout": split(lambda d: d["holdout"])}
+    tally = lambda f: {"detected": sum(d["primary"] for g, d in p if f(d)), "n": sum(1 for g, d in p if f(d))}
+    return {"all": tally(lambda d: True), "public": tally(lambda d: not d["holdout"]),
+            "holdout": tally(lambda d: d["holdout"])}
 
 
 def reference_counts(grades: list[dict], conditions: dict, near_zero: list[list[str]]) -> dict:

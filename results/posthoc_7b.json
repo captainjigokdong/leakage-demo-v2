@@ -1,0 +1,29 @@
+{
+ "note": "사후 분석 2 (analysis_plan_v2.md에 없음, 결과를 본 뒤 더함). 판정에 쓰지 않음. 주 분석 grades.",
+ "clean_absorbed_as_false_alarm": {
+  "가": {
+   "reports": 16,
+   "false_alarms": 8,
+   "absorbed": 20,
+   "mean_per_report_fa_only": 0.5,
+   "mean_per_report_with_absorbed": 1.75
+  },
+  "나": {
+   "reports": 16,
+   "false_alarms": 8,
+   "absorbed": 4,
+   "mean_per_report_fa_only": 0.5,
+   "mean_per_report_with_absorbed": 0.75
+  }
+ },
+ "misses": {
+  "가": {
+   "missed": 2,
+   "defect_cell_as_assumption_or_unable": 0
+  },
+  "나": {
+   "missed": 7,
+   "defect_cell_as_assumption_or_unable": 6
+  }
+ }
+}
