@@ -196,3 +196,30 @@ def test_leak_check_catches_cells_and_variant_names():
     assert an.leak_check([{"invoked_split": 1, "x": "split은 단어"}], key) == {"answer_cells": 0, "variant_names": 0, "case_ids": 0}
     lc = an.leak_check([{"a": ["features.cr_last", "split.key"], "vA.json": 1, "b": "E02"}], key)
     assert lc == {"answer_cells": 2, "variant_names": 1, "case_ids": 1}
+
+
+def test_near_zero_must_be_placed_defect():
+    _, _, key, _ = _fake_run()
+    an.check_near_zero_placed([["vA.json", "E02"], ["vB.json", "E06"]], key)
+    for bad in ([["vA.json", "E06"], ["vB.json", "E06"]],      # 그 변형에 없는 사례
+                [["vC.json", "E02"], ["vB.json", "E06"]],      # 깨끗한 변형
+                [["vZ.json", "E02"], ["vB.json", "E06"]],      # 정답표에 없는 변형
+                [["vA.json", "E02"], ["vA.json", "E02"]]):     # 중복
+        with pytest.raises(SystemExit):
+            an.check_near_zero_placed(bad, key)
+    # 기록에 배치되지 않은 조합 조각이 섞여 있으면 멈춘다
+    with pytest.raises(SystemExit):
+        an.near_zero_from_record({"near_zero": [["E02", "aki_a"], ["E06", "readmit_c"], ["E02", "aki_c"]]}, key)
+
+
+def test_near_zero_checked_before_grading(tmp_path, monkeypatch):
+    reports, conds, key, designs = _fake_run()
+    _patch_key(monkeypatch, key, designs)
+    called = []
+    monkeypatch.setattr(gr, "grade_all", lambda *a, **k: called.append(1) or [])
+    runs = _fake_runs_dir(tmp_path, reports, conds)
+    out = tmp_path / "results"
+    rec = _record(tmp_path, {"near_zero": [["E02", "aki_a"], ["E13", "readmit_c"]]})
+    with pytest.raises(SystemExit):
+        an.run("시험암호", out=out, runs=runs, sealed=tmp_path, record=rec)
+    assert called == [] and not out.exists()

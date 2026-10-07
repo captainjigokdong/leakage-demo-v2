@@ -120,9 +120,19 @@ def near_zero_from_record(rec, key_variants: dict) -> list[list[str]]:
             out.add((placed[(i, next(iter(bs)))], i))
         else:
             bad += 1
-    if len(out) != NEAR_ZERO_N:
+    if len(out) != NEAR_ZERO_N or bad:
         raise SystemExit(f"봉인 기록에서 0에 가까운 배치를 {len(out)}개 찾음 (기대 {NEAR_ZERO_N}, 맞추지 못한 조각 {bad}). 멈춤.")
-    return [list(x) for x in sorted(out)]
+    nz = [list(x) for x in sorted(out)]
+    check_near_zero_placed(nz, key_variants)
+    return nz
+
+
+def check_near_zero_placed(near_zero: list[list[str]], key_variants: dict) -> None:
+    """찾은 배치가 정답표의 결함 변형(kind = defect)에 실제로 배치된 사례인지 대조. 아니면 내용 없이 멈춘다."""
+    ok = sum(v in key_variants and key_variants[v].get("kind", "defect") == "defect"
+             and any(d["id"] == i for d in key_variants[v]["defects"]) for v, i in near_zero)
+    if ok != len(near_zero) or len({tuple(x) for x in near_zero}) != len(near_zero):
+        raise SystemExit(f"0에 가까운 배치 대조 실패: 정답표 결함 변형 배치와 맞는 것 {ok}/{len(near_zero)}. 멈춤.")
 
 
 def narrative_fixed_drawn(key_variants: dict) -> list[str]:
@@ -205,6 +215,7 @@ def run(password: str, out: Path = RESULTS, runs: Path = RUNS, sealed: Path = SE
     bad = grader.verify_variants(key["variants"])
     if bad:
         raise SystemExit(f"변형 파일 해시 불일치 {len(bad)}건. 멈춤.")
+    # 봉인 기록 탐색·정답표 대조는 채점(grade_all)보다 먼저 한다. 실패하면 아무 결과도 쓰지 않고 멈춘다.
     near_zero = near_zero_from_record(json.loads(decrypt_bytes(record.read_bytes(), password)), key["variants"])
     conditions = json.loads((runs / "conditions.json").read_text(encoding="utf-8"))
     checker = _read(runs / "checker")
