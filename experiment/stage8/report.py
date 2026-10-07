@@ -122,7 +122,43 @@ def tables(b: str, res: dict) -> list[str]:
     return L
 
 
-def main() -> int:
+def _r(v: dict) -> str:
+    return f"{f3(v['mean'])} [{f3(v['min'])}, {f3(v['max'])}]"
+
+
+def summary(R: dict) -> list[str]:
+    """요약 문장 (사용자 요청 2026-10-07). 숫자는 모두 결과 파일에서 읽는다."""
+    A, B, M = R["aux_A"]["summary"]["dynamic"], R["aux_B"]["summary"]["dynamic"], R["main"]["summary"]
+    L = ["## 요약", "",
+         "- **이 결과는 가설 판정이 아니다.** 7단계 판정(H1a·b·c, H2a·b)과 무관한 보조 분석이다.",
+         f"- **안 A는 v1 설계가 아니라 8단계 시연용 설계다** (v1 동적 설계 + 검사 500종 특징). 안 A에서는 특징 선택 누수(D5)가 "
+         f"참조 대비 로지스틱 {_r(A['D5']['logistic']['vs_ref'])}, 부스팅 {_r(A['D5']['hgb']['vs_ref'])}였다. "
+         f"**안 B(v1 설계 그대로)에서는 효과가 없었다**: D5 참조 대비 로지스틱 {_r(B['D5']['logistic']['vs_ref'])}, "
+         f"부스팅 {_r(B['D5']['hgb']['vs_ref'])}.",
+         "- **특징 선택 누수의 효과는 참조 대비 차이로 읽는다.** v1 수정 설계에는 특징 선택 단계가 없어, 수정 대비 차이에는 "
+         "누수 효과와 \"특징을 절반으로 줄인 효과\"가 섞인다. 참조(같은 선택을 학습 집합에서만 적합) 대비 차이가 누수 효과다. "
+         f"예: 본 데이터 동적 D5는 수정 대비 로지스틱 {_r(M['dynamic']['D5']['logistic']['vs_fixed'])}이지만 참조 대비 "
+         f"{_r(M['dynamic']['D5']['logistic']['vs_ref'])}이다 (두 조건이 고른 열이 같았다, `posthoc_selected_columns.md`).",
+         f"- **TPOT(시드 1개)에서는 안 A의 D4+D5가 수정 대비 {A['D4+D5']['tpot']['vs_fixed']['mean']:+.3f}로 부풀림이 보이지 않았다.** "
+         f"(안 B는 {B['D4+D5']['tpot']['vs_fixed']['mean']:+.3f}.) TPOT는 시드 1개라 범위가 없다.",
+         f"- **부스팅의 D5 단독은 범위가 0에 걸친다** (안 A, 시드 20개): 수정 대비 {_r(A['D5']['hgb']['vs_fixed'])}, "
+         f"참조 대비 {_r(A['D5']['hgb']['vs_ref'])}. 로지스틱은 두 차이 모두 범위가 0보다 크다 "
+         f"(수정 대비 {_r(A['D5']['logistic']['vs_fixed'])}).",
+         "- **수정 설계의 AUROC 절대값** (모델별 평균 [범위]; TPOT는 시드 1개). 합성 데이터라 임상적 의미는 없다.", "",
+         "| 묶음 | 로지스틱 | 부스팅 | TPOT |", "|---|---|---|---|"]
+    for lab, e in (("본 데이터 고정 시점 (시드 5)", M["fixed"]["fixed"]), ("본 데이터 동적 AKI (시드 5)", M["dynamic"]["fixed"]),
+                   ("보조 안 A (시드 20)", A["fixed"]), ("보조 안 B (시드 20)", B["fixed"])):
+        L.append(f"| {lab} | " + " | ".join(f"{e[m]['mean']:.3f} [{e[m]['min']:.3f}, {e[m]['max']:.3f}]" if m != "tpot"
+                                             else f"{e[m]['mean']:.3f}" for m in ("logistic", "hgb", "tpot")) + " |")
+    L += ["", "계획과 다르게 한 것: `docs/stage8_deviations.md`. 사후 확인: `posthoc_selected_columns.md`.", ""]
+    return L
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--no-plot", action="store_true", help="그림은 다시 그리지 않고 표만 쓴다")
+    a = ap.parse_args(argv)
     L = ["# 8단계 누수 효과 시연 결과", "",
          "계획 `docs/stage8_plan.md`. v2 판정(H1·H2)과 무관한 보조 분석이다. 합성 데이터라 AUROC 절대값에는 임상적 의미가 없고, "
          "수정 설계(또는 참조 조건) 대비 차이로 읽는다. 생성: `python -m experiment.stage8.report`.", "",
@@ -133,9 +169,11 @@ def main() -> int:
          "- 보조 데이터의 동적 설계 특징 `bun_last`, `k_last`, `hgb_min`: 보조 데이터에 bun·potassium·hemoglobin 검사가 없어 모든 행이 빈 열. "
          "그대로 두고 0으로 채운 상수 열로 처리 (계획 3절 f).",
          "- v1 동적 설계(안 B)에는 검사 t001~t500이 특징으로 들어가지 않는다. 그래서 \"변수 많은\" 조건은 8단계 시연용 설계(안 A)로만 생긴다.", ""]
-    for b in ("main", "aux_A", "aux_B"):
-        res = load(b)
-        plot(b, res)
+    R = {b: load(b) for b in ("main", "aux_A", "aux_B")}
+    L += summary(R)
+    for b, res in R.items():
+        if not a.no_plot:
+            plot(b, res)
         L += tables(b, res)
     (OUT / "leakage_effect.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     return 0

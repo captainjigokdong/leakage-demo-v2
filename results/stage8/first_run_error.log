@@ -1,0 +1,8 @@
+FAIL aux_B
+    r = run_one(t, name, d, tables, step, tp, built=b)
+  File "/home/user/leakage-demo-v2/experiment/leakage_effect.py", line 284, in run_one
+    level = splitting.effective_key_level(b["design"]["split"])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'leakcheck.splitting' has no attribute 'effective_key_level'. Did you mean: 'effective_levels'?
+
+[exited with code 1]

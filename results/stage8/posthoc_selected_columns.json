@@ -1,0 +1,642 @@
+[
+ {
+  "bundle": "main",
+  "type": "fixed",
+  "leak": "F4",
+  "ref": "F4ref",
+  "seed_step": 0,
+  "k": 8,
+  "overlap": 7,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": [
+   "age",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ],
+  "ref_columns": [
+   "los_h",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "fixed",
+  "leak": "F4",
+  "ref": "F4ref",
+  "seed_step": 1,
+  "k": 8,
+  "overlap": 7,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": [
+   "age",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ],
+  "ref_columns": [
+   "age",
+   "los_h",
+   "n_dx",
+   "cr_last",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "fixed",
+  "leak": "F4",
+  "ref": "F4ref",
+  "seed_step": 2,
+  "k": 8,
+  "overlap": 7,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": [
+   "age",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ],
+  "ref_columns": [
+   "los_h",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "fixed",
+  "leak": "F4",
+  "ref": "F4ref",
+  "seed_step": 3,
+  "k": 8,
+  "overlap": 8,
+  "same_columns": true,
+  "same_auroc": {
+   "logistic": true,
+   "hgb": true
+  },
+  "leak_columns": [
+   "age",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ],
+  "ref_columns": [
+   "age",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "fixed",
+  "leak": "F4",
+  "ref": "F4ref",
+  "seed_step": 4,
+  "k": 8,
+  "overlap": 7,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": [
+   "age",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ],
+  "ref_columns": [
+   "los_h",
+   "n_dx",
+   "cr_last",
+   "dialysis_ordered",
+   "unit=ICU",
+   "unit=ward",
+   "discharge_status=home",
+   "discharge_status=transfer"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 0,
+  "k": 6,
+  "overlap": 6,
+  "same_columns": true,
+  "same_auroc": {
+   "logistic": true,
+   "hgb": true
+  },
+  "leak_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ],
+  "ref_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 1,
+  "k": 6,
+  "overlap": 6,
+  "same_columns": true,
+  "same_auroc": {
+   "logistic": true,
+   "hgb": true
+  },
+  "leak_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ],
+  "ref_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 2,
+  "k": 6,
+  "overlap": 6,
+  "same_columns": true,
+  "same_auroc": {
+   "logistic": true,
+   "hgb": true
+  },
+  "leak_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ],
+  "ref_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 3,
+  "k": 6,
+  "overlap": 6,
+  "same_columns": true,
+  "same_auroc": {
+   "logistic": true,
+   "hgb": true
+  },
+  "leak_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ],
+  "ref_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ]
+ },
+ {
+  "bundle": "main",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 4,
+  "k": 6,
+  "overlap": 6,
+  "same_columns": true,
+  "same_auroc": {
+   "logistic": true,
+   "hgb": true
+  },
+  "leak_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ],
+  "ref_columns": [
+   "cr_last",
+   "cr_min_adm",
+   "cr_max_48h",
+   "bun_last",
+   "unit=ICU",
+   "unit=ward"
+  ]
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 0,
+  "k": 256,
+  "overlap": 185,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 1,
+  "k": 256,
+  "overlap": 188,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 2,
+  "k": 256,
+  "overlap": 183,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 3,
+  "k": 256,
+  "overlap": 189,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 4,
+  "k": 256,
+  "overlap": 180,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 5,
+  "k": 256,
+  "overlap": 190,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 6,
+  "k": 256,
+  "overlap": 189,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 7,
+  "k": 256,
+  "overlap": 191,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 8,
+  "k": 256,
+  "overlap": 189,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 9,
+  "k": 256,
+  "overlap": 176,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 10,
+  "k": 256,
+  "overlap": 194,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 11,
+  "k": 256,
+  "overlap": 183,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 12,
+  "k": 256,
+  "overlap": 185,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 13,
+  "k": 256,
+  "overlap": 174,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 14,
+  "k": 256,
+  "overlap": 189,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 15,
+  "k": 256,
+  "overlap": 181,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 16,
+  "k": 256,
+  "overlap": 184,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 17,
+  "k": 256,
+  "overlap": 180,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 18,
+  "k": 256,
+  "overlap": 191,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ },
+ {
+  "bundle": "aux_A",
+  "type": "dynamic",
+  "leak": "D5",
+  "ref": "D5ref",
+  "seed_step": 19,
+  "k": 256,
+  "overlap": 185,
+  "same_columns": false,
+  "same_auroc": {
+   "logistic": false,
+   "hgb": false
+  },
+  "leak_columns": null,
+  "ref_columns": null
+ }
+]
