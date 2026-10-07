@@ -1,0 +1,8 @@
+{
+ "note": "평문 grades_*.json의 SHA-256. 평문은 커밋하지 않고 sealed/grades_<묶음>.enc로 봉인 (7단계 사용자 결정 2)",
+ "sha256": {
+  "grades_main.json": "f2b4e7f579145b2e0fc078464d947d7ae1430e654881ef31ae1aad97339ea8db",
+  "grades_first.json": "f2b4e7f579145b2e0fc078464d947d7ae1430e654881ef31ae1aad97339ea8db",
+  "grades_blank.json": "f2b4e7f579145b2e0fc078464d947d7ae1430e654881ef31ae1aad97339ea8db"
+ }
+}
