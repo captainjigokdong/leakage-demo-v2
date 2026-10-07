@@ -1,0 +1,121 @@
+{
+ "note": "사후 분석 (analysis_plan_v2.md에 없음, 결과를 본 뒤 더함). 판정에 쓰지 않음. 주 분석 grades.",
+ "absorbed_by_variant_type": {
+  "가": {
+   "clean": {
+    "reports": 16,
+    "n_justified": 20,
+    "n_justified_strict": 20
+   },
+   "defect": {
+    "reports": 44,
+    "n_justified": 41,
+    "n_justified_strict": 45
+   }
+  },
+  "나": {
+   "clean": {
+    "reports": 16,
+    "n_justified": 4,
+    "n_justified_strict": 4
+   },
+   "defect": {
+    "reports": 44,
+    "n_justified": 10,
+    "n_justified_strict": 12
+   }
+  }
+ },
+ "reference_counts_primary": {
+  "without_assumption_overlap_cases": {
+   "가": {
+    "all": {
+     "detected": 50,
+     "n": 52
+    },
+    "public": {
+     "detected": 28,
+     "n": 28
+    },
+    "holdout": {
+     "detected": 22,
+     "n": 24
+    }
+   },
+   "나": {
+    "all": {
+     "detected": 45,
+     "n": 52
+    },
+    "public": {
+     "detected": 27,
+     "n": 28
+    },
+    "holdout": {
+     "detected": 18,
+     "n": 24
+    }
+   }
+  },
+  "without_near_zero": {
+   "가": {
+    "all": {
+     "detected": 54,
+     "n": 56
+    },
+    "public": {
+     "detected": 32,
+     "n": 32
+    },
+    "holdout": {
+     "detected": 22,
+     "n": 24
+    }
+   },
+   "나": {
+    "all": {
+     "detected": 49,
+     "n": 56
+    },
+    "public": {
+     "detected": 31,
+     "n": 32
+    },
+    "holdout": {
+     "detected": 18,
+     "n": 24
+    }
+   }
+  },
+  "without_narrative_fixed": {
+   "가": {
+    "all": {
+     "detected": 56,
+     "n": 56
+    },
+    "public": {
+     "detected": 36,
+     "n": 36
+    },
+    "holdout": {
+     "detected": 20,
+     "n": 20
+    }
+   },
+   "나": {
+    "all": {
+     "detected": 51,
+     "n": 56
+    },
+    "public": {
+     "detected": 35,
+     "n": 36
+    },
+    "holdout": {
+     "detected": 16,
+     "n": 20
+    }
+   }
+  }
+ }
+}
