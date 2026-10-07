@@ -1,0 +1,3179 @@
+{
+ "bundle": "aux_A",
+ "data": "data/synth_aux",
+ "seeds": 20,
+ "approver": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+ "leaks": {
+  "fixed": {
+   "F1": "E12 다음 입원 병동 특징 (Q4)",
+   "F2": "E06 입원 단위 분할 (Q2)",
+   "F3": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "F4": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)"
+  },
+  "dynamic": {
+   "D1": "E01 이번 입원 AKI 진단 코드 N17 (Q1)",
+   "D2": "E03 입원 전체 기간 최고 크레아티닌 (Q1)",
+   "D3": "행(예측 시점) 단위 분할 (Q2)",
+   "D4": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "D5": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "D6": "E13 투석 오더·신장내과 협진 오더 (Q4, 대리 변수)"
+  }
+ },
+ "refs": {
+  "fixed": {
+   "F4ref": "F4 참조: 같은 특징 선택을 학습 집합에서만 적합"
+  },
+  "dynamic": {
+   "D5ref": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합"
+  }
+ },
+ "built": {
+  "dynamic/fixed": {
+   "seconds": 130.0,
+   "n_features": 510,
+   "all_empty_columns": [
+    "bun_last",
+    "hgb_min",
+    "k_last"
+   ]
+  },
+  "dynamic/D4": {
+   "seconds": 125.2,
+   "n_features": 510,
+   "all_empty_columns": [
+    "bun_last",
+    "hgb_min",
+    "k_last"
+   ]
+  },
+  "dynamic/D5": {
+   "seconds": 126.3,
+   "n_features": 510,
+   "all_empty_columns": [
+    "bun_last",
+    "hgb_min",
+    "k_last"
+   ]
+  },
+  "dynamic/D4+D5": {
+   "seconds": 126.9,
+   "n_features": 510,
+   "all_empty_columns": [
+    "bun_last",
+    "hgb_min",
+    "k_last"
+   ]
+  },
+  "dynamic/D5ref": {
+   "seconds": 138.3,
+   "n_features": 510,
+   "all_empty_columns": [
+    "bun_last",
+    "hgb_min",
+    "k_last"
+   ]
+  }
+ },
+ "runs": [
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 0,
+   "split_seed": 20261002,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 448,
+   "n_test": 186,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6288412291933418,
+    "hgb": 0.648527528809219,
+    "tpot": 0.6320422535211268
+   },
+   "tpot": {
+    "seconds": 199.0,
+    "cv_split_calls": 54,
+    "cv_gen_is_group_folds": true,
+    "cv_gen_is_passed_object": true,
+    "cv_groups_crossing_folds": 0,
+    "cv_folds": 5,
+    "pipeline": "Pipeline(steps=[('maxabsscaler', MaxAbsScaler()),\n                ('rfe',\n                 RFE(estimator=ExtraTreesClassifier(bootstrap=np.False_,\n                                                    criterion=np.str_('entropy'),\n                                                    max_features=0.7445015513014,\n                                                    min_samples_split=19,\n                                                    n_jobs=1,\n                                                    random_state=20261002),\n                     step=0.6077668431089)),\n                ('featureunion-1",
+    "default_rowwise_cv_would_split": {
+     "groups": 120,
+     "groups_with_multiple_rows": 96,
+     "groups_split_across_folds": 89
+    }
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "ce6507098512"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 1,
+   "split_seed": 20261003,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 442,
+   "n_test": 192,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5980819529206626,
+    "hgb": 0.4929380993897124
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "60bda6393f73"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 2,
+   "split_seed": 20261004,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 414,
+   "n_test": 220,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5737327188940092,
+    "hgb": 0.5901177675371224
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "eb729e753d6d"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 3,
+   "split_seed": 20261005,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 462,
+   "n_test": 172,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6821484681853889,
+    "hgb": 0.5959347996857818
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "e0061b448123"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 4,
+   "split_seed": 20261006,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.48133722817267127,
+    "hgb": 0.5714865303472898
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "443a154084ca"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 5,
+   "split_seed": 20261007,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6028218694885361,
+    "hgb": 0.5654320987654321
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "d3c8d3b286f0"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 6,
+   "split_seed": 20261008,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 471,
+   "n_test": 163,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4939526505404014,
+    "hgb": 0.44094184251158003
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "4b06fd07cf09"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 7,
+   "split_seed": 20261009,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 441,
+   "n_test": 193,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5530861354214648,
+    "hgb": 0.646130815292492
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "0b4da1e82b39"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 8,
+   "split_seed": 20261010,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 465,
+   "n_test": 169,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.556503198294243,
+    "hgb": 0.5993603411513859
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "459dfa77d363"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 9,
+   "split_seed": 20261011,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 418,
+   "n_test": 216,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.49790758500435917,
+    "hgb": 0.512205754141238
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "cb3b8a28c1a7"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 10,
+   "split_seed": 20261012,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 463,
+   "n_test": 171,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4219430154333202,
+    "hgb": 0.6138702018203404
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "2a55cfa6d32d"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 11,
+   "split_seed": 20261013,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 456,
+   "n_test": 178,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6382617382617384,
+    "hgb": 0.5831168831168831
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "1e83086bdf1a"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 12,
+   "split_seed": 20261014,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 424,
+   "n_test": 210,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5461224489795918,
+    "hgb": 0.49812244897959185
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "ca6160f2b8cd"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 13,
+   "split_seed": 20261015,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 434,
+   "n_test": 200,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5073333333333334,
+    "hgb": 0.5893999999999999
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "f49b022a382d"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 14,
+   "split_seed": 20261016,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 468,
+   "n_test": 166,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6182539682539683,
+    "hgb": 0.4316468253968254
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "b4bd6c6cf26b"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 15,
+   "split_seed": 20261017,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 421,
+   "n_test": 213,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.507220748600059,
+    "hgb": 0.5727969348659004
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "23263a7cda11"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 16,
+   "split_seed": 20261018,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 447,
+   "n_test": 187,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6312370062370063,
+    "hgb": 0.6224012474012475
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "96013f352a6a"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 17,
+   "split_seed": 20261019,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 433,
+   "n_test": 201,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6218378936499742,
+    "hgb": 0.5157459989674755
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "c83d5d8d6cdd"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 18,
+   "split_seed": 20261020,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 443,
+   "n_test": 191,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.3901309846431797,
+    "hgb": 0.501806684733514
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "adb73f2c5617"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "fixed",
+   "seed_step": 19,
+   "split_seed": 20261021,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 469,
+   "n_test": 165,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5589010989010988,
+    "hgb": 0.5389010989010988
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "8884472b9be0"
+   },
+   "description": "수정 설계",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 0,
+   "split_seed": 20261002,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 448,
+   "n_test": 186,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6306017925736236,
+    "hgb": 0.5937900128040974
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "31d1af02b6bc"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 1,
+   "split_seed": 20261003,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 442,
+   "n_test": 192,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5996512641673932,
+    "hgb": 0.4657367044463819
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "cd033ce0c984"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 2,
+   "split_seed": 20261004,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 414,
+   "n_test": 220,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5713432326335552,
+    "hgb": 0.6797235023041475
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "bf8610eae86c"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 3,
+   "split_seed": 20261005,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 462,
+   "n_test": 172,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.684897879025923,
+    "hgb": 0.6348193244304792
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "1e04839d5903"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 4,
+   "split_seed": 20261006,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4813372281726712,
+    "hgb": 0.5268581629341124
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "bd1cd7d676b6"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 5,
+   "split_seed": 20261007,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6019400352733686,
+    "hgb": 0.5548500881834215
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "0d1d3a591948"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 6,
+   "split_seed": 20261008,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 471,
+   "n_test": 163,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.49498198661863096,
+    "hgb": 0.44595985589294906
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "ee06120b692f"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 7,
+   "split_seed": 20261009,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 441,
+   "n_test": 193,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5551589129433441,
+    "hgb": 0.5255642561031783
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "a244d1190282"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 8,
+   "split_seed": 20261010,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 465,
+   "n_test": 169,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5575692963752665,
+    "hgb": 0.5936034115138592
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "f41e077c5ea2"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 9,
+   "split_seed": 20261011,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 418,
+   "n_test": 216,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4919790758500436,
+    "hgb": 0.5920662598081953
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "102f58a3bb71"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 10,
+   "split_seed": 20261012,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 463,
+   "n_test": 171,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.42273446774831813,
+    "hgb": 0.6298971111990503
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "46b308d97f44"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 11,
+   "split_seed": 20261013,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 456,
+   "n_test": 178,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6386613386613386,
+    "hgb": 0.5813186813186813
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "851b59a4fe99"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 12,
+   "split_seed": 20261014,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 424,
+   "n_test": 210,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.542204081632653,
+    "hgb": 0.5748571428571428
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "beffd136b00e"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 13,
+   "split_seed": 20261015,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 434,
+   "n_test": 200,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5074666666666667,
+    "hgb": 0.6130666666666668
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "5771f17601df"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 14,
+   "split_seed": 20261016,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 468,
+   "n_test": 166,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6172619047619048,
+    "hgb": 0.5116071428571428
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "5dffcfe85be3"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 15,
+   "split_seed": 20261017,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 421,
+   "n_test": 213,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5075154730327144,
+    "hgb": 0.6112584733274389
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "6bd2a983540b"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 16,
+   "split_seed": 20261018,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 447,
+   "n_test": 187,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6352217602217602,
+    "hgb": 0.6180699930699931
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "6557dae14cd4"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 17,
+   "split_seed": 20261019,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 433,
+   "n_test": 201,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6215797625193599,
+    "hgb": 0.4977413526071244
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "40324619314e"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 18,
+   "split_seed": 20261020,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 443,
+   "n_test": 191,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.38809846431797645,
+    "hgb": 0.4832881662149955
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "e89131cf5d4f"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4",
+   "seed_step": 19,
+   "split_seed": 20261021,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 469,
+   "n_test": 165,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 512,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5593406593406594,
+    "hgb": 0.5857142857142856
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "f6275f96f510"
+   },
+   "description": "E08 중앙값 대치를 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 0,
+   "split_seed": 20261002,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 448,
+   "n_test": 186,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7756081946222791,
+    "hgb": 0.71398847631242
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "61a366122e8d"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 1,
+   "split_seed": 20261003,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 442,
+   "n_test": 192,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7996512641673933,
+    "hgb": 0.6974716652136007
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "d150190314d5"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 2,
+   "split_seed": 20261004,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 414,
+   "n_test": 220,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8147294760197986,
+    "hgb": 0.6955965181771633
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "6b05955ae3f8"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 3,
+   "split_seed": 20261005,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 462,
+   "n_test": 172,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8039080911233307,
+    "hgb": 0.6340337784760408
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "79c830f8a8d1"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 4,
+   "split_seed": 20261006,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7867575462512171,
+    "hgb": 0.6501947419668939
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "bd105398acb7"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 5,
+   "split_seed": 20261007,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7800705467372134,
+    "hgb": 0.634920634920635
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "385b992537a5"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 6,
+   "split_seed": 20261008,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 471,
+   "n_test": 163,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7919454451878538,
+    "hgb": 0.6148996397323727
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "17dc2d82ebda"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 7,
+   "split_seed": 20261009,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 441,
+   "n_test": 193,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8156379548595117,
+    "hgb": 0.7069322892676185
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "dce1c45fdfd1"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 8,
+   "split_seed": 20261010,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 465,
+   "n_test": 169,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.72409381663113,
+    "hgb": 0.5955223880597016
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "ca844c37d5ca"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 9,
+   "split_seed": 20261011,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 418,
+   "n_test": 216,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7786399302528335,
+    "hgb": 0.6496076721883173
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "a91454b2abe4"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 10,
+   "split_seed": 20261012,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 463,
+   "n_test": 171,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7219034428175702,
+    "hgb": 0.6150573802928374
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "70054f5eb946"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 11,
+   "split_seed": 20261013,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 456,
+   "n_test": 178,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8274725274725275,
+    "hgb": 0.6638361638361638
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "d09e99fe62e1"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 12,
+   "split_seed": 20261014,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 424,
+   "n_test": 210,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8667755102040816,
+    "hgb": 0.7275102040816327
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "dac6f0bae9b7"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 13,
+   "split_seed": 20261015,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 434,
+   "n_test": 200,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7853333333333333,
+    "hgb": 0.6559333333333334
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "a0e5bde4fdc9"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 14,
+   "split_seed": 20261016,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 468,
+   "n_test": 166,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8001984126984127,
+    "hgb": 0.7267857142857144
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "725886c479c8"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 15,
+   "split_seed": 20261017,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 421,
+   "n_test": 213,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7561155319776008,
+    "hgb": 0.6507515473032714
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "68d569298625"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 16,
+   "split_seed": 20261018,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 447,
+   "n_test": 187,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8122834372834372,
+    "hgb": 0.7043485793485793
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "a2ebaec5ec9b"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 17,
+   "split_seed": 20261019,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 433,
+   "n_test": 201,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7718120805369126,
+    "hgb": 0.6124161073825503
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "121021e40c85"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 18,
+   "split_seed": 20261020,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 443,
+   "n_test": 191,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6489385727190605,
+    "hgb": 0.5626693766937668
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "e968aa0971f2"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5",
+   "seed_step": 19,
+   "split_seed": 20261021,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 469,
+   "n_test": 165,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7934065934065934,
+    "hgb": 0.6942857142857144
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "477c1a9f8e51"
+   },
+   "description": "E10 상위 k개 특징 선택을 전체 데이터로 적합 (Q3)",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 0,
+   "split_seed": 20261002,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 448,
+   "n_test": 186,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7764084507042254,
+    "hgb": 0.6816581306017926,
+    "tpot": 0.623079385403329
+   },
+   "tpot": {
+    "seconds": 181.7,
+    "cv_split_calls": 58,
+    "cv_gen_is_group_folds": true,
+    "cv_gen_is_passed_object": true,
+    "cv_groups_crossing_folds": 0,
+    "cv_folds": 5,
+    "pipeline": "Pipeline(steps=[('standardscaler', StandardScaler()),\n                ('rfe',\n                 RFE(estimator=ExtraTreesClassifier(bootstrap=np.False_,\n                                                    class_weight='balanced',\n                                                    criterion=np.str_('entropy'),\n                                                    max_features=0.5358850678911,\n                                                    min_samples_leaf=10,\n                                                    min_samples_split=16,\n                                                    n_jobs=1,",
+    "default_rowwise_cv_would_split": {
+     "groups": 120,
+     "groups_with_multiple_rows": 96,
+     "groups_split_across_folds": 89
+    }
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "aeda41e75dfc"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 1,
+   "split_seed": 20261003,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 442,
+   "n_test": 192,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7966870095902354,
+    "hgb": 0.7119442022667829
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "1a69fcd6b901"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 2,
+   "split_seed": 20261004,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 414,
+   "n_test": 220,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8048301757979178,
+    "hgb": 0.7312681344939411
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "504c94bed3f9"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 3,
+   "split_seed": 20261005,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 462,
+   "n_test": 172,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8044972505891594,
+    "hgb": 0.6587784760408484
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "7f6bc2d5169f"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 4,
+   "split_seed": 20261006,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7877312560856864,
+    "hgb": 0.6498701720220708
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "efc20d3a2565"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 5,
+   "split_seed": 20261007,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7795414462081128,
+    "hgb": 0.6148148148148148
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "5ddcf3a8ce53"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 6,
+   "split_seed": 20261008,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 471,
+   "n_test": 163,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8048121461657232,
+    "hgb": 0.6030622748327329
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "39f5cd24f0e3"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 7,
+   "split_seed": 20261009,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 441,
+   "n_test": 193,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8207047443574389,
+    "hgb": 0.704398894518655
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "4d0074222294"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 8,
+   "split_seed": 20261010,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 465,
+   "n_test": 169,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7281449893390192,
+    "hgb": 0.6643923240938167
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "9846365674e2"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 9,
+   "split_seed": 20261011,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 418,
+   "n_test": 216,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7781168265039233,
+    "hgb": 0.7064516129032259
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "c5a231d022e8"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 10,
+   "split_seed": 20261012,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 463,
+   "n_test": 171,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7098337950138505,
+    "hgb": 0.6275227542540562
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "67c3be9714e8"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 11,
+   "split_seed": 20261013,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 456,
+   "n_test": 178,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8378621378621379,
+    "hgb": 0.6022977022977022
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "d7bed365985f"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 12,
+   "split_seed": 20261014,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 424,
+   "n_test": 210,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8568163265306122,
+    "hgb": 0.6995918367346939
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "964627706f04"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 13,
+   "split_seed": 20261015,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 434,
+   "n_test": 200,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7792000000000001,
+    "hgb": 0.6800666666666666
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "caa9451d3054"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 14,
+   "split_seed": 20261016,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 468,
+   "n_test": 166,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7942460317460317,
+    "hgb": 0.7422619047619048
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "f720f9ebcb3c"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 15,
+   "split_seed": 20261017,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 421,
+   "n_test": 213,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7555260831122901,
+    "hgb": 0.6700559976422046
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "4a43bc80c682"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 16,
+   "split_seed": 20261018,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 447,
+   "n_test": 187,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.8096846846846847,
+    "hgb": 0.7265246015246014
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "221d61a9b83d"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 17,
+   "split_seed": 20261019,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 433,
+   "n_test": 201,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7657459989674754,
+    "hgb": 0.5913138874548272
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "e9da270abbb3"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 18,
+   "split_seed": 20261020,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 443,
+   "n_test": 191,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6435185185185185,
+    "hgb": 0.5829945799457994
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "03c236ec8d4c"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D4+D5",
+   "seed_step": 19,
+   "split_seed": 20261021,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 469,
+   "n_test": 165,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7934065934065935,
+    "hgb": 0.6817582417582417
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "28b57afe6531"
+   },
+   "description": "D4+D5",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 0,
+   "split_seed": 20261002,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 448,
+   "n_test": 186,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5957106274007682,
+    "hgb": 0.6717349551856594
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "cbb6e47153bc"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 1,
+   "split_seed": 20261003,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 442,
+   "n_test": 192,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6943330427201395,
+    "hgb": 0.6353966870095903
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "6f30253cdaa6"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 2,
+   "split_seed": 20261004,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 414,
+   "n_test": 220,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.7095920805598225,
+    "hgb": 0.6978153268475848
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "12150fb6b639"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 3,
+   "split_seed": 20261005,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 462,
+   "n_test": 172,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6701688923802043,
+    "hgb": 0.6065396700706991
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "48cee4bb3f87"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 4,
+   "split_seed": 20261006,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5126582278481012,
+    "hgb": 0.6026452450503084
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "4c4b99d3cf60"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 5,
+   "split_seed": 20261007,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 437,
+   "n_test": 197,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6320987654320988,
+    "hgb": 0.5710758377425045
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "ad2a8702bb75"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 6,
+   "split_seed": 20261008,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 471,
+   "n_test": 163,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4898353062274833,
+    "hgb": 0.5183993823983531
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "4c5d2d6c3cae"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 7,
+   "split_seed": 20261009,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 441,
+   "n_test": 193,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6272455089820359,
+    "hgb": 0.6312759097190235
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "9dd78bdf8877"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 8,
+   "split_seed": 20261010,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 465,
+   "n_test": 169,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5594882729211087,
+    "hgb": 0.5511727078891258
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "3a1e3f0b97b5"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 9,
+   "split_seed": 20261011,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 418,
+   "n_test": 216,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4161290322580645,
+    "hgb": 0.5528334786399302
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "3401c82b109f"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 10,
+   "split_seed": 20261012,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 463,
+   "n_test": 171,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4615156311832212,
+    "hgb": 0.49594380688563516
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "eef4dc2331a1"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 11,
+   "split_seed": 20261013,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 456,
+   "n_test": 178,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5511488511488511,
+    "hgb": 0.5837162837162837
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "ca01144c1e5d"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 12,
+   "split_seed": 20261014,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 424,
+   "n_test": 210,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.622530612244898,
+    "hgb": 0.5627755102040817
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "e3945e80b0d4"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 13,
+   "split_seed": 20261015,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 434,
+   "n_test": 200,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.4682666666666666,
+    "hgb": 0.6205999999999999
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "56ad069193d0"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 14,
+   "split_seed": 20261016,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 468,
+   "n_test": 166,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6301587301587301,
+    "hgb": 0.6089285714285715
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "6fca63abc6f9"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 15,
+   "split_seed": 20261017,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 421,
+   "n_test": 213,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.5673445328617743,
+    "hgb": 0.5613026819923371
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "fabcdfe7955a"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 16,
+   "split_seed": 20261018,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 447,
+   "n_test": 187,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6128724878724878,
+    "hgb": 0.6035169785169785
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "84f5583c9958"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 17,
+   "split_seed": 20261019,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 433,
+   "n_test": 201,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.6566855962829117,
+    "hgb": 0.561564274651523
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "640ed591da9a"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 18,
+   "split_seed": 20261020,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 443,
+   "n_test": 191,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.424683830171635,
+    "hgb": 0.5140018066847335
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "15e0b4675b12"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  },
+  {
+   "type": "dynamic",
+   "design": "D5ref",
+   "seed_step": 19,
+   "split_seed": 20261021,
+   "split_level": "family",
+   "n_rows": 634,
+   "n_train": 469,
+   "n_test": 165,
+   "outcome_rate": 0.18454258675078863,
+   "n_columns": 256,
+   "skipped_features": {},
+   "patients_or_families_in_both": 0,
+   "auroc": {
+    "logistic": 0.628131868131868,
+    "hgb": 0.5448351648351648
+   },
+   "lock": {
+    "approved_by": "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)",
+    "design_hash": "8c62f8f3aa82"
+   },
+   "description": "D5 참조: 같은 특징 선택을 학습 집합에서만 적합",
+   "unexpected_empty": []
+  }
+ ],
+ "summary": {
+  "dynamic": {
+   "fixed": {
+    "logistic": {
+     "n": 20,
+     "mean": 0.5554827636204175,
+     "min": 0.3901309846431797,
+     "max": 0.6821484681853889,
+     "by_seed": {
+      "0": 0.6288412291933418,
+      "1": 0.5980819529206626,
+      "2": 0.5737327188940092,
+      "3": 0.6821484681853889,
+      "4": 0.48133722817267127,
+      "5": 0.6028218694885361,
+      "6": 0.4939526505404014,
+      "7": 0.5530861354214648,
+      "8": 0.556503198294243,
+      "9": 0.49790758500435917,
+      "10": 0.4219430154333202,
+      "11": 0.6382617382617384,
+      "12": 0.5461224489795918,
+      "13": 0.5073333333333334,
+      "14": 0.6182539682539683,
+      "15": 0.507220748600059,
+      "16": 0.6312370062370063,
+      "17": 0.6218378936499742,
+      "18": 0.3901309846431797,
+      "19": 0.5589010989010988
+     }
+    },
+    "hgb": {
+     "n": 20,
+     "mean": 0.5565441950907065,
+     "min": 0.4316468253968254,
+     "max": 0.648527528809219,
+     "by_seed": {
+      "0": 0.648527528809219,
+      "1": 0.4929380993897124,
+      "2": 0.5901177675371224,
+      "3": 0.5959347996857818,
+      "4": 0.5714865303472898,
+      "5": 0.5654320987654321,
+      "6": 0.44094184251158003,
+      "7": 0.646130815292492,
+      "8": 0.5993603411513859,
+      "9": 0.512205754141238,
+      "10": 0.6138702018203404,
+      "11": 0.5831168831168831,
+      "12": 0.49812244897959185,
+      "13": 0.5893999999999999,
+      "14": 0.4316468253968254,
+      "15": 0.5727969348659004,
+      "16": 0.6224012474012475,
+      "17": 0.5157459989674755,
+      "18": 0.501806684733514,
+      "19": 0.5389010989010988
+     }
+    },
+    "tpot": {
+     "n": 1,
+     "mean": 0.6320422535211268,
+     "min": 0.6320422535211268,
+     "max": 0.6320422535211268,
+     "by_seed": {
+      "0": 0.6320422535211268
+     }
+    }
+   },
+   "D4": {
+    "logistic": {
+     "n": 20,
+     "mean": 0.5554772641268586,
+     "min": 0.38809846431797645,
+     "max": 0.684897879025923,
+     "by_seed": {
+      "0": 0.6306017925736236,
+      "1": 0.5996512641673932,
+      "2": 0.5713432326335552,
+      "3": 0.684897879025923,
+      "4": 0.4813372281726712,
+      "5": 0.6019400352733686,
+      "6": 0.49498198661863096,
+      "7": 0.5551589129433441,
+      "8": 0.5575692963752665,
+      "9": 0.4919790758500436,
+      "10": 0.42273446774831813,
+      "11": 0.6386613386613386,
+      "12": 0.542204081632653,
+      "13": 0.5074666666666667,
+      "14": 0.6172619047619048,
+      "15": 0.5075154730327144,
+      "16": 0.6352217602217602,
+      "17": 0.6215797625193599,
+      "18": 0.38809846431797645,
+      "19": 0.5593406593406594
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": -5.4994935588387195e-06,
+      "min": -0.0059285091543155866,
+      "max": 0.003984753984753953,
+      "against": "fixed",
+      "by_seed": {
+       "0": 0.0017605633802817433,
+       "1": 0.0015693112467306536,
+       "2": -0.002389486260453988,
+       "3": 0.00274941084053415,
+       "4": -5.551115123125783e-17,
+       "5": -0.0008818342151675207,
+       "6": 0.0010293360782295813,
+       "7": 0.0020727775218792877,
+       "8": 0.0010660980810235365,
+       "9": -0.0059285091543155866,
+       "10": 0.0007914523149979424,
+       "11": 0.00039960039960018623,
+       "12": -0.003918367346938845,
+       "13": 0.00013333333333331865,
+       "14": -0.0009920634920634885,
+       "15": 0.00029472443265543546,
+       "16": 0.003984753984753953,
+       "17": -0.00025813113061434745,
+       "18": -0.0020325203252032353,
+       "19": 0.0004395604395605046
+      }
+     }
+    },
+    "hgb": {
+     "n": 20,
+     "mean": 0.5659895297126671,
+     "min": 0.44595985589294906,
+     "max": 0.6797235023041475,
+     "by_seed": {
+      "0": 0.5937900128040974,
+      "1": 0.4657367044463819,
+      "2": 0.6797235023041475,
+      "3": 0.6348193244304792,
+      "4": 0.5268581629341124,
+      "5": 0.5548500881834215,
+      "6": 0.44595985589294906,
+      "7": 0.5255642561031783,
+      "8": 0.5936034115138592,
+      "9": 0.5920662598081953,
+      "10": 0.6298971111990503,
+      "11": 0.5813186813186813,
+      "12": 0.5748571428571428,
+      "13": 0.6130666666666668,
+      "14": 0.5116071428571428,
+      "15": 0.6112584733274389,
+      "16": 0.6180699930699931,
+      "17": 0.4977413526071244,
+      "18": 0.4832881662149955,
+      "19": 0.5857142857142856
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.009445334621960632,
+      "min": -0.1205665591893137,
+      "max": 0.08960573476702505,
+      "against": "fixed",
+      "by_seed": {
+       "0": -0.05473751600512167,
+       "1": -0.027201394943330515,
+       "2": 0.08960573476702505,
+       "3": 0.03888452474469739,
+       "4": -0.04462836741317744,
+       "5": -0.010582010582010581,
+       "6": 0.005018013381369035,
+       "7": -0.1205665591893137,
+       "8": -0.00575692963752672,
+       "9": 0.07986050566695724,
+       "10": 0.016026909378709986,
+       "11": -0.0017982017982018927,
+       "12": 0.076734693877551,
+       "13": 0.023666666666666836,
+       "14": 0.0799603174603174,
+       "15": 0.038461538461538436,
+       "16": -0.004331254331254364,
+       "17": -0.01800464636035115,
+       "18": -0.01851851851851849,
+       "19": 0.0468131868131868
+      }
+     }
+    }
+   },
+   "D5": {
+    "logistic": {
+     "n": 20,
+     "mean": 0.7827640854151047,
+     "min": 0.6489385727190605,
+     "max": 0.8667755102040816,
+     "by_seed": {
+      "0": 0.7756081946222791,
+      "1": 0.7996512641673933,
+      "2": 0.8147294760197986,
+      "3": 0.8039080911233307,
+      "4": 0.7867575462512171,
+      "5": 0.7800705467372134,
+      "6": 0.7919454451878538,
+      "7": 0.8156379548595117,
+      "8": 0.72409381663113,
+      "9": 0.7786399302528335,
+      "10": 0.7219034428175702,
+      "11": 0.8274725274725275,
+      "12": 0.8667755102040816,
+      "13": 0.7853333333333333,
+      "14": 0.8001984126984127,
+      "15": 0.7561155319776008,
+      "16": 0.8122834372834372,
+      "17": 0.7718120805369126,
+      "18": 0.6489385727190605,
+      "19": 0.7934065934065934
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.22728132179468713,
+      "min": 0.12175962293794185,
+      "max": 0.3206530612244898,
+      "against": "fixed",
+      "by_seed": {
+       "0": 0.1467669654289373,
+       "1": 0.20156931124673072,
+       "2": 0.24099675712578938,
+       "3": 0.12175962293794185,
+       "4": 0.3054203180785458,
+       "5": 0.17724867724867732,
+       "6": 0.29799279464745243,
+       "7": 0.26255181943804695,
+       "8": 0.16759061833688704,
+       "9": 0.28073234524847435,
+       "10": 0.29996042738425005,
+       "11": 0.18921078921078915,
+       "12": 0.3206530612244898,
+       "13": 0.2779999999999999,
+       "14": 0.18194444444444446,
+       "15": 0.2488947833775419,
+       "16": 0.18104643104643092,
+       "17": 0.14997418688693842,
+       "18": 0.25880758807588083,
+       "19": 0.23450549450549452
+      }
+     },
+     "vs_ref": {
+      "n": 20,
+      "mean": 0.206234157242461,
+      "min": 0.10513739545997614,
+      "max": 0.362510897994769,
+      "against": "D5ref",
+      "by_seed": {
+       "0": 0.17989756722151096,
+       "1": 0.10531822144725378,
+       "2": 0.10513739545997614,
+       "3": 0.13373919874312645,
+       "4": 0.27409931840311585,
+       "5": 0.14797178130511468,
+       "6": 0.30211013896037053,
+       "7": 0.18839244587747583,
+       "8": 0.16460554371002134,
+       "9": 0.362510897994769,
+       "10": 0.26038781163434904,
+       "11": 0.2763236763236764,
+       "12": 0.24424489795918358,
+       "13": 0.3170666666666667,
+       "14": 0.1700396825396826,
+       "15": 0.1887709991158265,
+       "16": 0.1994109494109494,
+       "17": 0.11512648425400096,
+       "18": 0.2242547425474255,
+       "19": 0.1652747252747253
+      }
+     }
+    },
+    "hgb": {
+     "n": 20,
+     "mean": 0.6603380962579164,
+     "min": 0.5626693766937668,
+     "max": 0.7275102040816327,
+     "by_seed": {
+      "0": 0.71398847631242,
+      "1": 0.6974716652136007,
+      "2": 0.6955965181771633,
+      "3": 0.6340337784760408,
+      "4": 0.6501947419668939,
+      "5": 0.634920634920635,
+      "6": 0.6148996397323727,
+      "7": 0.7069322892676185,
+      "8": 0.5955223880597016,
+      "9": 0.6496076721883173,
+      "10": 0.6150573802928374,
+      "11": 0.6638361638361638,
+      "12": 0.7275102040816327,
+      "13": 0.6559333333333334,
+      "14": 0.7267857142857144,
+      "15": 0.6507515473032714,
+      "16": 0.7043485793485793,
+      "17": 0.6124161073825503,
+      "18": 0.5626693766937668,
+      "19": 0.6942857142857144
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.10379390116720985,
+      "min": -0.003837953091684332,
+      "max": 0.29513888888888895,
+      "against": "fixed",
+      "by_seed": {
+       "0": 0.06546094750320097,
+       "1": 0.20453356582388832,
+       "2": 0.10547875064004086,
+       "3": 0.03809897879025903,
+       "4": 0.07870821161960406,
+       "5": 0.0694885361552029,
+       "6": 0.1739577972207927,
+       "7": 0.060801473975126585,
+       "8": -0.003837953091684332,
+       "9": 0.13740191804707924,
+       "10": 0.0011871784724970524,
+       "11": 0.0807192807192807,
+       "12": 0.22938775510204085,
+       "13": 0.06653333333333344,
+       "14": 0.29513888888888895,
+       "15": 0.07795461243737101,
+       "16": 0.08194733194733184,
+       "17": 0.09667010841507473,
+       "18": 0.060862691960252846,
+       "19": 0.15538461538461557
+      }
+     },
+     "vs_ref": {
+      "n": 20,
+      "mean": 0.075534382284512,
+      "min": -0.002218808670421568,
+      "max": 0.16473469387755102,
+      "against": "D5ref",
+      "by_seed": {
+       "0": 0.04225352112676062,
+       "1": 0.06207497820401042,
+       "2": -0.002218808670421568,
+       "3": 0.027494108405341722,
+       "4": 0.0475494969165855,
+       "5": 0.06384479717813052,
+       "6": 0.09650025733401957,
+       "7": 0.07565637954859505,
+       "8": 0.044349680170575834,
+       "9": 0.09677419354838712,
+       "10": 0.11911357340720224,
+       "11": 0.08011988011988014,
+       "12": 0.16473469387755102,
+       "13": 0.03533333333333344,
+       "14": 0.11785714285714288,
+       "15": 0.08944886531093432,
+       "16": 0.10083160083160081,
+       "17": 0.050851832731027224,
+       "18": 0.04866757000903332,
+       "19": 0.14945054945054959
+      }
+     }
+    }
+   },
+   "D4+D5": {
+    "logistic": {
+     "n": 20,
+     "mean": 0.7813657232591819,
+     "min": 0.6435185185185185,
+     "max": 0.8568163265306122,
+     "by_seed": {
+      "0": 0.7764084507042254,
+      "1": 0.7966870095902354,
+      "2": 0.8048301757979178,
+      "3": 0.8044972505891594,
+      "4": 0.7877312560856864,
+      "5": 0.7795414462081128,
+      "6": 0.8048121461657232,
+      "7": 0.8207047443574389,
+      "8": 0.7281449893390192,
+      "9": 0.7781168265039233,
+      "10": 0.7098337950138505,
+      "11": 0.8378621378621379,
+      "12": 0.8568163265306122,
+      "13": 0.7792000000000001,
+      "14": 0.7942460317460317,
+      "15": 0.7555260831122901,
+      "16": 0.8096846846846847,
+      "17": 0.7657459989674754,
+      "18": 0.6435185185185185,
+      "19": 0.7934065934065935
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.22588295963876437,
+      "min": 0.12234878240377056,
+      "max": 0.3108594956253218,
+      "against": "fixed",
+      "by_seed": {
+       "0": 0.14756722151088353,
+       "1": 0.19860505666957284,
+       "2": 0.2310974569039086,
+       "3": 0.12234878240377056,
+       "4": 0.3063940279130151,
+       "5": 0.17671957671957672,
+       "6": 0.3108594956253218,
+       "7": 0.2676186089359741,
+       "8": 0.17164179104477617,
+       "9": 0.28020924149956417,
+       "10": 0.2878907795805303,
+       "11": 0.19960039960039955,
+       "12": 0.3106938775510204,
+       "13": 0.2718666666666667,
+       "14": 0.17599206349206342,
+       "15": 0.24830533451223114,
+       "16": 0.1784476784476784,
+       "17": 0.1439081053175012,
+       "18": 0.2533875338753388,
+       "19": 0.23450549450549463
+      }
+     },
+     "vs_ref": {
+      "n": 20,
+      "mean": 0.20483579508653832,
+      "min": 0.09523809523809534,
+      "max": 0.3619877942458588,
+      "against": "D5ref",
+      "by_seed": {
+       "0": 0.18069782330345718,
+       "1": 0.1023539668700959,
+       "2": 0.09523809523809534,
+       "3": 0.13432835820895517,
+       "4": 0.27507302823758517,
+       "5": 0.14744268077601408,
+       "6": 0.3149768399382399,
+       "7": 0.193459235375403,
+       "8": 0.16865671641791047,
+       "9": 0.3619877942458588,
+       "10": 0.24831816383062927,
+       "11": 0.2867132867132868,
+       "12": 0.2342857142857142,
+       "13": 0.3109333333333335,
+       "14": 0.16408730158730156,
+       "15": 0.18818155025051575,
+       "16": 0.19681219681219686,
+       "17": 0.10906040268456374,
+       "18": 0.21883468834688347,
+       "19": 0.16527472527472542
+      }
+     }
+    },
+    "hgb": {
+     "n": 20,
+     "mean": 0.666551360481469,
+     "min": 0.5829945799457994,
+     "max": 0.7422619047619048,
+     "by_seed": {
+      "0": 0.6816581306017926,
+      "1": 0.7119442022667829,
+      "2": 0.7312681344939411,
+      "3": 0.6587784760408484,
+      "4": 0.6498701720220708,
+      "5": 0.6148148148148148,
+      "6": 0.6030622748327329,
+      "7": 0.704398894518655,
+      "8": 0.6643923240938167,
+      "9": 0.7064516129032259,
+      "10": 0.6275227542540562,
+      "11": 0.6022977022977022,
+      "12": 0.6995918367346939,
+      "13": 0.6800666666666666,
+      "14": 0.7422619047619048,
+      "15": 0.6700559976422046,
+      "16": 0.7265246015246014,
+      "17": 0.5913138874548272,
+      "18": 0.5829945799457994,
+      "19": 0.6817582417582417
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.11000716539076243,
+      "min": 0.013652552433715881,
+      "max": 0.31061507936507937,
+      "against": "fixed",
+      "by_seed": {
+       "0": 0.033130601792573544,
+       "1": 0.2190061028770705,
+       "2": 0.1411503669568187,
+       "3": 0.0628436763550666,
+       "4": 0.07838364167478096,
+       "5": 0.04938271604938271,
+       "6": 0.16212043232115286,
+       "7": 0.05826807922616306,
+       "8": 0.06503198294243073,
+       "9": 0.19424585876198786,
+       "10": 0.013652552433715881,
+       "11": 0.019180819180819042,
+       "12": 0.2014693877551021,
+       "13": 0.09066666666666667,
+       "14": 0.31061507936507937,
+       "15": 0.09725906277630414,
+       "16": 0.10412335412335394,
+       "17": 0.07556788848735163,
+       "18": 0.08118789521228542,
+       "19": 0.1428571428571429
+      }
+     },
+     "vs_ref": {
+      "n": 20,
+      "mean": 0.08174764650806456,
+      "min": 0.00992317541613319,
+      "max": 0.15361813426329574,
+      "against": "D5ref",
+      "by_seed": {
+       "0": 0.00992317541613319,
+       "1": 0.07654751525719261,
+       "2": 0.033452807646356275,
+       "3": 0.052238805970149294,
+       "4": 0.04722492697176239,
+       "5": 0.04373897707231034,
+       "6": 0.08466289243437974,
+       "7": 0.07312298479963153,
+       "8": 0.1132196162046909,
+       "9": 0.15361813426329574,
+       "10": 0.13157894736842107,
+       "11": 0.018581418581418485,
+       "12": 0.13681632653061226,
+       "13": 0.05946666666666667,
+       "14": 0.1333333333333333,
+       "15": 0.10875331564986745,
+       "16": 0.12300762300762291,
+       "17": 0.029749612803304126,
+       "18": 0.0689927732610659,
+       "19": 0.13692307692307693
+      }
+     }
+    },
+    "tpot": {
+     "n": 1,
+     "mean": 0.623079385403329,
+     "min": 0.623079385403329,
+     "max": 0.623079385403329,
+     "by_seed": {
+      "0": 0.623079385403329
+     },
+     "vs_fixed": {
+      "n": 1,
+      "mean": -0.008962868117797784,
+      "min": -0.008962868117797784,
+      "max": -0.008962868117797784,
+      "against": "fixed",
+      "by_seed": {
+       "0": -0.008962868117797784
+      }
+     }
+    }
+   },
+   "D5ref": {
+    "logistic": {
+     "n": 20,
+     "mean": 0.5765299281726437,
+     "min": 0.4161290322580645,
+     "max": 0.7095920805598225,
+     "by_seed": {
+      "0": 0.5957106274007682,
+      "1": 0.6943330427201395,
+      "2": 0.7095920805598225,
+      "3": 0.6701688923802043,
+      "4": 0.5126582278481012,
+      "5": 0.6320987654320988,
+      "6": 0.4898353062274833,
+      "7": 0.6272455089820359,
+      "8": 0.5594882729211087,
+      "9": 0.4161290322580645,
+      "10": 0.4615156311832212,
+      "11": 0.5511488511488511,
+      "12": 0.622530612244898,
+      "13": 0.4682666666666666,
+      "14": 0.6301587301587301,
+      "15": 0.5673445328617743,
+      "16": 0.6128724878724878,
+      "17": 0.6566855962829117,
+      "18": 0.424683830171635,
+      "19": 0.628131868131868
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.021047164552226126,
+      "min": -0.08711288711288723,
+      "max": 0.13585936166581325,
+      "against": "fixed",
+      "by_seed": {
+       "0": -0.033130601792573655,
+       "1": 0.09625108979947694,
+       "2": 0.13585936166581325,
+       "3": -0.011979575805184606,
+       "4": 0.03132099967542995,
+       "5": 0.029276895943562642,
+       "6": -0.004117344312918103,
+       "7": 0.07415937356057112,
+       "8": 0.0029850746268657025,
+       "9": -0.08177855274629464,
+       "10": 0.03957261574990101,
+       "11": -0.08711288711288723,
+       "12": 0.0764081632653062,
+       "13": -0.039066666666666805,
+       "14": 0.011904761904761862,
+       "15": 0.060123784261715385,
+       "16": -0.018364518364518467,
+       "17": 0.03484770263293746,
+       "18": 0.034552845528455334,
+       "19": 0.0692307692307692
+      }
+     }
+    },
+    "hgb": {
+     "n": 20,
+     "mean": 0.5848037139734045,
+     "min": 0.49594380688563516,
+     "max": 0.6978153268475848,
+     "by_seed": {
+      "0": 0.6717349551856594,
+      "1": 0.6353966870095903,
+      "2": 0.6978153268475848,
+      "3": 0.6065396700706991,
+      "4": 0.6026452450503084,
+      "5": 0.5710758377425045,
+      "6": 0.5183993823983531,
+      "7": 0.6312759097190235,
+      "8": 0.5511727078891258,
+      "9": 0.5528334786399302,
+      "10": 0.49594380688563516,
+      "11": 0.5837162837162837,
+      "12": 0.5627755102040817,
+      "13": 0.6205999999999999,
+      "14": 0.6089285714285715,
+      "15": 0.5613026819923371,
+      "16": 0.6035169785169785,
+      "17": 0.561564274651523,
+      "18": 0.5140018066847335,
+      "19": 0.5448351648351648
+     },
+     "vs_fixed": {
+      "n": 20,
+      "mean": 0.028259518882697877,
+      "min": -0.11792639493470519,
+      "max": 0.17728174603174607,
+      "against": "fixed",
+      "by_seed": {
+       "0": 0.023207426376440354,
+       "1": 0.1424585876198779,
+       "2": 0.10769755931046243,
+       "3": 0.010604870384917309,
+       "4": 0.031158714703018564,
+       "5": 0.005643738977072377,
+       "6": 0.07745753988677312,
+       "7": -0.014854905573468469,
+       "8": -0.048187633262260166,
+       "9": 0.04062772449869212,
+       "10": -0.11792639493470519,
+       "11": 0.0005994005994005569,
+       "12": 0.06465306122448983,
+       "13": 0.031200000000000006,
+       "14": 0.17728174603174607,
+       "15": -0.011494252873563315,
+       "16": -0.018884268884268973,
+       "17": 0.045818275684047505,
+       "18": 0.012195121951219523,
+       "19": 0.00593406593406598
+      }
+     }
+    }
+   }
+  }
+ }
+}
