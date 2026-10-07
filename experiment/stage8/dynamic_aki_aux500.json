@@ -1,0 +1,7736 @@
+{
+  "design_id": "stage8_dynamic_aki_aux500",
+  "design_type": "dynamic",
+  "question": "입원 중 매일(입원 후 24h~7일), 앞으로 48시간 안에 KDIGO 크레아티닌 기준 AKI가 생길지 예측",
+  "tp": {
+    "anchor": "admit",
+    "offsets_h": [
+      24,
+      48,
+      72,
+      96,
+      120,
+      144,
+      168
+    ]
+  },
+  "outcome": {
+    "name": "aki_48h",
+    "definition": "kdigo_creatinine",
+    "description": "결과 창 안에 채취된 크레아티닌이 KDIGO 기준(48h 내 +0.3 mg/dL 또는 7일 내 최솟값의 1.5배)을 만족",
+    "source": "labs",
+    "filter": {
+      "test": [
+        "creatinine"
+      ]
+    },
+    "scope": "index_admission",
+    "time_column": "collect_time",
+    "window": {
+      "start": "tp",
+      "end": "tp+48h"
+    },
+    "reference_window": {
+      "start": "tp-168h",
+      "end": "tp"
+    },
+    "ascertainment": {
+      "by_stratum": [
+        "unit"
+      ],
+      "method": "ICU·병동 결과율과 측정 빈도를 층별로 보고"
+    }
+  },
+  "cohort": {
+    "index_time": "tp",
+    "inclusion": [
+      {
+        "name": "adult",
+        "source": "patients",
+        "column": "age",
+        "agg": "value",
+        "op": ">=",
+        "value": 18
+      }
+    ],
+    "exclusion": [
+      {
+        "name": "aki_known_by_tp",
+        "source": "labs",
+        "filter": {
+          "test": [
+            "creatinine"
+          ]
+        },
+        "time_column": "report_time",
+        "window": {
+          "start": "admit",
+          "end": "tp"
+        },
+        "agg": "kdigo_aki",
+        "op": "==",
+        "value": true
+      }
+    ],
+    "subgroups": [
+      "unit"
+    ]
+  },
+  "features": [
+    {
+      "name": "age",
+      "source": "patients",
+      "column": "age",
+      "agg": "value"
+    },
+    {
+      "name": "sex",
+      "source": "patients",
+      "column": "sex",
+      "agg": "value"
+    },
+    {
+      "name": "unit",
+      "source": "admissions",
+      "column": "unit",
+      "agg": "value"
+    },
+    {
+      "name": "cr_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "cr_min_adm",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min"
+    },
+    {
+      "name": "cr_max_48h",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "tp-48h",
+        "end": "tp"
+      },
+      "agg": "max"
+    },
+    {
+      "name": "n_cr",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "creatinine"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "count"
+    },
+    {
+      "name": "bun_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "bun"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "k_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "potassium"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "hgb_min",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "hemoglobin"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "min"
+    },
+    {
+      "name": "t001_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t001"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t002_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t002"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t003_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t003"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t004_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t004"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t005_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t005"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t006_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t006"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t007_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t007"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t008_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t008"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t009_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t009"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t010_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t010"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t011_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t011"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t012_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t012"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t013_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t013"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t014_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t014"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t015_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t015"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t016_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t016"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t017_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t017"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t018_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t018"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t019_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t019"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t020_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t020"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t021_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t021"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t022_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t022"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t023_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t023"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t024_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t024"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t025_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t025"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t026_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t026"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t027_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t027"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t028_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t028"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t029_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t029"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t030_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t030"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t031_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t031"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t032_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t032"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t033_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t033"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t034_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t034"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t035_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t035"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t036_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t036"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t037_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t037"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t038_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t038"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t039_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t039"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t040_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t040"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t041_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t041"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t042_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t042"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t043_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t043"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t044_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t044"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t045_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t045"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t046_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t046"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t047_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t047"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t048_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t048"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t049_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t049"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t050_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t050"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t051_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t051"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t052_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t052"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t053_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t053"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t054_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t054"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t055_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t055"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t056_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t056"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t057_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t057"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t058_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t058"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t059_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t059"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t060_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t060"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t061_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t061"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t062_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t062"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t063_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t063"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t064_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t064"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t065_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t065"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t066_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t066"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t067_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t067"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t068_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t068"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t069_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t069"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t070_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t070"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t071_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t071"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t072_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t072"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t073_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t073"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t074_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t074"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t075_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t075"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t076_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t076"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t077_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t077"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t078_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t078"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t079_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t079"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t080_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t080"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t081_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t081"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t082_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t082"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t083_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t083"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t084_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t084"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t085_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t085"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t086_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t086"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t087_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t087"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t088_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t088"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t089_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t089"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t090_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t090"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t091_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t091"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t092_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t092"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t093_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t093"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t094_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t094"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t095_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t095"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t096_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t096"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t097_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t097"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t098_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t098"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t099_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t099"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t100_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t100"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t101_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t101"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t102_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t102"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t103_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t103"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t104_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t104"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t105_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t105"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t106_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t106"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t107_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t107"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t108_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t108"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t109_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t109"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t110_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t110"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t111_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t111"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t112_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t112"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t113_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t113"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t114_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t114"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t115_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t115"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t116_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t116"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t117_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t117"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t118_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t118"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t119_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t119"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t120_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t120"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t121_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t121"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t122_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t122"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t123_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t123"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t124_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t124"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t125_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t125"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t126_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t126"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t127_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t127"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t128_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t128"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t129_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t129"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t130_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t130"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t131_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t131"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t132_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t132"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t133_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t133"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t134_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t134"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t135_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t135"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t136_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t136"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t137_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t137"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t138_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t138"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t139_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t139"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t140_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t140"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t141_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t141"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t142_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t142"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t143_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t143"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t144_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t144"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t145_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t145"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t146_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t146"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t147_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t147"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t148_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t148"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t149_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t149"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t150_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t150"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t151_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t151"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t152_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t152"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t153_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t153"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t154_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t154"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t155_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t155"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t156_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t156"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t157_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t157"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t158_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t158"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t159_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t159"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t160_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t160"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t161_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t161"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t162_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t162"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t163_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t163"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t164_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t164"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t165_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t165"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t166_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t166"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t167_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t167"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t168_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t168"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t169_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t169"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t170_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t170"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t171_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t171"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t172_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t172"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t173_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t173"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t174_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t174"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t175_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t175"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t176_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t176"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t177_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t177"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t178_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t178"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t179_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t179"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t180_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t180"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t181_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t181"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t182_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t182"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t183_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t183"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t184_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t184"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t185_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t185"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t186_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t186"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t187_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t187"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t188_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t188"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t189_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t189"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t190_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t190"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t191_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t191"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t192_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t192"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t193_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t193"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t194_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t194"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t195_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t195"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t196_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t196"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t197_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t197"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t198_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t198"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t199_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t199"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t200_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t200"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t201_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t201"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t202_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t202"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t203_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t203"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t204_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t204"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t205_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t205"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t206_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t206"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t207_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t207"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t208_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t208"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t209_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t209"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t210_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t210"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t211_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t211"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t212_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t212"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t213_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t213"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t214_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t214"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t215_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t215"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t216_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t216"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t217_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t217"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t218_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t218"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t219_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t219"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t220_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t220"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t221_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t221"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t222_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t222"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t223_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t223"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t224_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t224"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t225_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t225"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t226_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t226"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t227_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t227"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t228_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t228"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t229_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t229"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t230_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t230"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t231_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t231"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t232_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t232"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t233_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t233"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t234_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t234"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t235_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t235"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t236_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t236"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t237_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t237"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t238_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t238"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t239_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t239"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t240_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t240"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t241_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t241"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t242_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t242"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t243_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t243"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t244_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t244"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t245_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t245"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t246_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t246"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t247_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t247"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t248_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t248"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t249_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t249"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t250_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t250"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t251_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t251"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t252_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t252"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t253_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t253"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t254_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t254"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t255_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t255"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t256_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t256"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t257_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t257"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t258_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t258"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t259_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t259"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t260_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t260"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t261_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t261"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t262_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t262"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t263_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t263"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t264_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t264"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t265_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t265"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t266_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t266"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t267_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t267"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t268_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t268"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t269_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t269"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t270_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t270"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t271_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t271"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t272_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t272"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t273_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t273"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t274_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t274"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t275_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t275"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t276_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t276"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t277_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t277"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t278_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t278"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t279_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t279"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t280_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t280"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t281_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t281"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t282_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t282"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t283_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t283"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t284_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t284"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t285_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t285"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t286_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t286"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t287_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t287"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t288_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t288"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t289_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t289"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t290_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t290"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t291_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t291"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t292_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t292"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t293_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t293"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t294_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t294"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t295_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t295"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t296_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t296"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t297_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t297"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t298_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t298"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t299_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t299"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t300_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t300"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t301_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t301"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t302_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t302"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t303_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t303"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t304_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t304"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t305_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t305"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t306_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t306"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t307_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t307"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t308_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t308"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t309_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t309"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t310_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t310"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t311_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t311"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t312_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t312"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t313_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t313"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t314_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t314"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t315_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t315"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t316_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t316"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t317_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t317"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t318_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t318"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t319_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t319"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t320_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t320"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t321_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t321"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t322_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t322"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t323_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t323"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t324_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t324"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t325_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t325"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t326_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t326"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t327_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t327"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t328_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t328"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t329_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t329"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t330_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t330"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t331_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t331"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t332_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t332"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t333_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t333"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t334_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t334"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t335_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t335"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t336_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t336"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t337_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t337"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t338_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t338"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t339_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t339"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t340_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t340"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t341_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t341"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t342_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t342"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t343_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t343"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t344_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t344"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t345_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t345"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t346_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t346"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t347_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t347"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t348_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t348"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t349_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t349"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t350_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t350"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t351_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t351"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t352_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t352"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t353_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t353"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t354_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t354"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t355_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t355"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t356_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t356"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t357_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t357"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t358_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t358"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t359_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t359"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t360_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t360"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t361_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t361"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t362_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t362"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t363_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t363"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t364_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t364"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t365_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t365"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t366_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t366"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t367_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t367"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t368_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t368"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t369_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t369"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t370_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t370"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t371_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t371"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t372_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t372"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t373_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t373"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t374_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t374"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t375_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t375"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t376_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t376"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t377_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t377"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t378_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t378"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t379_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t379"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t380_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t380"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t381_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t381"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t382_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t382"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t383_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t383"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t384_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t384"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t385_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t385"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t386_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t386"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t387_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t387"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t388_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t388"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t389_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t389"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t390_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t390"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t391_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t391"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t392_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t392"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t393_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t393"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t394_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t394"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t395_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t395"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t396_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t396"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t397_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t397"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t398_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t398"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t399_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t399"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t400_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t400"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t401_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t401"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t402_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t402"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t403_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t403"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t404_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t404"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t405_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t405"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t406_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t406"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t407_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t407"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t408_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t408"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t409_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t409"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t410_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t410"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t411_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t411"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t412_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t412"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t413_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t413"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t414_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t414"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t415_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t415"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t416_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t416"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t417_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t417"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t418_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t418"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t419_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t419"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t420_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t420"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t421_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t421"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t422_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t422"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t423_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t423"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t424_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t424"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t425_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t425"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t426_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t426"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t427_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t427"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t428_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t428"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t429_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t429"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t430_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t430"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t431_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t431"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t432_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t432"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t433_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t433"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t434_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t434"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t435_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t435"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t436_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t436"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t437_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t437"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t438_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t438"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t439_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t439"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t440_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t440"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t441_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t441"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t442_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t442"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t443_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t443"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t444_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t444"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t445_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t445"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t446_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t446"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t447_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t447"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t448_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t448"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t449_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t449"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t450_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t450"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t451_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t451"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t452_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t452"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t453_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t453"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t454_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t454"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t455_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t455"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t456_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t456"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t457_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t457"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t458_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t458"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t459_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t459"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t460_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t460"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t461_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t461"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t462_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t462"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t463_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t463"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t464_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t464"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t465_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t465"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t466_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t466"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t467_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t467"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t468_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t468"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t469_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t469"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t470_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t470"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t471_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t471"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t472_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t472"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t473_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t473"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t474_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t474"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t475_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t475"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t476_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t476"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t477_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t477"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t478_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t478"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t479_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t479"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t480_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t480"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t481_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t481"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t482_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t482"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t483_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t483"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t484_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t484"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t485_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t485"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t486_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t486"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t487_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t487"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t488_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t488"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t489_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t489"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t490_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t490"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t491_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t491"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t492_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t492"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t493_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t493"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t494_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t494"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t495_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t495"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t496_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t496"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t497_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t497"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t498_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t498"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t499_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t499"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    },
+    {
+      "name": "t500_last",
+      "source": "labs",
+      "filter": {
+        "test": [
+          "t500"
+        ]
+      },
+      "time_column": "report_time",
+      "window": {
+        "start": "admit",
+        "end": "tp"
+      },
+      "agg": "last"
+    }
+  ],
+  "split_unit": "family",
+  "split": {
+    "key": "family_id",
+    "method": "group_holdout",
+    "test_fraction": 0.3,
+    "seed": 20261002
+  },
+  "preprocessing": [
+    {
+      "name": "median_impute",
+      "kind": "impute",
+      "fit_scope": "train"
+    },
+    {
+      "name": "standardize",
+      "kind": "scale",
+      "fit_scope": "train"
+    }
+  ],
+  "model": {
+    "family": "logistic_regression",
+    "tuning": {
+      "method": "group_kfold",
+      "cv_key": "family_id",
+      "fit_scope": "train"
+    }
+  },
+  "attempts": {
+    "n_designs_tried": 1,
+    "n_models_tried": 1,
+    "correction": "none"
+  }
+}
