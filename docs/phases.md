@@ -428,8 +428,12 @@
 ## 8단계. 보조
 
 **할 일**
-- [ ] 누수 효과 시연: v1 설계 + 2단계 보조 데이터(환자 적고 변수 많은)
-- [ ] `tpot` 설치와 버전 기록 (`requirements-lock.txt`)
-- [ ] (2b에서 넘김) `experiment/leakage_effect.py`의 `load()`는 v1 로더다. 시연에 쓸 데이터(본 데이터 또는 `data/synth_aux/`)를 v2 로더로 읽도록 바꾼다
+- [x] 누수 효과 시연: v1 설계 + 2단계 보조 데이터(환자 적고 변수 많은)
+- [x] `tpot` 설치와 버전 기록 (`requirements-lock.txt`)
+- [x] (2b에서 넘김) `experiment/leakage_effect.py`의 `load()`는 v1 로더다. 시연에 쓸 데이터(본 데이터 또는 `data/synth_aux/`)를 v2 로더로 읽도록 바꾼다
 
 **완료 기준**: 그림과 표
+
+- (8단계 덧붙임) tpot 버전 기록은 `requirements-lock.txt`가 아니라 `requirements-stage8-lock.txt`에 했다 (`requirements-lock.txt`는 바꾸지 않음, 사용자 결정 2026-10-07).
+
+**8단계 결과 (2026-10-07)**: 계획 `docs/stage8_plan.md`(학습 전 커밋 `2408674`). 본 데이터(v1 설계, 시드 5), 보조 데이터 안 A(8단계 시연용 설계: v1 동적 + 검사 500종, 시드 20), 안 B(v1 동적 그대로, 시드 20). 결과 `results/stage8/` (json 3개, 그림 3개, 표 `leakage_effect.md`). TPOT 8회 모두 조각 사이 걸친 가족 0, 넘긴 조각 사용. 수정 설계 학습·시험 양쪽 가족 0. 7단계 결과·판정·잠긴 파일·동결 폴더는 바꾸지 않았다.

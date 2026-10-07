@@ -1,4 +1,4 @@
-"""누수 효과 시연 (7단계 보조 분석, docs/step7_analysis_plan.md 4절).
+"""누수 효과 시연 (v1 7단계 보조 분석 docs/step7_analysis_plan.md 4절 → v2 8단계 docs/stage8_plan.md).
 
 같은 합성 데이터에서 수정 설계(기본 설계서, 점검기 통과)와 누수 설계(공개 오류 목록의 누수를 하나씩 / 모두 넣은 것)를
 학습해 시험 집합 AUROC를 비교한다. 결과는 절대값이 아니라 누수 유무에 따른 차이로 해석한다.
@@ -9,7 +9,12 @@
 - TPOT 1.1.0: fit(X, y)가 그룹을 받지 않고 cv=정수이면 행 단위 StratifiedKFold를 쓴다.
   그래서 학습 집합 안에서 분할 단위(가족, 없으면 환자)로 미리 나눈 폴드를 넘기고, 실제로 그 폴드가 쓰였는지 기록한다.
 
-  python -m experiment.leakage_effect [--no-tpot] [--seeds 5]
+8단계(v2): 데이터는 v2 로더 leakcheck.data.load로 읽는다. 묶음(BUNDLES) 단위로 실행한다.
+  main  = 본 데이터, v1 고정·동적 설계, 누수 F1~F4·D1~D6·모두 + 참조(F4ref, D5ref: 같은 특징 선택을 학습 집합에서만)
+  aux_B = 보조 데이터, v1 동적 설계 그대로, 수정·D4·D5·D4+D5·D5ref
+  aux_A = 보조 데이터, 8단계 시연용 설계(v1 동적 + 검사 500종 특징), 같은 조건
+
+  python -m experiment.leakage_effect --bundle main|aux_A|aux_B [--no-tpot] [--seeds N]
 """
 from __future__ import annotations
 
@@ -26,6 +31,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.feature_selection import f_classif
 from sklearn.linear_model import LogisticRegression
 
+from leakcheck import data as ld
 from leakcheck import design as dz
 from leakcheck import lock as lk
 from leakcheck import outcomes, rules, splitting
@@ -35,8 +41,9 @@ from leakcheck.features import feature_matrix, make_feature
 ROOT = Path(__file__).resolve().parents[1]
 BASES = {"fixed": ROOT / "designs" / "base" / "fixed_readmission.json",
          "dynamic": ROOT / "designs" / "base" / "dynamic_aki.json"}
-OUT = ROOT / "results"
-APPROVER = "사용자 (7단계 계획 승인 2026-10-03, 누수 효과 시연용 설계 일괄 승인)"
+OUT = ROOT / "results" / "stage8"
+AUX500 = ROOT / "experiment" / "stage8" / "dynamic_aki_aux500.json"
+APPROVER = "사용자 (8단계 계획 승인 2026-10-07, 누수 효과 시연용 설계 일괄 승인)"
 SEED_STEPS = range(5)
 TPOT_MINUTES = 5
 TPOT_FOLDS = 5
@@ -56,6 +63,11 @@ def _fit_all(d: dict, name: str) -> None:
 
 def _select_all(d: dict) -> None:
     d["preprocessing"].append({"name": "select_k", "kind": "select", "fit_scope": "all"})
+
+
+def _select_train(d: dict) -> None:
+    """참조 조건 (8단계): 같은 특징 선택을 학습 집합에서만 적합."""
+    d["preprocessing"].append({"name": "select_k", "kind": "select", "fit_scope": "train"})
 
 
 LEAKS = {
@@ -80,6 +92,49 @@ LEAKS = {
             "name": "renal_order", "source": "orders", "filter": {"order_type": ["dialysis_order", "nephrology_consult"]},
             "time_column": "order_time", "window": {"start": "admit", "end": "tp"}, "agg": "any"})),
     },
+}
+
+
+# 8단계 참조 조건과 묶음 (docs/stage8_plan.md 2절, 실행 전 고정)
+REFS = {"fixed": {"F4ref": ("F4 참조: 같은 특징 선택을 학습 집합에서만 적합", _select_train)},
+        "dynamic": {"D5ref": ("D5 참조: 같은 특징 선택을 학습 집합에서만 적합", _select_train)}}
+SELECT_CONDS = {"F4": "F4ref", "D5": "D5ref", "D4+D5": "D5ref", "all": None}   # all의 참조는 유형별 REFS
+
+
+def variants8(t: str, base: dict, leak_ids: list[str] | None, combo_name: str) -> dict[str, tuple[str, dict]]:
+    """8단계: fixed(수정), leak_ids의 누수 하나씩, combo_name(그 누수 모두), 참조 조건."""
+    leak_ids = list(LEAKS[t]) if leak_ids is None else leak_ids
+    out = {"fixed": ("수정 설계", copy.deepcopy(base))}
+    every = copy.deepcopy(base)
+    for lid in leak_ids:
+        desc, fn = LEAKS[t][lid]
+        d = copy.deepcopy(base)
+        fn(d)
+        d["design_id"] = f"{base['design_id']}+{lid}"
+        out[lid] = (desc, d)
+        fn(every)
+    every["design_id"] = f"{base['design_id']}+{combo_name}"
+    out[combo_name] = ("누수 모두" if combo_name == "all" else "+".join(leak_ids), every)
+    for rid, (desc, fn) in REFS[t].items():
+        d = copy.deepcopy(base)
+        fn(d)
+        d["design_id"] = f"{base['design_id']}+{rid}"
+        out[rid] = (desc, d)
+    return out
+
+
+def _base(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+BUNDLES = {
+    "main": {"data": ROOT / "data" / "synth", "seeds": 5, "parts": [
+        ("fixed", BASES["fixed"], None, "all", ("fixed", "all")),
+        ("dynamic", BASES["dynamic"], None, "all", ("fixed", "all"))]},
+    "aux_B": {"data": ROOT / "data" / "synth_aux", "seeds": 20, "parts": [
+        ("dynamic", BASES["dynamic"], ["D4", "D5"], "D4+D5", ("fixed", "D4+D5"))]},
+    "aux_A": {"data": ROOT / "data" / "synth_aux", "seeds": 20, "parts": [
+        ("dynamic", AUX500, ["D4", "D5"], "D4+D5", ("fixed", "D4+D5"))]},
 }
 
 
@@ -213,16 +268,20 @@ def tpot_model(folds: GroupFolds, seed: int):
                           n_jobs=4, processes=False, random_state=seed, verbose=0)
 
 
-def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool) -> dict:
+def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool, built: dict | None = None) -> dict:
+    """built: 같은 설계(분할 시드만 다름)로 미리 만든 build() 결과. 시드는 분할만 바꾸므로 특징·결과는 같다."""
     d = with_seed(d, step)
     card = lk.decision_card(d, tables)
     lock = lk.DecisionLock(card)
     lock.approve(APPROVER)
-    b = build(d, tables)
+    if built is None:
+        b = build(d, tables)
+    else:
+        b = dict(built, design=dz.normalize(d))
     split = splitting.assign(b["rows"], b["design"]["split"])
     train = (split == "train").to_numpy()
     Z, names = preprocess(b["X"], b["y"], train, b["design"]["preprocessing"])
-    level = splitting.effective_key_level(b["design"]["split"])
+    level = splitting.key_level(b["design"]["split"])
     crossing, n_groups = splitting.crossing(b["rows"], split, rules.split_level(BASE_SPLIT_KEY[t]))
     rec = {"type": t, "design": name, "seed_step": step, "split_seed": b["design"]["split"]["seed"],
            "split_level": level, "n_rows": int(len(b["y"])), "n_train": int(train.sum()), "n_test": int((~train).sum()),
@@ -232,7 +291,7 @@ def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool)
         m.fit(Z[train], b["y"][train])
         rec["auroc"][mname] = lk.auroc(lock, d, b["y"][~train], m.predict_proba(Z[~train])[:, 1])
     if use_tpot:
-        grp = splitting.group_values(b["rows"], rules.split_level(BASE_SPLIT_KEY[t])).to_numpy()[train]
+        grp = splitting.group_values(b["rows"], {"key": BASE_SPLIT_KEY[t]}).to_numpy()[train]
         folds = GroupFolds(grp, TPOT_FOLDS, b["design"]["split"]["seed"])
         tp = tpot_model(folds, b["design"]["split"]["seed"])
         t0 = time.time()
@@ -240,7 +299,7 @@ def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool)
         tp.fit(Z[train], b["y"][train])
         rec["auroc"]["tpot"] = lk.auroc(lock, d, b["y"][~train], tp.predict_proba(Z[~train])[:, 1])
         rec["tpot"] = {"seconds": round(time.time() - t0, 1), "cv_split_calls": GroupFolds.total_calls - before,
-                       "cv_gen_is_group_folds": isinstance(tp.cv_gen, GroupFolds),
+                       "cv_gen_is_group_folds": isinstance(tp.cv_gen, GroupFolds), "cv_gen_is_passed_object": tp.cv_gen is folds,
                        "cv_groups_crossing_folds": folds.crossing_groups(), "cv_folds": TPOT_FOLDS,
                        "pipeline": str(tp.fitted_pipeline_)[:600],
                        "default_rowwise_cv_would_split": row_kfold_crossing(grp, b["y"][train], TPOT_FOLDS,
@@ -253,41 +312,94 @@ def run_one(t: str, name: str, d: dict, tables: dict, step: int, use_tpot: bool)
 BASE_SPLIT_KEY = {"fixed": "family_id", "dynamic": "family_id"}
 
 
+def _stats(v: list[float]) -> dict:
+    return {"n": len(v), "mean": float(np.mean(v)), "min": float(np.min(v)), "max": float(np.max(v))}
+
+
 def summarize(recs: list[dict]) -> dict:
-    out = {}
+    """유형 → 조건 → 모델: 평균·범위·시드별 값, 수정 대비 짝 차이, 특징 선택 조건은 참조 대비 짝 차이."""
+    by = {}
     for r in recs:
         for m, a in r["auroc"].items():
-            out.setdefault(r["type"], {}).setdefault(r["design"], {}).setdefault(m, []).append(a)
+            by.setdefault(r["type"], {}).setdefault(r["design"], {}).setdefault(m, {})[r["seed_step"]] = a
     table = {}
-    for t, ds in out.items():
-        ref = {m: np.mean(v) for m, v in ds["fixed"].items()}
+    for t, ds in by.items():
+        ref_name = next(iter(REFS[t]))
         for name, ms in ds.items():
             for m, v in ms.items():
-                table.setdefault(t, {}).setdefault(name, {})[m] = {
-                    "n": len(v), "mean": float(np.mean(v)), "min": float(np.min(v)), "max": float(np.max(v)),
-                    "diff_vs_fixed": float(np.mean(v) - ref[m]) if m in ref else None}
+                steps = sorted(v)
+                e = dict(_stats([v[s] for s in steps]), by_seed={str(s): v[s] for s in steps})
+                for key, other in (("vs_fixed", "fixed"), ("vs_ref", ref_name if name in SELECT_CONDS else None)):
+                    o = ds.get(other, {}).get(m, {}) if other else {}
+                    common = [s for s in steps if s in o]
+                    if other and common and name != other:
+                        diffs = [v[s] - o[s] for s in common]
+                        e[key] = dict(_stats(diffs), against=other, by_seed={str(s): v[s] - o[s] for s in common})
+                table.setdefault(t, {}).setdefault(name, {})[m] = e
     return table
+
+
+class StopRun(RuntimeError):
+    """docs/stage8_plan.md 6절 멈추는 조건."""
+
+
+def check_stop(r: dict) -> None:
+    if r["design"] == "fixed" and r["patients_or_families_in_both"] != 0:
+        raise StopRun(f"수정 설계 학습·시험 양쪽 가족 {r['patients_or_families_in_both']}")
+    if r["skipped_features"]:
+        raise StopRun(f"만들지 못한 특징 {r['skipped_features']}")
+    if r.get("unexpected_empty"):
+        raise StopRun(f"계획에 없던 빈 특징 {r['unexpected_empty']}")
+    tp = r.get("tpot")
+    if tp:
+        if tp["cv_groups_crossing_folds"] != 0 or not tp["cv_gen_is_group_folds"] or tp["cv_split_calls"] < 1:
+            raise StopRun(f"TPOT 조각 점검 실패 {tp}")
+        if tp["seconds"] > 600:
+            raise StopRun(f"TPOT {tp['seconds']}초 > 10분")
+
+
+# 보조 데이터에 없는 검사라 전부 비는 열 (docs/stage8_plan.md 3절 f). 누락으로 세지 않는다.
+PLANNED_EMPTY = {"main": set(), "aux_A": {"bun_last", "k_last", "hgb_min"}, "aux_B": {"bun_last", "k_last", "hgb_min"}}
+
+
+def run_bundle(bundle: str, seeds: int | None = None, use_tpot: bool = True) -> dict:
+    cfg = BUNDLES[bundle]
+    tables = ld.load(cfg["data"])
+    seeds = cfg["seeds"] if seeds is None else seeds
+    recs, built_info = [], {}
+    for t, base_path, leak_ids, combo, tpot_conds in cfg["parts"]:
+        for name, (desc, d) in variants8(t, _base(base_path), leak_ids, combo).items():
+            t0 = time.time()
+            b = build(d, tables)
+            empty = sorted(c for c in b["X"].columns if b["X"][c].isna().all())
+            built_info[f"{t}/{name}"] = {"seconds": round(time.time() - t0, 1), "n_features": int(b["X"].shape[1]),
+                                         "all_empty_columns": empty}
+            unexpected = sorted(set(empty) - PLANNED_EMPTY[bundle])
+            for step in range(seeds):
+                tp = use_tpot and step == 0 and name in tpot_conds
+                r = run_one(t, name, d, tables, step, tp, built=b)
+                r["description"] = desc
+                r["unexpected_empty"] = unexpected
+                check_stop(r)
+                recs.append(r)
+                print(json.dumps({k: r[k] for k in ("type", "design", "seed_step", "auroc")}, ensure_ascii=False), flush=True)
+    return {"bundle": bundle, "data": str(cfg["data"].relative_to(ROOT)), "seeds": seeds, "approver": APPROVER,
+            "leaks": {t: {k: v[0] for k, v in LEAKS[t].items()} for t in LEAKS},
+            "refs": {t: {k: v[0] for k, v in REFS[t].items()} for t in REFS},
+            "built": built_info, "runs": recs, "summary": summarize(recs)}
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--bundle", choices=list(BUNDLES), required=True)
     ap.add_argument("--no-tpot", action="store_true")
-    ap.add_argument("--seeds", type=int, default=len(SEED_STEPS))
-    ap.add_argument("--out", type=Path, default=OUT / "leakage_effect.json")
+    ap.add_argument("--seeds", type=int, default=None)
+    ap.add_argument("--out", type=Path, default=None)
     a = ap.parse_args(argv)
-    from synth.generate import load
-    tables = load()
-    recs = []
-    for t in ("fixed", "dynamic"):
-        for name, (desc, d) in variants(t).items():
-            for step in range(a.seeds):
-                tpot = (not a.no_tpot) and step == 0 and name in ("fixed", "all")
-                r = run_one(t, name, d, tables, step, tpot)
-                r["description"] = desc
-                recs.append(r)
-                print(json.dumps({k: r[k] for k in ("type", "design", "seed_step", "auroc")}, ensure_ascii=False), flush=True)
-    res = {"leaks": {t: {k: v[0] for k, v in LEAKS[t].items()} for t in LEAKS}, "runs": recs, "summary": summarize(recs)}
-    a.out.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    res = run_bundle(a.bundle, a.seeds, not a.no_tpot)
+    out = a.out or OUT / f"leakage_effect_{a.bundle}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return 0
 
 
